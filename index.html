@@ -869,21 +869,34 @@ function setStage(id, stage) {
   const rec = POS[id]; if (!rec) return;
 
   const connected = new Set([id]);
-  wires.querySelectorAll('path').forEach(p => {
-    if (p.dataset.from === id || p.dataset.to === id) {
-      p.classList.add('focus-wire');
-      connected.add(p.dataset.from); connected.add(p.dataset.to);
-    }
-  });
-
-  // 부서 클릭 시 확장: 사업자가 연결되어 있으면 그 사업자 산하 채널까지 + CEO도
   const isDept = !!depts.find(x => x.id === id);
+  const isDeptNode = (nid) => !!depts.find(x => x.id === nid);
+
   if (isDept) {
+    // 부서 클릭 → BFS로 와이어 따라 모든 연결 노드 (다른 부서 제외, CEO 포함)
+    let frontier = new Set([id]);
+    for (let step = 0; step < 4; step++) {
+      const next = new Set();
+      wires.querySelectorAll('path').forEach(p => {
+        const f = p.dataset.from, t = p.dataset.to;
+        if (frontier.has(f) && !connected.has(t) && (!isDeptNode(t) || t === id)) next.add(t);
+        if (frontier.has(t) && !connected.has(f) && (!isDeptNode(f) || f === id)) next.add(f);
+      });
+      next.forEach(n => connected.add(n));
+      if (next.size === 0) break;
+      frontier = next;
+    }
     connected.add('ceo');
-    if (connected.has('personal')) DATA.personalChannels.forEach(c => connected.add(c.id));
-    if (connected.has('corp'))     DATA.corpChannels.forEach(c => connected.add(c.id));
+  } else {
+    // 비부서 노드 클릭 → 직접 연결만
+    wires.querySelectorAll('path').forEach(p => {
+      if (p.dataset.from === id || p.dataset.to === id) {
+        connected.add(p.dataset.from); connected.add(p.dataset.to);
+      }
+    });
   }
-  // 두 번째 패스: connected 노드 두 개를 잇는 와이어도 모두 강조
+
+  // 와이어 강조: connected 노드 두 개를 잇는 모든 wire
   wires.querySelectorAll('path').forEach(p => {
     if (connected.has(p.dataset.from) && connected.has(p.dataset.to)) {
       p.classList.add('focus-wire');
@@ -1029,4 +1042,4 @@ window.addEventListener('resize', () => { fitView(); drawAllWires(); });
 </script>
 </body>
 </html>
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                          
+                                          
