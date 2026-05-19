@@ -48,7 +48,11 @@ body::before {
   display: flex; justify-content: space-between; align-items: center;
   pointer-events: none;
 }
-.title { display: flex; gap: 12px; align-items: baseline; pointer-events: auto; }
+.title { display: flex; gap: 12px; align-items: center; pointer-events: auto; }
+.brand-logo {
+  height: 32px; width: auto; object-fit: contain;
+  filter: drop-shadow(0 0 8px rgba(167,139,250,0.5)) brightness(1.15);
+}
 .title h1 {
   font-size: 14px; font-weight: 700;
   text-transform: uppercase; letter-spacing: 0.18em;
@@ -452,6 +456,7 @@ svg.wires path.flow {
 
 <div class="topbar">
   <div class="title">
+    <img class="brand-logo" src="https://www.hanasignmall.kr/image/common/hana_logo2.png" alt="HANASIGNMALL" />
     <h1>HANASM · WIRE MAP</h1>
     <span class="ver">v0.8</span>
     <span class="date" id="today"></span>
@@ -1150,10 +1155,4 @@ document.getElementById('today').textContent = new Date().toLocaleDateString('en
 function init() {
   fitView(); drawAllWires();
   setTimeout(() => { drawAllWires(); fitView(); }, 200);
-  setTimeout(() => { drawAllWires(); fitView(); }, 600);
-}
-if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
-window.addEventListener('resize', () => { fitView(); drawAllWires(); });
-</script>
-</body>
-</html>
+  setTimeout(() 
