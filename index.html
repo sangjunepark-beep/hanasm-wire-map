@@ -1158,9 +1158,9 @@ stageEl.addEventListener('wheel', (e) => {
 document.getElementById('today').textContent = new Date().toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' }).toUpperCase();
 
 function init() {
+  fitView();
+  drawAllWires();
+  setTimeout(() => { drawAllWires(); fitView(); }, 200);
+  setTimeout(() => { drawAllWires(); fitView(); }, 600);
 }
-if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
-window.addEventListener('resize', () => { fitView(); drawAllWires(); });
-</script>
-</body>
-</html>
+if (document.readyState === 'loading') document.addEventLis
