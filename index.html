@@ -169,36 +169,11 @@ svg.wires path.flow {
   position: relative;
 }
 
-/* 1차 클릭 = 빛 + 바운스 */
+/* 1차 클릭 = 빛 (바운스 제거, 글로우만) */
 .node.lit .frame {
-  animation: bounceLit 1.4s cubic-bezier(.36, .07, .19, .97) infinite;
-  transform-origin: center bottom;
-}
-@keyframes bounceLit {
-  0%, 100% {
-    transform: translateY(0) scale(1);
-    filter:
-      drop-shadow(0 0 20px var(--c1, var(--blue-2)))
-      drop-shadow(0 0 40px var(--c2, var(--purple-2)))
-      drop-shadow(0 0 60px var(--c1, var(--blue-2)));
-  }
-  20% {
-    transform: translateY(-14px) scale(1.08);
-    filter:
-      drop-shadow(0 0 32px var(--c1, var(--blue-2)))
-      drop-shadow(0 0 58px var(--c2, var(--purple-2)))
-      drop-shadow(0 0 88px var(--c1, var(--blue-2)));
-  }
-  40% { transform: translateY(0) scale(1); }
-  55% {
-    transform: translateY(-7px) scale(1.04);
-    filter:
-      drop-shadow(0 0 26px var(--c1, var(--blue-2)))
-      drop-shadow(0 0 48px var(--c2, var(--purple-2)))
-      drop-shadow(0 0 70px var(--c1, var(--blue-2)));
-  }
-  70% { transform: translateY(0) scale(1); }
-  82% { transform: translateY(-3px) scale(1.015); }
+  filter:
+    drop-shadow(0 0 22px var(--c1, var(--blue-2)))
+    drop-shadow(0 0 40px var(--c2, var(--purple-2)));
 }
 
 /* 2차 클릭 = 확대 */
@@ -762,14 +737,11 @@ function spreadX(items, gap) {
 spreadX(depts.slice(0, 4), 510).forEach(({it, x}) => placeNode(it, x, DEPT_TOP_Y, 'dept'));
 spreadX(depts.slice(4),    510).forEach(({it, x}) => placeNode(it, x, DEPT_BOT_Y, 'dept'));
 
-// 시스템 컬럼 (우측 끝) - Playauto / Ecount / ERP / Claude×2 / GPT
-const SYS_X = POS_X.chC + 200;
-placeNode(DATA.playauto, SYS_X, CY - 400, 'sys sys-playauto');
-placeNode(DATA.ecount,   SYS_X, CY - 240, 'sys sys-ecount');
-placeNode(DATA.erp,      SYS_X, CY - 60,  'erp');
-placeNode(DATA.claude20, SYS_X, CY + 110, 'sys sys-claude20');
-placeNode(DATA.claude5,  SYS_X, CY + 270, 'sys sys-claude5');
-placeNode(DATA.gpt,      SYS_X, CY + 410, 'sys sys-gpt');
+// 플레이오토 + 이카운트 → CS팀 위쪽 영역 (CS팀 X=945 근처)
+placeNode(DATA.playauto, 845, 80, 'sys sys-playauto');
+placeNode(DATA.ecount,   1080, 80, 'sys sys-ecount');
+// ERP → Hanasignmall.kr (self-mall) 우측에 산하로
+placeNode(DATA.erp, POS_X.chC + 180, CY - 50, 'erp');
 
 // ============ WIRES ============
 function nodeSize(id) {
@@ -830,11 +802,9 @@ function drawAllWires() {
   DATA.personalChannels.forEach(c => drawWire('personal', c.id, '#60a5fa', { width: 1.5, flow: true }));
   DATA.corpChannels.forEach(c => drawWire('corp', c.id, '#a855f7', { width: 1.5, flow: true }));
   drawWire('self-mall', 'erp', '#22d3ee', { width: 2.2, flow: true });
-  // 시스템 연결
-  drawWire('cs', 'playauto', '#fb923c', { width: 1.4, flow: true });
-  drawWire('cs', 'ecount',   '#34d399', { width: 1.2, flow: true, opacity: 0.7 });
-  drawWire('fin', 'ecount',  '#34d399', { width: 1.4, flow: true });
-  drawWire('dev', 'claude5', '#a855f7', { width: 1.4, flow: true });
+  drawWire('cs', 'playauto', '#fb923c', { width: 1.6, flow: true });
+  drawWire('cs', 'ecount',   '#34d399', { width: 1.4, flow: true });
+  drawWire('fin', 'ecount',  '#34d399', { width: 1.6, flow: true });
   depts.forEach(d => d.links.forEach(t => drawWire(d.id, t, d.color, { width: 1.0, opacity: 0.30 })));
 }
 
@@ -1045,3 +1015,4 @@ window.addEventListener('resize', () => { fitView(); drawAllWires(); });
 </script>
 </body>
 </html>
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           
