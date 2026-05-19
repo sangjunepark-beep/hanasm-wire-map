@@ -117,7 +117,7 @@ body::before {
 .stage.dragging .world { transition: none !important; }
 .world {
   position: absolute; left: 0; top: 0;
-  width: 2700px; height: 1400px;
+  width: 2400px; height: 1400px;
   transform-origin: 0 0;
   transition: transform 0.7s cubic-bezier(.4,.0,.15,1);
 }
@@ -125,13 +125,14 @@ body::before {
 /* WIRES */
 svg.wires {
   position: absolute; left: 0; top: 0;
-  width: 2700px; height: 1400px;
+  width: 2400px; height: 1400px;
   pointer-events: none; overflow: visible;
 }
 svg.wires path {
   fill: none; stroke-linecap: round; stroke-linejoin: round;
-  opacity: 0.45;
-  filter: drop-shadow(0 0 6px currentColor);
+  opacity: 0.85;
+  stroke-width: 2;
+  filter: drop-shadow(0 0 8px currentColor);
   transition: opacity 0.3s, stroke-width 0.3s;
 }
 svg.wires path.flow {
@@ -433,7 +434,7 @@ svg.wires path.flow {
 
 <div class="stage" id="stage">
   <div class="world" id="world">
-    <svg class="wires" id="wires" viewBox="0 0 2700 1400"></svg>
+    <svg class="wires" id="wires" viewBox="0 0 2400 1400"></svg>
   </div>
 </div>
 
@@ -459,7 +460,7 @@ svg.wires path.flow {
 </aside>
 
 <script>
-const STAGE_W = 2700, STAGE_H = 1400;
+const STAGE_W = 2400, STAGE_H = 1400;
 const CX = STAGE_W / 2, CY = STAGE_H / 2;
 
 // ============ TASKS ============
@@ -762,13 +763,13 @@ spreadX(depts.slice(0, 4), 510).forEach(({it, x}) => placeNode(it, x, DEPT_TOP_Y
 spreadX(depts.slice(4),    510).forEach(({it, x}) => placeNode(it, x, DEPT_BOT_Y, 'dept'));
 
 // 시스템 컬럼 (우측 끝) - Playauto / Ecount / ERP / Claude×2 / GPT
-const SYS_X = POS_X.chC + 280;
-placeNode(DATA.playauto, SYS_X, CY - 410, 'sys sys-playauto');
+const SYS_X = POS_X.chC + 200;
+placeNode(DATA.playauto, SYS_X, CY - 400, 'sys sys-playauto');
 placeNode(DATA.ecount,   SYS_X, CY - 240, 'sys sys-ecount');
 placeNode(DATA.erp,      SYS_X, CY - 60,  'erp');
 placeNode(DATA.claude20, SYS_X, CY + 110, 'sys sys-claude20');
 placeNode(DATA.claude5,  SYS_X, CY + 270, 'sys sys-claude5');
-placeNode(DATA.gpt,      SYS_X, CY + 420, 'sys sys-gpt');
+placeNode(DATA.gpt,      SYS_X, CY + 410, 'sys sys-gpt');
 
 // ============ WIRES ============
 function nodeSize(id) {
@@ -843,9 +844,10 @@ function applyCam() {
 }
 function fitView() {
   const vw = window.innerWidth, vh = window.innerHeight;
-  const sx = (vw - 100) / STAGE_W;
-  const sy = (vh - 160) / STAGE_H;
-  camS = Math.min(sx, sy);
+  // 가로 여백 240(좌우 legend/controls 영역 + 패딩), 세로 여백 200(상단 topbar + 하단 패딩)
+  const sx = (vw - 280) / STAGE_W;
+  const sy = (vh - 220) / STAGE_H;
+  camS = Math.min(sx, sy) * 0.92; // 추가 8% 여유
   camX = (vw - STAGE_W * camS) / 2;
   camY = (vh - STAGE_H * camS) / 2;
   applyCam();
@@ -996,12 +998,4 @@ let isDragging = false, dragStart = null;
 
 stageEl.addEventListener('mousedown', (e) => {
   if (e.button !== 0) return;
-  if (e.target.closest('.task-panel') || e.target.closest('.controls') || e.target.closest('.topbar') || e.target.closest('.legend')) return;
-  dragStart = { camX, camY, x: e.clientX, y: e.clientY };
-});
-
-
-window.addEventListener('resize', drawAllWires);
-</script>
-</body>
-</html>
+  if (e.target.closest('.task-panel') || e.target.closest('.controls') || e.target.closest('.topbar') || e.target.closest(
