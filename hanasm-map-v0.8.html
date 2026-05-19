@@ -457,7 +457,7 @@ svg.wires path.flow {
 <div class="topbar">
   <div class="title">
     <img class="brand-logo" src="https://www.hanasignmall.kr/image/common/hana_logo2.png" alt="HANASIGNMALL" />
-    <span class="ver">v0.8</span>
+    
     <span class="date" id="today"></span>
   </div>
   <div class="hint">클릭 = 빛 · 더블 = 확대 · 드래그 = 이동 · 휠 = 줌</div>
@@ -1161,6 +1161,18 @@ stageEl.addEventListener('wheel', (e) => {
   const wx = (mx - camX) / camS, wy = (my - camY) / camS;
   camS = ns; camX = mx - wx * camS; camY = my - wy * camS;
 
+if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
+window.addEventListener('resize', () => { fitView(); drawAllWires(); });
+</script>
+</body>
+</html>
+
+function init() {
+  fitView();
+  drawAllWires();
+  setTimeout(() => { drawAllWires(); fitView(); }, 200);
+  setTimeout(() => { drawAllWires(); fitView(); }, 600);
+}
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
 window.addEventListener('resize', () => { fitView(); drawAllWires(); });
 </script>
