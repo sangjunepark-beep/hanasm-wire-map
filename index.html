@@ -50,8 +50,8 @@ body::before {
 }
 .title { display: flex; gap: 12px; align-items: center; pointer-events: auto; }
 .brand-logo {
-  height: 32px; width: auto; object-fit: contain;
-  filter: drop-shadow(0 0 8px rgba(167,139,250,0.5)) brightness(1.15);
+  height: 16px; width: auto; object-fit: contain;
+  filter: drop-shadow(0 0 6px rgba(167,139,250,0.5)) brightness(1.15);
 }
 .title h1 {
   font-size: 14px; font-weight: 700;
@@ -457,7 +457,6 @@ svg.wires path.flow {
 <div class="topbar">
   <div class="title">
     <img class="brand-logo" src="https://www.hanasignmall.kr/image/common/hana_logo2.png" alt="HANASIGNMALL" />
-    <h1>HANASM · WIRE MAP</h1>
     <span class="ver">v0.8</span>
     <span class="date" id="today"></span>
   </div>
@@ -584,6 +583,12 @@ const TASKS = {
     { name:"전 채널 고객 문의 대응", status:"정기", prio:"h" },
     { name:"CS팀 업무 분장 · 총괄", status:"상시", prio:"m" }
   ],
+  kimdg: [
+    { name:"디자인 시안 체크 → 소재별·장비별 분류·편집", status:"정기", prio:"h" },
+    { name:"출력 데이터화 작업", status:"정기", prio:"h" },
+    { name:"제작업무 밀리지 않게 각 파트 지원", status:"상시", prio:"h" },
+    { name:"제작일정 조율", status:"상시", prio:"h" }
+  ],
   leehn: [
     { name:"하나사인몰 경리일보 작성", status:"정기", prio:"h", detail:"통장·매출·세금" },
     { name:"경리일보 결재", status:"정기", prio:"h" },
@@ -703,7 +708,7 @@ const DATA = {
       members:[
         { name:"이지은", role:"대리", title:"제작", tasks: null },
         { name:"우연형", role:"대리", title:"제작", tasks: null },
-        { name:"김동관", role:"대리", title:"제작", tasks: null },
+        { name:"김동관", role:"대리", title:"제작 일정·시안 분류", tasks: TASKS.kimdg },
         { name:"김민현", role:"주임", title:"제작", tasks: null }
       ]}
   ]
@@ -1153,9 +1158,6 @@ stageEl.addEventListener('wheel', (e) => {
 document.getElementById('today').textContent = new Date().toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' }).toUpperCase();
 
 function init() {
-  fitView(); drawAllWires();
-  setTimeout(() => { drawAllWires(); fitView(); }, 200);
-  setTimeout(() => { drawAllWires(); fitView(); }, 600);
 }
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
 window.addEventListener('resize', () => { fitView(); drawAllWires(); });
