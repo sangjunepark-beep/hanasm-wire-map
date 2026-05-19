@@ -814,22 +814,17 @@ function edge(id, side) {
   return { x: r.x, y: r.y };
 }
 function orthoPath(p1, p2, mode) {
-  // 각진 직각 라우팅 + 작게 둥근 모서리
-  const r = 12;
+  // 부드러운 베지에 곡선 (스크린샷 스타일)
   if (mode === 'H') {
-    if (Math.abs(p2.y - p1.y) < 2) return `M${p1.x},${p1.y} L${p2.x},${p2.y}`;
-    const midX = (p1.x + p2.x) / 2;
-    const dirX1 = Math.sign(midX - p1.x);
-    const dirY = Math.sign(p2.y - p1.y);
-    const dirX2 = Math.sign(p2.x - midX);
-    return `M${p1.x},${p1.y} L${midX - r*dirX1},${p1.y} Q${midX},${p1.y} ${midX},${p1.y + r*dirY} L${midX},${p2.y - r*dirY} Q${midX},${p2.y} ${midX + r*dirX2},${p2.y} L${p2.x},${p2.y}`;
+    const dx = p2.x - p1.x;
+    const cx1 = p1.x + dx * 0.55;
+    const cx2 = p2.x - dx * 0.55;
+    return `M${p1.x},${p1.y} C${cx1},${p1.y} ${cx2},${p2.y} ${p2.x},${p2.y}`;
   } else {
-    if (Math.abs(p2.x - p1.x) < 2) return `M${p1.x},${p1.y} L${p2.x},${p2.y}`;
-    const midY = (p1.y + p2.y) / 2;
-    const dirY1 = Math.sign(midY - p1.y);
-    const dirX = Math.sign(p2.x - p1.x);
-    const dirY2 = Math.sign(p2.y - midY);
-    return `M${p1.x},${p1.y} L${p1.x},${midY - r*dirY1} Q${p1.x},${midY} ${p1.x + r*dirX},${midY} L${p2.x - r*dirX},${midY} Q${p2.x},${midY} ${p2.x},${midY + r*dirY2} L${p2.x},${p2.y}`;
+    const dy = p2.y - p1.y;
+    const cy1 = p1.y + dy * 0.55;
+    const cy2 = p2.y - dy * 0.55;
+    return `M${p1.x},${p1.y} C${p1.x},${cy1} ${p2.x},${cy2} ${p2.x},${p2.y}`;
   }
 }
 function drawWire(fromId, toId, color, opts={}) {
@@ -1159,3 +1154,4 @@ window.addEventListener('resize', () => { fitView(); drawAllWires(); });
 </script>
 </body>
 </html>
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   
