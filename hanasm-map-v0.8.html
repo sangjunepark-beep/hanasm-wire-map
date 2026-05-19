@@ -1163,4 +1163,8 @@ function init() {
   setTimeout(() => { drawAllWires(); fitView(); }, 200);
   setTimeout(() => { drawAllWires(); fitView(); }, 600);
 }
-if (document.readyState === 'loading') document.addEventLis
+if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
+window.addEventListener('resize', () => { fitView(); drawAllWires(); });
+</script>
+</body>
+</html>
