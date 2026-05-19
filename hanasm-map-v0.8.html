@@ -545,7 +545,7 @@ const DATA = {
   corp: { id:"corp", name:"법인사업자", sub:"CORP · MAIN", desc:"자사몰 + 오픈마켓 다채널 운영. 회사 메인 사업자" },
   erp: { id:"erp", name:"ERP", sub:"내부 시스템 · CORE",
          brand:"#22d3ee",
-         desc:"Hanasignmall.kr 산하 사내 ERP · CS·디자인·제작실 운영 핵심" },
+         desc:"자체 개발 ERP (개발팀 산하) · CS·디자인·제작실 운영 핵심" },
   playauto: { id:"playauto", name:"플레이오토", sub:"주문수집 SYS",
               brand:"#fb923c",
               desc:"CS팀 전 채널 주문 수집 프로그램 (오전 9시 / 오후 1시 운영)" },
@@ -569,7 +569,7 @@ const DATA = {
   ],
   corpChannels: [
     { id:"godo",      name:"Hanasignmall.com", sub:"자사몰 · 고도몰",     brand:"#a855f7", desc:"자사몰 1 · 고도몰 (외부 솔루션)" },
-    { id:"self-mall", name:"Hanasignmall.kr",  sub:"자사몰 · 자체개발몰", brand:"#c084fc", desc:"자사몰 2 · 자체개발몰 · ERP 산하" },
+    { id:"self-mall", name:"Hanasignmall.kr",  sub:"자사몰 · 자체개발몰", brand:"#c084fc", desc:"자사몰 2 · 자체개발몰 (개발팀 자체 개발 · ERP와 연결)" },
     { id:"coupang",   name:"쿠팡",         sub:"오픈마켓", brand:"#f472b6", desc:"쿠팡 · 보류 업무 다수 누적 (7건)" },
     { id:"11st",      name:"11번가",       sub:"오픈마켓", brand:"#ec4899", desc:"11번가 · 판매기간 연장 관리" },
     { id:"auction",   name:"옥션",         sub:"ESM",      brand:"#fbbf24", desc:"옥션 (ESM)" },
@@ -607,8 +607,8 @@ const DATA = {
         { name:"박민진", role:"주임", title:"디자인", tasks: null }
       ]},
     { id:"dev", name:"개발팀", color:"#22d3ee", color2:"#3b82f6",
-      desc:"자사몰 · 자체개발몰 개발 (2명)",
-      links:["godo","self-mall"],
+      desc:"Hanasignmall.kr (자체개발몰) + ERP 자체 개발·운영 (2명)",
+      links:["self-mall","erp"],
       members:[
         { name:"강두원", role:"팀장", title:"개발 총괄", tasks: null },
         { name:"나민지", role:"주임", title:"개발", tasks: null }
@@ -1107,4 +1107,4 @@ window.addEventListener('resize', () => { fitView(); drawAllWires(); });
 </script>
 </body>
 </html>
-                                                                                                                                                                    
+                                                                                                           
