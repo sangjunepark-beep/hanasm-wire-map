@@ -830,19 +830,20 @@ function drawAllWires() {
   drawWire('ceo', 'corp',     '#a855f7', { width: 2.0, flow: true });
   DATA.personalChannels.forEach(c => drawWire('personal', c.id, '#60a5fa', { width: 1.5, flow: true }));
   DATA.corpChannels.forEach(c => drawWire('corp', c.id, '#a855f7', { width: 1.5, flow: true }));
-  drawWire('self-mall', 'erp', '#22d3ee', { width: 2.2, flow: true });
-  // 시스템
-  drawWire('cs', 'playauto', '#fb923c', { width: 1.6, flow: true });
-  drawWire('cs', 'ecount',   '#34d399', { width: 1.4, flow: true });
-  drawWire('fin', 'ecount',  '#34d399', { width: 1.6, flow: true });
-  // 부서 간 업무 흐름
-  drawWire('design', 'web',  '#f472b6', { width: 1.4, flow: true });   // 디자인 → 웹팀 (상세·랜딩·배너)
-  drawWire('web', 'cs',      '#60a5fa', { width: 1.6, flow: true });   // 웹팀 ↔ CS (노출→피드백 유기적 연결)
-  drawWire('cs', 'design',   '#a855f7', { width: 1.4, flow: true });   // CS → 디자인 (콜견적 주문)
-  drawWire('design', 'product', '#f472b6', { width: 1.4, flow: true }); // 디자인 → 제작실
-  drawWire('product', 'factory2', '#2dd4bf', { width: 1.4, flow: true }); // 제작실 → 2공장 (게시판·오뚜기)
-  drawWire('cs', 'erp',      '#22d3ee', { width: 1.4, flow: true });   // CS 콜견적 매출 → ERP
-  depts.forEach(d => d.links.forEach(t => drawWire(d.id, t, d.color, { width: 1.0, opacity: 0.30 })));
+  drawWire('self-mall', 'erp', '#22d3ee', { width: 1.4, opacity: 0.4 });
+  // 시스템 (옅게)
+  drawWire('cs', 'playauto', '#fb923c', { width: 1.0, opacity: 0.25 });
+  drawWire('cs', 'ecount',   '#34d399', { width: 1.0, opacity: 0.25 });
+  drawWire('fin', 'ecount',  '#34d399', { width: 1.0, opacity: 0.25 });
+  // 부서 간 인과 (옅게)
+  drawWire('design', 'web',     '#f472b6', { width: 1.0, opacity: 0.18 });
+  drawWire('web', 'cs',         '#60a5fa', { width: 1.0, opacity: 0.18 });
+  drawWire('cs', 'design',      '#a855f7', { width: 1.0, opacity: 0.18 });
+  drawWire('design', 'product', '#f472b6', { width: 1.0, opacity: 0.18 });
+  drawWire('product', 'factory2','#2dd4bf', { width: 1.0, opacity: 0.18 });
+  drawWire('cs', 'erp',         '#22d3ee', { width: 1.0, opacity: 0.18 });
+  // 부서 → 사업자 (매우 옅게)
+  depts.forEach(d => d.links.forEach(t => drawWire(d.id, t, d.color, { width: 0.8, opacity: 0.10 })));
 }
 
 // ============ CAMERA ============
@@ -1106,3 +1107,4 @@ window.addEventListener('resize', () => { fitView(); drawAllWires(); });
 </script>
 </body>
 </html>
+                                                                                                                                                                    
