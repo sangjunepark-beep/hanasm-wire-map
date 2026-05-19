@@ -136,8 +136,8 @@ svg.wires path {
   fill: none; stroke-linecap: round; stroke-linejoin: round;
   opacity: 0.85;
   stroke-width: 2;
-  filter: drop-shadow(0 0 8px currentColor);
-  transition: opacity 0.3s, stroke-width 0.3s;
+  filter: drop-shadow(0 0 4px currentColor);
+  transition: opacity 0.2s;
 }
 svg.wires path.flow {
   stroke-dasharray: 6 8;
@@ -155,11 +155,8 @@ svg.wires path.flow {
   position: relative; padding: 1.5px;
   background: linear-gradient(135deg, var(--c1, var(--blue-2)), var(--c2, var(--purple-2)));
   clip-path: polygon(12px 0%, 100% 0%, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0% 100%, 0% 12px);
-  filter:
-    drop-shadow(0 0 14px var(--c1, var(--blue-2)))
-    drop-shadow(0 0 26px var(--c2, var(--purple-2)))
-    drop-shadow(0 0 42px var(--c1, var(--blue-2)));
-  transition: filter 0.3s ease;
+  filter: drop-shadow(0 0 8px var(--c1, var(--blue-2))) drop-shadow(0 0 16px var(--c2, var(--purple-2)));
+  transition: filter 0.2s ease;
 }
 .node .core {
   display: flex; align-items: center; gap: 12px;
@@ -173,14 +170,11 @@ svg.wires path.flow {
   position: relative;
 }
 
-/* 1차 클릭 = 빛 (강하게) */
+/* 1차 클릭 = 빛 */
 .node.lit .frame {
-  filter:
-    drop-shadow(0 0 28px var(--c1, var(--blue-2)))
-    drop-shadow(0 0 56px var(--c2, var(--purple-2)))
-    drop-shadow(0 0 80px var(--c1, var(--blue-2)));
+  filter: drop-shadow(0 0 18px var(--c1, var(--blue-2))) drop-shadow(0 0 36px var(--c2, var(--purple-2)));
 }
-.node.lit { transform: translate(-50%,-50%) scale(1.07); transition: transform 0.3s ease; }
+.node.lit { transform: translate(-50%,-50%) scale(1.05); transition: transform 0.2s ease; }
 .world.has-focus svg.wires path.focus-wire {
   opacity: 1 !important;
   stroke-width: 3 !important;
@@ -196,10 +190,7 @@ svg.wires path.flow {
 
 .node:hover { z-index: 50; }
 .node:hover .frame {
-  filter:
-    drop-shadow(0 0 22px var(--c1, var(--blue-2)))
-    drop-shadow(0 0 44px var(--c2, var(--purple-2)))
-    drop-shadow(0 0 60px var(--c1, var(--blue-2)));
+  filter: drop-shadow(0 0 14px var(--c1, var(--blue-2))) drop-shadow(0 0 24px var(--c2, var(--purple-2)));
 }
 
 .dot {
@@ -1199,3 +1190,4 @@ window.addEventListener('resize', () => { fitView(); drawAllWires(); });
 </script>
 </body>
 </html>
+                                                                                                                                                                                                                 
