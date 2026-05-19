@@ -589,6 +589,15 @@ const TASKS = {
     { name:"제작업무 밀리지 않게 각 파트 지원", status:"상시", prio:"h" },
     { name:"제작일정 조율", status:"상시", prio:"h" }
   ],
+  leeje: [
+    { name:"라텍스·주차스티커 출력 및 합지", status:"정기", prio:"h" },
+    { name:"솔벤·시트지 출력 및 합지", status:"정기", prio:"h" },
+    { name:"수성·현수막 출력 및 후가공·포장", status:"정기", prio:"h" },
+    { name:"슬림게시판·강화유리게시판·패드배너 출력 및 합지", status:"정기", prio:"h" },
+    { name:"UV DTF·슈마 출력 후 재단", status:"정기", prio:"h" },
+    { name:"A형 작업 및 1층 포장 지원", status:"상시", prio:"m" },
+    { name:"쿠팡 작업", status:"정기", prio:"m" }
+  ],
   leehn: [
     { name:"하나사인몰 경리일보 작성", status:"정기", prio:"h", detail:"통장·매출·세금" },
     { name:"경리일보 결재", status:"정기", prio:"h" },
@@ -706,7 +715,7 @@ const DATA = {
       desc:"제작실 · 출력 (4명) · ERP 사용",
       links:["personal","corp","erp"],
       members:[
-        { name:"이지은", role:"대리", title:"제작", tasks: null },
+        { name:"이지은", role:"대리", title:"출력·합지·재단·포장 (멀티)", tasks: TASKS.leeje },
         { name:"우연형", role:"대리", title:"제작", tasks: null },
         { name:"김동관", role:"대리", title:"제작 일정·시안 분류", tasks: TASKS.kimdg },
         { name:"김민현", role:"주임", title:"제작", tasks: null }
@@ -1151,18 +1160,7 @@ stageEl.addEventListener('wheel', (e) => {
   const mx = e.clientX, my = e.clientY;
   const wx = (mx - camX) / camS, wy = (my - camY) / camS;
   camS = ns; camX = mx - wx * camS; camY = my - wy * camS;
-  world.style.transition = 'none'; applyCam();
-  requestAnimationFrame(() => world.style.transition = '');
-}, { passive: false });
 
-document.getElementById('today').textContent = new Date().toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' }).toUpperCase();
-
-function init() {
-  fitView();
-  drawAllWires();
-  setTimeout(() => { drawAllWires(); fitView(); }, 200);
-  setTimeout(() => { drawAllWires(); fitView(); }, 600);
-}
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
 window.addEventListener('resize', () => { fitView(); drawAllWires(); });
 </script>
