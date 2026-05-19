@@ -1,0 +1,1081 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>HANASM · 와이어 맵 v0.7</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --purple-1: #c084fc; --purple-2: #a855f7; --purple-3: #7c3aed;
+  --blue-1: #93c5fd;   --blue-2: #60a5fa;   --blue-3: #3b82f6;
+  --cyan: #22d3ee; --pink: #f472b6; --amber: #fbbf24;
+  --green: #34d399; --orange: #fb923c; --red: #f87171;
+  --bg-0: #14163a; --bg-1: #1a1d44; --bg-2: #232652;
+  --line: rgba(167,139,250,0.22);
+  --line-2: rgba(96,165,250,0.26);
+  --text-1: #f3f4fb; --text-2: #c5c9e0; --text-3: #8a8fad;
+}
+html, body {
+  height: 100vh; width: 100vw; overflow: hidden;
+  background: var(--bg-0);
+  font-family: "JetBrains Mono", "Inter", "Pretendard", "Noto Sans KR", monospace, system-ui;
+  color: var(--text-1);
+  -webkit-font-smoothing: antialiased;
+  letter-spacing: 0.01em;
+  font-weight: 500;
+}
+body {
+  background:
+    radial-gradient(ellipse at 25% 30%, rgba(167,139,250,0.08), transparent 60%),
+    radial-gradient(ellipse at 75% 70%, rgba(96,165,250,0.07), transparent 60%),
+    radial-gradient(circle at 50% 50%, rgba(34,211,238,0.025), transparent 55%),
+    linear-gradient(180deg, #050614 0%, #07091b 50%, #050614 100%);
+}
+body::before {
+  content: ""; position: fixed; inset: 0; pointer-events: none; z-index: 1;
+  background-image:
+    linear-gradient(rgba(167,139,250,0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(96,165,250,0.025) 1px, transparent 1px);
+  background-size: 80px 80px;
+  background-position: center;
+  mask-image: radial-gradient(ellipse at center, black 20%, transparent 75%);
+}
+body::after {
+  content: ""; position: fixed; inset: 0; pointer-events: none; z-index: 1;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence baseFrequency='0.85' /%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.6'/%3E%3C/svg%3E");
+  opacity: 0.025; mix-blend-mode: overlay;
+}
+
+/* TOP BAR */
+.topbar {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+  padding: 16px 24px;
+  display: flex; justify-content: space-between; align-items: center;
+  pointer-events: none;
+}
+.title { display: flex; gap: 12px; align-items: baseline; pointer-events: auto; }
+.title h1 {
+  font-size: 14px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 0.18em;
+  background: linear-gradient(90deg, var(--purple-1), var(--blue-1));
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+.title .ver {
+  font-size: 10px; padding: 3px 8px;
+  background: rgba(167,139,250,0.15); color: var(--purple-1);
+  border: 1px solid rgba(167,139,250,0.4);
+  font-weight: 700; letter-spacing: 0.1em;
+  clip-path: polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px);
+}
+.title .date { font-size: 11px; color: var(--text-3); letter-spacing: 0.05em; }
+.hint {
+  font-size: 10.5px; color: var(--text-2); font-weight: 500;
+  background: rgba(24,26,66,0.78);
+  padding: 8px 14px;
+  border: 1px solid var(--line);
+  pointer-events: auto;
+  backdrop-filter: blur(20px);
+  letter-spacing: 0.06em; text-transform: uppercase;
+  clip-path: polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px);
+}
+
+/* LEGEND / CONTROLS */
+.legend, .controls {
+  position: fixed; bottom: 18px; z-index: 100;
+  background: rgba(24,26,66,0.78);
+  border: 1px solid var(--line);
+  padding: 12px 14px;
+  font-size: 11px;
+  backdrop-filter: blur(20px);
+  clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px);
+}
+.legend { left: 18px; }
+.controls { right: 18px; display: flex; gap: 8px; align-items: center; padding: 8px 12px; }
+.legend .row { display: flex; align-items: center; gap: 10px; margin: 5px 0; color: var(--text-2); font-weight: 500; letter-spacing: 0.04em; }
+.legend .sw {
+  width: 10px; height: 10px;
+  background: var(--c, var(--text-3));
+  box-shadow: 0 0 8px var(--c, var(--text-3));
+  clip-path: polygon(3px 0, 100% 0, 100% calc(100% - 3px), calc(100% - 3px) 100%, 0 100%, 0 3px);
+}
+.controls button {
+  background: transparent; border: 1px solid var(--line-2);
+  color: var(--blue-1);
+  padding: 6px 14px; font-size: 10.5px;
+  font-family: inherit; cursor: pointer; font-weight: 700;
+  letter-spacing: 0.1em; text-transform: uppercase;
+  transition: all 0.18s ease;
+  clip-path: polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px);
+}
+.controls button:hover {
+  background: rgba(96,165,250,0.12); color: var(--text-1);
+  border-color: var(--blue-2);
+  box-shadow: 0 0 16px rgba(96,165,250,0.4);
+}
+
+/* STAGE */
+.stage {
+  position: fixed; inset: 0; z-index: 2; overflow: hidden;
+  cursor: grab;
+}
+.stage.dragging { cursor: grabbing; }
+.stage.dragging .world { transition: none !important; }
+.world {
+  position: absolute; left: 0; top: 0;
+  width: 2400px; height: 1400px;
+  transform-origin: 0 0;
+  transition: transform 0.7s cubic-bezier(.4,.0,.15,1);
+}
+
+/* WIRES */
+svg.wires {
+  position: absolute; left: 0; top: 0;
+  width: 2400px; height: 1400px;
+  pointer-events: none; overflow: visible;
+}
+svg.wires path {
+  fill: none; stroke-linecap: round; stroke-linejoin: round;
+  opacity: 0.45;
+  filter: drop-shadow(0 0 6px currentColor);
+  transition: opacity 0.3s, stroke-width 0.3s;
+}
+svg.wires path.flow {
+  stroke-dasharray: 6 8;
+  animation: flow 2.5s linear infinite;
+}
+@keyframes flow { to { stroke-dashoffset: -28; } }
+
+/* NODES */
+.node {
+  position: absolute; cursor: pointer;
+  transform: translate(-50%,-50%);
+  z-index: 10; user-select: none;
+}
+.node .frame {
+  position: relative; padding: 1.5px;
+  background: linear-gradient(135deg, var(--c1, var(--blue-2)), var(--c2, var(--purple-2)));
+  clip-path: polygon(12px 0%, 100% 0%, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0% 100%, 0% 12px);
+  filter:
+    drop-shadow(0 0 14px var(--c1, var(--blue-2)))
+    drop-shadow(0 0 26px var(--c2, var(--purple-2)))
+    drop-shadow(0 0 42px var(--c1, var(--blue-2)));
+  transition: filter 0.3s ease;
+}
+.node .core {
+  display: flex; align-items: center; gap: 12px;
+  background: linear-gradient(180deg, rgba(68,72,118,0.96), rgba(48,52,92,0.97));
+  padding: 14px 22px;
+  font-size: 15px; font-weight: 700;
+  color: var(--text-1);
+  white-space: nowrap;
+  letter-spacing: 0.02em;
+  clip-path: polygon(11px 0%, 100% 0%, 100% calc(100% - 11px), calc(100% - 11px) 100%, 0% 100%, 0% 11px);
+  position: relative;
+}
+.node .core::before, .node .core::after { display: none; }
+
+/* 1차 클릭 = 빛 + 바운스 */
+.node.lit .frame {
+  animation: bounceLit 1.4s cubic-bezier(.36, .07, .19, .97) infinite;
+  transform-origin: center bottom;
+}
+@keyframes bounceLit {
+  0%, 100% {
+    transform: translateY(0) scale(1);
+    filter:
+      drop-shadow(0 0 20px var(--c1, var(--blue-2)))
+      drop-shadow(0 0 40px var(--c2, var(--purple-2)))
+      drop-shadow(0 0 60px var(--c1, var(--blue-2)));
+  }
+  20% {
+    transform: translateY(-14px) scale(1.08);
+    filter:
+      drop-shadow(0 0 32px var(--c1, var(--blue-2)))
+      drop-shadow(0 0 58px var(--c2, var(--purple-2)))
+      drop-shadow(0 0 88px var(--c1, var(--blue-2)));
+  }
+  40% {
+    transform: translateY(0) scale(1);
+  }
+  55% {
+    transform: translateY(-7px) scale(1.04);
+    filter:
+      drop-shadow(0 0 26px var(--c1, var(--blue-2)))
+      drop-shadow(0 0 48px var(--c2, var(--purple-2)))
+      drop-shadow(0 0 70px var(--c1, var(--blue-2)));
+  }
+  70% {
+    transform: translateY(0) scale(1);
+  }
+  82% {
+    transform: translateY(-3px) scale(1.015);
+  }
+}
+
+/* 2차 클릭 = 확대 + 컨텐츠 (zoomed) */
+.node.zoomed .frame {
+  filter:
+    drop-shadow(0 0 24px var(--c1, var(--blue-2)))
+    drop-shadow(0 0 48px var(--c2, var(--purple-2)));
+}
+
+.node:hover { z-index: 50; }
+.node:hover .frame {
+  filter:
+    drop-shadow(0 0 22px var(--c1, var(--blue-2)))
+    drop-shadow(0 0 44px var(--c2, var(--purple-2)))
+    drop-shadow(0 0 60px var(--c1, var(--blue-2)));
+}
+
+.dot {
+  width: 8px; height: 8px; flex-shrink: 0;
+  background: var(--c, var(--text-3));
+  box-shadow: 0 0 10px var(--c, var(--text-3));
+  clip-path: polygon(2px 0, 100% 0, 100% calc(100% - 2px), calc(100% - 2px) 100%, 0 100%, 0 2px);
+}
+
+.node .sub {
+  font-size: 11px; color: var(--text-3); font-weight: 600;
+  margin-top: 7px; text-align: center;
+  letter-spacing: 0.12em; text-transform: uppercase;
+}
+
+/* === Expanded content === */
+.expanded {
+  display: none;
+  margin-top: 12px;
+  background: rgba(24,26,66,0.85);
+  border: 1px solid var(--line);
+  padding: 14px 14px;
+  max-width: 320px;
+  backdrop-filter: blur(20px);
+  clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px);
+  animation: expandIn 0.35s cubic-bezier(.2,.8,.2,1);
+}
+@keyframes expandIn {
+  from { opacity: 0; transform: translateY(-8px) scale(0.95); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+.node.zoomed .expanded { display: block; }
+.expanded .label {
+  font-size: 9.5px; color: var(--text-3);
+  letter-spacing: 0.18em; text-transform: uppercase;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+.expanded .desc {
+  font-size: 11.5px; color: var(--text-2);
+  line-height: 1.55; letter-spacing: 0.02em;
+  margin-bottom: 10px;
+}
+.member-grid {
+  display: flex; flex-direction: column; gap: 5px;
+}
+.member-chip {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 8px; padding: 6px 10px;
+  background: rgba(167,139,250,0.06);
+  border: 1px solid var(--line);
+  font-size: 11px; color: var(--text-1); font-weight: 600;
+  cursor: pointer;
+  transition: all 0.18s;
+  letter-spacing: 0.02em;
+  clip-path: polygon(5px 0, 100% 0, 100% calc(100% - 5px), calc(100% - 5px) 100%, 0 100%, 0 5px);
+}
+.member-chip:hover {
+  background: rgba(167,139,250,0.16);
+  border-color: var(--purple-2);
+  box-shadow: 0 0 12px rgba(167,139,250,0.3);
+}
+.member-chip .mname { display: flex; align-items: center; gap: 6px; }
+.member-chip .role-tag {
+  font-size: 9px; color: var(--text-3);
+  font-weight: 600; letter-spacing: 0.04em;
+}
+.member-chip .badge {
+  font-size: 9px; padding: 2px 7px;
+  font-weight: 700; letter-spacing: 0.05em;
+  text-transform: uppercase;
+  clip-path: polygon(3px 0, 100% 0, 100% calc(100% - 3px), calc(100% - 3px) 100%, 0 100%, 0 3px);
+}
+.member-chip .badge.has  { background: rgba(34,211,238,0.18); color: var(--cyan); }
+.member-chip .badge.none { background: rgba(138,143,173,0.16); color: var(--text-3); }
+
+/* === Node variants === */
+.node.ceo .frame { --c1: var(--cyan); --c2: var(--purple-1); }
+.node.ceo .core  { font-size: 18px; padding: 18px 28px; }
+
+.node.biz-personal .frame { --c1: var(--blue-2); --c2: var(--cyan); }
+.node.biz-personal .core  { font-size: 16px; padding: 15px 24px; }
+
+.node.biz-corp .frame { --c1: var(--purple-2); --c2: var(--pink); }
+.node.biz-corp .core  { font-size: 16px; padding: 15px 24px; }
+
+.node.ch-personal .frame { --c1: var(--blue-1); --c2: var(--blue-3); }
+.node.ch-corp .frame { --c1: var(--purple-1); --c2: var(--purple-3); }
+
+.node.dept .frame { --c1: var(--dc, var(--blue-2)); --c2: var(--dc2, var(--purple-2)); }
+.node.dept .core  { font-size: 14px; padding: 13px 20px; }
+
+.node.erp .frame { --c1: var(--cyan); --c2: var(--blue-2); padding: 2px; }
+.node.erp .core  { font-size: 17px; padding: 16px 26px; letter-spacing: 0.06em; }
+.node.erp .frame {
+  filter:
+    drop-shadow(0 0 18px var(--cyan))
+    drop-shadow(0 0 32px var(--blue-2))
+    drop-shadow(0 0 48px var(--cyan));
+}
+
+/* === Dim non-focus === */
+.world.has-focus .node:not(.lit):not(.zoomed) { filter: saturate(0.3) brightness(0.5); }
+.world.has-focus svg.wires path:not(.focus-wire) { opacity: 0.04; }
+.world.has-focus svg.wires path.focus-wire {
+  opacity: 0.95;
+  stroke-width: 2.3 !important;
+}
+
+/* === Task Panel (member click) === */
+.task-panel {
+  position: fixed; top: 70px; right: 18px; bottom: 80px;
+  width: 380px;
+  background: rgba(24,26,66,0.92);
+  border: 1px solid var(--purple-2);
+  padding: 0;
+  z-index: 220;
+  backdrop-filter: blur(30px);
+  box-shadow: -10px 0 40px rgba(0,0,0,0.55), 0 0 30px rgba(168,85,247,0.2);
+  display: flex; flex-direction: column;
+  transform: translateX(420px); opacity: 0;
+  transition: all 0.4s cubic-bezier(.2,.7,.2,1);
+  pointer-events: none;
+  clip-path: polygon(16px 0, 100% 0, 100% calc(100% - 16px), calc(100% - 16px) 100%, 0 100%, 0 16px);
+}
+.task-panel.show {
+  transform: translateX(0); opacity: 1; pointer-events: auto;
+}
+.task-panel .tp-head {
+  padding: 18px 20px 14px;
+  border-bottom: 1px solid var(--line);
+}
+.task-panel .tp-head .tp-name {
+  font-size: 15px; font-weight: 800; letter-spacing: 0.04em;
+  background: linear-gradient(90deg, var(--blue-1), var(--purple-1));
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+  margin-bottom: 3px;
+}
+.task-panel .tp-head .tp-role {
+  font-size: 10px; color: var(--text-3);
+  letter-spacing: 0.15em; text-transform: uppercase;
+  font-weight: 600;
+}
+.task-panel .tp-stats {
+  display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap;
+}
+.task-panel .tp-stats .st {
+  font-size: 9.5px; padding: 3px 8px;
+  font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase;
+  clip-path: polygon(3px 0, 100% 0, 100% calc(100% - 3px), calc(100% - 3px) 100%, 0 100%, 0 3px);
+}
+.task-panel .tp-stats .st.active  { background: rgba(52,211,153,0.18); color: var(--green); }
+.task-panel .tp-stats .st.routine { background: rgba(167,139,250,0.18); color: var(--purple-1); }
+.task-panel .tp-stats .st.hold    { background: rgba(251,146,60,0.20); color: var(--orange); }
+.task-panel .tp-stats .st.planned { background: rgba(138,143,173,0.20); color: var(--text-3); }
+
+.task-panel .tp-body {
+  flex: 1; overflow-y: auto; padding: 14px 20px 20px;
+}
+.task-panel .tp-body::-webkit-scrollbar { width: 4px; }
+.task-panel .tp-body::-webkit-scrollbar-thumb { background: var(--line-2); }
+.task-panel .tp-empty {
+  text-align: center; padding: 40px 20px;
+  color: var(--text-3); font-size: 12px;
+  line-height: 1.7; letter-spacing: 0.02em;
+}
+.task-panel .tp-empty .ic {
+  font-size: 26px; margin-bottom: 12px;
+  color: var(--purple-1);
+  letter-spacing: 0.2em;
+}
+.task-group {
+  margin-bottom: 14px;
+}
+.task-group h4 {
+  font-size: 10px; color: var(--text-3); font-weight: 700;
+  letter-spacing: 0.18em; text-transform: uppercase;
+  padding: 6px 0; margin-bottom: 6px;
+  border-bottom: 1px dashed var(--line);
+  display: flex; justify-content: space-between; align-items: center;
+}
+.task-group h4 .cnt {
+  font-size: 10px; padding: 1px 7px;
+  background: rgba(255,255,255,0.05);
+  color: var(--text-2);
+  clip-path: polygon(3px 0, 100% 0, 100% calc(100% - 3px), calc(100% - 3px) 100%, 0 100%, 0 3px);
+}
+.task-item {
+  display: flex; align-items: flex-start; gap: 8px;
+  padding: 6px 0;
+  font-size: 11px; color: var(--text-2);
+  line-height: 1.5; letter-spacing: 0.015em;
+}
+.task-item .tdot {
+  width: 6px; height: 6px; margin-top: 5px;
+  background: var(--st-c, var(--text-3));
+  flex-shrink: 0;
+  clip-path: polygon(2px 0, 100% 0, 100% calc(100% - 2px), calc(100% - 2px) 100%, 0 100%, 0 2px);
+  box-shadow: 0 0 6px var(--st-c, var(--text-3));
+}
+.task-item .tname { flex: 1; }
+.task-item .tname b { color: var(--text-3); font-weight: 600; font-size: 10px; margin-left: 6px; }
+.task-item .prio {
+  font-size: 9px; padding: 1px 5px;
+  font-weight: 800; letter-spacing: 0.05em;
+  flex-shrink: 0; margin-top: 3px;
+  clip-path: polygon(2px 0, 100% 0, 100% calc(100% - 2px), calc(100% - 2px) 100%, 0 100%, 0 2px);
+}
+.task-item .prio.h { background: rgba(248,113,113,0.20); color: var(--red); }
+.task-item .prio.m { background: rgba(251,191,36,0.20); color: var(--amber); }
+.task-item .prio.l { background: rgba(138,143,173,0.20); color: var(--text-3); }
+
+.task-group.s-active  .tdot, .task-group.s-active  h4 { --st-c: var(--green); color: var(--green); }
+.task-group.s-routine .tdot, .task-group.s-routine h4 { --st-c: var(--purple-1); color: var(--purple-1); }
+.task-group.s-hold    .tdot, .task-group.s-hold    h4 { --st-c: var(--orange); color: var(--orange); }
+.task-group.s-planned .tdot, .task-group.s-planned h4 { --st-c: var(--blue-1); color: var(--blue-1); }
+
+.task-panel .close-x {
+  position: absolute; top: 14px; right: 16px;
+  cursor: pointer; color: var(--text-3);
+  font-size: 14px; padding: 4px;
+}
+.task-panel .close-x:hover { color: var(--text-1); }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="title">
+    <h1>HANASM · WIRE MAP</h1>
+    <span class="ver">v0.7</span>
+    <span class="date" id="today"></span>
+  </div>
+  <div class="hint">클릭 → 빛 · 더블 = 확대 · 드래그 = 이동 · 휠 = 줌</div>
+</div>
+
+<div class="stage" id="stage">
+  <div class="world" id="world">
+    <svg class="wires" id="wires" viewBox="0 0 2400 1400"></svg>
+  </div>
+</div>
+
+<div class="legend">
+  <div class="row"><span class="sw" style="--c:#22d3ee"></span> CEO</div>
+  <div class="row"><span class="sw" style="--c:#60a5fa"></span> 개인사업자 · 스마트스토어</div>
+  <div class="row"><span class="sw" style="--c:#a855f7"></span> 법인사업자 · 자사몰·오픈마켓</div>
+  <div class="row"><span class="sw" style="--c:#c4b5fd"></span> 부서</div>
+</div>
+
+<div class="controls">
+  <button id="btnFit">RESET</button>
+</div>
+
+<aside class="task-panel" id="taskPanel">
+  <span class="close-x" id="taskClose">✕</span>
+  <div class="tp-head">
+    <div class="tp-name" id="tpName"></div>
+    <div class="tp-role" id="tpRole"></div>
+    <div class="tp-stats" id="tpStats"></div>
+  </div>
+  <div class="tp-body" id="tpBody"></div>
+</aside>
+
+<script>
+const STAGE_W = 2400, STAGE_H = 1400;
+const CX = STAGE_W / 2, CY = STAGE_H / 2;
+
+// === DATA ===
+// 업무 데이터: 박상준, 홍재이, 임정민 (웹팀), 이하나 (경영지원팀)
+// status: 정기·진행중·예정·보류·상시 / prio: h(상)·m(중)·l(하)
+const TASKS = {
+  // 박상준 차장 - 웹팀 총괄
+  parksj: [
+    { name:"네이버 광고 운영·입찰 조정", status:"정기", prio:"h" },
+    { name:"SEO 개선 / 검색 노출 최적화", status:"진행중", prio:"h" },
+    { name:"데이터 분석 · 매출 전략", status:"정기", prio:"h" },
+    { name:"AI · 자동화 도입 검토", status:"진행중", prio:"m" },
+    { name:"상품 · 상세페이지 기획", status:"정기", prio:"h" },
+    { name:"개발팀 커뮤니케이션", status:"상시", prio:"m" },
+    { name:"팀 업무 분장 · 관리", status:"상시", prio:"m" },
+    { name:"신규몰(로켓출력공장) 운영", status:"진행중", prio:"h" }
+  ],
+  // 홍재이 주임 - 상품등록·운영
+  hongjy: [
+    { name:"개인 결제창 정리 (월)", status:"정기", prio:"m" },
+    { name:"ESM·11번가 판매기간 연장/중지 (월)", status:"정기", prio:"m" },
+    { name:"사이트 판매수량 체크 (월)", status:"정기", prio:"m" },
+    { name:"스마트스토어 리뷰 답변", status:"정기", prio:"h" },
+    { name:"쿠팡 자동가격수정 확인 (주1)", status:"정기", prio:"m" },
+    { name:"일주일전건 판매량 기재 (월)", status:"정기", prio:"l" },
+    { name:"쿠팡 아이템위너·노출ID 분리 확인", status:"정기", prio:"m" },
+    { name:"네이버페이 취소건 확인", status:"정기", prio:"m" },
+    { name:"주별 주문현황 (금)", status:"정기", prio:"m" },
+    { name:"각 사이트 문의/배송·출고지연 확인", status:"정기", prio:"h" },
+    { name:"전 사이트 가격 수정", status:"진행중", prio:"h", detail:"주차스티커·A형·게시판" },
+    { name:"오픈마켓·고도몰 자사몰 매칭", status:"진행중", prio:"h", detail:"627/737 (85%)" },
+    { name:"신규몰 현장맞춤소재 업로드", status:"진행중", prio:"m" },
+    { name:"신규몰·고도몰 A형 가격 정리", status:"예정", prio:"h" },
+    { name:"채널 매칭 기준 (1:N/1:1) 확인", status:"예정", prio:"h" },
+    { name:"경쟁사 벤치마킹 리포트", status:"예정", prio:"m", detail:"20/100 (20%)" },
+    { name:"상세페이지 부착·설치영상 업데이트", status:"예정", prio:"m", detail:"67/862 (7.8%)" },
+    { name:"해피톡·포스팅 데이터 검수", status:"예정", prio:"l" },
+    { name:"쿠팡 A형 재등록", status:"보류", prio:"h", detail:"754/929 (81%)" },
+    { name:"쿠팡 A형 상단이미지 수정", status:"보류", prio:"h", detail:"754/929 (81%)" },
+    { name:"쿠팡 상단 공통이미지 변경", status:"보류", prio:"m", detail:"798/1635 (49%)" },
+    { name:"쿠팡 하단 공통이미지 변경", status:"보류", prio:"m", detail:"798/1635 (49%)" },
+    { name:"쿠팡 유튜브 영상 위치 수정", status:"보류", prio:"l", detail:"798/1635 (49%)" },
+    { name:"쿠팡 옵션 배송메시지 삭제", status:"보류", prio:"l", detail:"798/1635 (49%)" },
+    { name:"쿠팡 광고노출 A형 썸네일 수정", status:"보류", prio:"h", detail:"426/794 (54%)" },
+    { name:"신규몰 안내판 2차 카테고리", status:"보류", prio:"m", detail:"10/565 (2%)" },
+    { name:"금손간판 신상품 등록", status:"보류", prio:"h", detail:"12건 · 가격대기" },
+    { name:"시공사례 신규몰 카테고리 정리", status:"보류", prio:"l" },
+    { name:"부착용투명알림판 신상 등록", status:"보류", prio:"m", detail:"가격대기" },
+    { name:"현황판 상품페이지·코드 업데이트", status:"보류", prio:"l", detail:"준비중" }
+  ],
+  // 임정민 주임 - 콘텐츠/SNS
+  limjm: [
+    { name:"일일 출고사진 정리·출고사례 (고도몰·신규몰)", status:"정기", prio:"m" },
+    { name:"게시판·오뚜기 출고사례 (신규몰)", status:"정기", prio:"m" },
+    { name:"네이버 블로그 노출 확인", status:"정기", prio:"m" },
+    { name:"네이버 블로그 포스팅", status:"정기", prio:"h" },
+    { name:"인스타그램 게시글", status:"정기", prio:"h" },
+    { name:"인스타그램 인사이트 확인", status:"정기", prio:"m" },
+    { name:"AI 이미지·영상 제작", status:"정기", prio:"h" },
+    { name:"인스타그램 릴스 제작·업로드", status:"정기", prio:"h" },
+    { name:"유튜브 쇼츠 업로드 (릴스 동일)", status:"정기", prio:"m" },
+    { name:"시공사례 블로그/인스타 포스팅", status:"예정", prio:"m" },
+    { name:"시공사례 신규몰 업로드", status:"예정", prio:"m" },
+    { name:"전월 출고사진 상품별 정리", status:"예정", prio:"l" }
+  ],
+  // 이하나 대리 - 회계·경리·총무
+  leehn: [
+    { name:"하나사인몰 경리일보 작성", status:"정기", prio:"h", detail:"통장·매출·세금" },
+    { name:"경리일보 결재", status:"정기", prio:"h" },
+    { name:"점심 취합·주문", status:"정기", prio:"l" },
+    { name:"입고 검수", status:"정기", prio:"m" },
+    { name:"결재요청건 이체", status:"정기", prio:"h" },
+    { name:"신규몰 세금계산서 발행", status:"정기", prio:"h" },
+    { name:"직원 요청업무 (증명서·소모품·ERP·회계)", status:"상시", prio:"m" },
+    { name:"정기주문 소모품 체크", status:"정기", prio:"m" },
+    { name:"사무실 미화 체크", status:"정기", prio:"l" },
+    { name:"푸드박스 확인·결제", status:"정기", prio:"l" },
+    { name:"정기출금 정리·이체 (임대·매입·급여)", status:"정기", prio:"h" },
+    { name:"급여 계산 (4대보험·인센티브·명세서)", status:"정기", prio:"h" },
+    { name:"법인·개인 매입대·거래명세표 정리", status:"정기", prio:"m" },
+    { name:"구월식당 결제", status:"정기", prio:"l" },
+    { name:"세무사 발송용 월결산 자료 취합", status:"정기", prio:"h" },
+    { name:"간식 취합·주문", status:"정기", prio:"l" }
+  ]
+};
+
+const DATA = {
+  ceo: { id:"ceo", name:"김한열", sub:"CEO",
+         desc:"하나사인몰 대표 · 전사 의사결정 · 사업 방향 총괄" },
+  personal: { id:"personal", name:"개인사업자", sub:"PERSONAL",
+              desc:"네이버 스마트스토어 채널 3개를 운영하는 개인사업자 단위" },
+  corp: { id:"corp", name:"법인사업자", sub:"CORP · MAIN",
+          desc:"자사몰 + 오픈마켓 다채널 운영. 회사 메인 사업자" },
+  erp: { id:"erp", name:"ERP", sub:"내부 시스템 · CORE",
+         brand:"#22d3ee",
+         desc:"Hanasignmall.kr 산하 사내 ERP 시스템 · CS·디자인·제작실 운영 핵심" },
+  personalChannels: [
+    { id:"ss-hana",   name:"하나몰",       sub:"SMARTSTORE", brand:"#60a5fa", desc:"네이버 스마트스토어 · 하나몰 (메인)" },
+    { id:"ss-baron",  name:"더바른사인",   sub:"SMARTSTORE", brand:"#60a5fa", desc:"네이버 스마트스토어 · 더바른사인" },
+    { id:"ss-rocket", name:"로켓출력공장", sub:"SMARTSTORE", brand:"#60a5fa", desc:"네이버 스마트스토어 · 신규 · 시트/페트/포맥스/폼보드/DTF" }
+  ],
+  corpChannels: [
+    { id:"godo",      name:"Hanasignmall.com", sub:"자사몰 · 고도몰",       brand:"#a855f7", desc:"자사몰 1 · 고도몰 (외부 솔루션)" },
+    { id:"self-mall", name:"Hanasignmall.kr",  sub:"자사몰 · 자체개발몰",   brand:"#c084fc", desc:"자사몰 2 · 자체개발몰 · ERP 산하" },
+    { id:"coupang",   name:"쿠팡",         sub:"오픈마켓", brand:"#f472b6", desc:"쿠팡 · 보류 업무 다수 누적 (7건)" },
+    { id:"11st",      name:"11번가",       sub:"오픈마켓", brand:"#ec4899", desc:"11번가 · 판매기간 연장 관리" },
+    { id:"auction",   name:"옥션",         sub:"ESM",      brand:"#fbbf24", desc:"옥션 (ESM)" },
+    { id:"gmarket",   name:"G마켓",        sub:"ESM",      brand:"#22d3ee", desc:"G마켓 (ESM)" }
+  ],
+  departments: [
+    { id:"web", name:"웹팀", color:"#60a5fa", color2:"#a855f7",
+      desc:"웹운영 · 광고 · SEO · 콘텐츠 · 상품등록 (5명)",
+      links:["personal","corp"],
+      members:[
+        { name:"박상준", role:"차장", title:"웹팀 총괄", tasks: TASKS.parksj },
+        { name:"황국인", role:"과장", title:"웹디자인팀장", tasks: null },
+        { name:"김은혜", role:"주임", title:"웹디자이너", tasks: null },
+        { name:"홍재이", role:"주임", title:"상품등록·운영", tasks: TASKS.hongjy },
+        { name:"임정민", role:"주임", title:"콘텐츠·SNS", tasks: TASKS.limjm }
+      ]},
+    { id:"cs", name:"CS팀", color:"#a855f7", color2:"#22d3ee",
+      desc:"전 채널 고객 상담 · 문의 응대 (5명) · ERP 사용",
+      links:["personal","corp","erp"],
+      members:[
+        { name:"천현정", role:"차장", title:"CS팀 총괄", tasks: null },
+        { name:"정현주", role:"과장", title:"CS", tasks: null },
+        { name:"김민주", role:"대리", title:"CS", tasks: null },
+        { name:"김정란", role:"주임", title:"CS", tasks: null },
+        { name:"이태경", role:"주임", title:"CS", tasks: null }
+      ]},
+    { id:"design", name:"디자인팀", color:"#f472b6", color2:"#a855f7",
+      desc:"상세페이지 · 상품 디자인 · 시안 (5명) · ERP 사용",
+      links:["personal","corp","erp"],
+      members:[
+        { name:"정예진", role:"대리", title:"디자인", tasks: null },
+        { name:"김사랑", role:"대리", title:"디자인", tasks: null },
+        { name:"신혜리", role:"주임", title:"디자인", tasks: null },
+        { name:"이경민", role:"주임", title:"디자인", tasks: null },
+        { name:"박민진", role:"주임", title:"디자인", tasks: null }
+      ]},
+    { id:"dev", name:"개발팀", color:"#22d3ee", color2:"#3b82f6",
+      desc:"자사몰 · 자체개발몰 개발 (2명)",
+      links:["godo","self-mall"],
+      members:[
+        { name:"강두원", role:"팀장", title:"개발 총괄", tasks: null },
+        { name:"나민지", role:"주임", title:"개발", tasks: null }
+      ]},
+    { id:"fin", name:"경영지원팀", color:"#7c3aed", color2:"#3b82f6",
+      desc:"회계 · 경리 · 인사 · 총무 (2명)",
+      links:["personal","corp"],
+      members:[
+        { name:"송기용", role:"팀장", title:"경영지원 총괄", tasks: null },
+        { name:"이하나", role:"대리", title:"회계·경리·총무", tasks: TASKS.leehn }
+      ]},
+    { id:"sales", name:"외부영업", color:"#ec4899", color2:"#a855f7",
+      desc:"외부 영업 (1명)",
+      links:["corp"],
+      members:[
+        { name:"이영호", role:"과장", title:"외부영업", tasks: null }
+      ]},
+    { id:"factory2", name:"2공장", color:"#3b82f6", color2:"#22d3ee",
+      desc:"제작 · 시공 (2명)",
+      links:["personal","corp"],
+      members:[
+        { name:"최두학", role:"공장장", title:"공장 총괄", tasks: null },
+        { name:"김현우", role:"주임", title:"제작", tasks: null }
+      ]},
+    { id:"product", name:"제작실", color:"#c084fc", color2:"#60a5fa",
+      desc:"제작실 · 출력 (4명) · ERP 사용",
+      links:["personal","corp","erp"],
+      members:[
+        { name:"이지은", role:"대리", title:"제작", tasks: null },
+        { name:"우연형", role:"대리", title:"제작", tasks: null },
+        { name:"김동관", role:"대리", title:"제작", tasks: null },
+        { name:"김민현", role:"주임", title:"제작", tasks: null }
+      ]}
+  ]
+};
+
+const world = document.getElementById('world');
+const wires = document.getElementById('wires');
+const POS = {};
+
+function placeNode(node, x, y, cls) {
+  const div = document.createElement('div');
+  div.className = `node ${cls}`;
+  div.dataset.id = node.id;
+  div.style.left = x + 'px';
+  div.style.top = y + 'px';
+  if (node.color)  div.style.setProperty('--dc', node.color);
+  if (node.color2) div.style.setProperty('--dc2', node.color2);
+
+  const frame = document.createElement('div');
+  frame.className = 'frame';
+  const core = document.createElement('div');
+  core.className = 'core';
+  if (node.brand) {
+    const dot = document.createElement('span');
+    dot.className = 'dot';
+    dot.style.setProperty('--c', node.brand);
+    core.appendChild(dot);
+  }
+  const txt = document.createElement('span');
+  txt.textContent = node.name;
+  core.appendChild(txt);
+  frame.appendChild(core);
+  div.appendChild(frame);
+
+  if (node.sub) {
+    const sub = document.createElement('div');
+    sub.className = 'sub';
+    sub.textContent = node.sub;
+    div.appendChild(sub);
+  }
+
+  // Expanded content
+  const exp = document.createElement('div');
+  exp.className = 'expanded';
+  if (node.desc) {
+    const lbl = document.createElement('div'); lbl.className = 'label'; lbl.textContent = 'INFO';
+    const dsc = document.createElement('div'); dsc.className = 'desc'; dsc.textContent = node.desc;
+    exp.appendChild(lbl); exp.appendChild(dsc);
+  }
+  if (node.members) {
+    const lbl = document.createElement('div'); lbl.className = 'label';
+    lbl.textContent = `MEMBERS · ${node.members.length}`;
+    exp.appendChild(lbl);
+    const grid = document.createElement('div');
+    grid.className = 'member-grid';
+    node.members.forEach(m => {
+      const chip = document.createElement('div');
+      chip.className = 'member-chip';
+      chip.dataset.dept = node.id;
+      chip.dataset.member = m.name;
+      chip.innerHTML = `<span class="mname">${m.name} <span class="role-tag">${m.role}</span></span>
+                       <span class="badge ${m.tasks ? 'has' : 'none'}">${m.tasks ? '업무 ' + m.tasks.length : '수집 대기'}</span>`;
+      chip.addEventListener('click', (e) => {
+        e.stopPropagation();
+        showTasks(node.id, m.name);
+      });
+      grid.appendChild(chip);
+    });
+    exp.appendChild(grid);
+  }
+  div.appendChild(exp);
+
+  world.appendChild(div);
+  POS[node.id] = { x, y, el: div, node };
+  div.addEventListener('click', (e) => {
+    e.stopPropagation();
+    if (typeof recentlyDragged !== 'undefined' && recentlyDragged) return;
+    nodeClick(node.id);
+  });
+}
+
+// === LAYOUT ===
+const POS_X = { ceo: CX, bizP: CX - 470, bizC: CX + 470, chP: CX - 970, chC: CX + 970 };
+const DEPT_TOP_Y = 210; const DEPT_BOT_Y = 1190;
+
+placeNode(DATA.ceo, POS_X.ceo, CY, 'ceo');
+placeNode(DATA.personal, POS_X.bizP, CY, 'biz-personal');
+placeNode(DATA.corp,     POS_X.bizC, CY, 'biz-corp');
+
+function spreadY(items, gap) {
+  const n = items.length, total = (n - 1) * gap;
+  return items.map((it, i) => ({ it, y: CY - total/2 + i*gap }));
+}
+spreadY(DATA.personalChannels, 165).forEach(({it, y}) => placeNode(it, POS_X.chP, y, 'ch-personal'));
+spreadY(DATA.corpChannels, 150).forEach(({it, y}) => placeNode(it, POS_X.chC, y, 'ch-corp'));
+
+const depts = DATA.departments;
+function spreadX(items, gap) {
+  const n = items.length, total = (n - 1) * gap;
+  return items.map((it, i) => ({ it, x: CX - total/2 + i*gap }));
+}
+spreadX(depts.slice(0, 4), 510).forEach(({it, x}) => placeNode(it, x, DEPT_TOP_Y, 'dept'));
+spreadX(depts.slice(4),    510).forEach(({it, x}) => placeNode(it, x, DEPT_BOT_Y, 'dept'));
+
+// ERP - Hanasignmall.kr 산하 (오른쪽 채널 라인 옆)
+const ERP_X = POS_X.chC + 220;
+const ERP_Y = CY;
+placeNode(DATA.erp, ERP_X, ERP_Y, 'erp');
+
+// === WIRES ===
+function nodeSize(id) {
+  const el = POS[id]?.el; if (!el) return { w: 120, h: 50 };
+  // 사용된 사이즈는 frame 기준 (확장된 내용 제외)
+  const frame = el.querySelector('.frame');
+  if (frame) return { w: frame.offsetWidth || 120, h: frame.offsetHeight || 50 };
+  return { w: el.offsetWidth || 120, h: el.offsetHeight || 50 };
+}
+function edge(id, side) {
+  const r = POS[id]; if (!r) return { x: 0, y: 0 };
+  const { w, h } = nodeSize(id);
+  if (side === 'right') return { x: r.x + w/2, y: r.y };
+  if (side === 'left')  return { x: r.x - w/2, y: r.y };
+  if (side === 'top')   return { x: r.x, y: r.y - h/2 + 6 };
+  if (side === 'bot')   return { x: r.x, y: r.y + h/2 - 6 };
+  return { x: r.x, y: r.y };
+}
+function orthoPath(p1, p2, mode) {
+  const r = 10;
+  if (mode === 'H') {
+    const midX = (p1.x + p2.x) / 2;
+    const dirX1 = Math.sign(midX - p1.x);
+    const dirY = Math.sign(p2.y - p1.y);
+    const dirX2 = Math.sign(p2.x - midX);
+    if (Math.abs(p2.y - p1.y) < 2) return `M${p1.x},${p1.y} L${p2.x},${p2.y}`;
+    return `M${p1.x},${p1.y} L${midX - r*dirX1},${p1.y} Q${midX},${p1.y} ${midX},${p1.y + r*dirY} L${midX},${p2.y - r*dirY} Q${midX},${p2.y} ${midX + r*dirX2},${p2.y} L${p2.x},${p2.y}`;
+  } else {
+    const midY = (p1.y + p2.y) / 2;
+    const dirY1 = Math.sign(midY - p1.y);
+    const dirX = Math.sign(p2.x - p1.x);
+    const dirY2 = Math.sign(p2.y - midY);
+    if (Math.abs(p2.x - p1.x) < 2) return `M${p1.x},${p1.y} L${p2.x},${p2.y}`;
+    return `M${p1.x},${p1.y} L${p1.x},${midY - r*dirY1} Q${p1.x},${midY} ${p1.x + r*dirX},${midY} L${p2.x - r*dirX},${midY} Q${p2.x},${midY} ${p2.x},${midY + r*dirY2} L${p2.x},${p2.y}`;
+  }
+}
+function drawWire(fromId, toId, color, opts={}) {
+  const a = POS[fromId], b = POS[toId];
+  if (!a || !b) return;
+  const dx = b.x - a.x, dy = b.y - a.y;
+  const mode = Math.abs(dy) > Math.abs(dx) * 1.2 ? 'V' : 'H';
+  const fSide = mode === 'V' ? (dy > 0 ? 'bot' : 'top') : (dx > 0 ? 'right' : 'left');
+  const tSide = mode === 'V' ? (dy > 0 ? 'top' : 'bot') : (dx > 0 ? 'left' : 'right');
+  const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+  path.setAttribute('d', orthoPath(edge(fromId, fSide), edge(toId, tSide), mode));
+  path.setAttribute('stroke', color);
+  path.style.color = color;
+  if (opts.flow) path.classList.add('flow');
+  path.setAttribute('stroke-width', opts.width || 1.4);
+  if (opts.opacity != null) path.style.opacity = opts.opacity;
+  path.dataset.from = fromId;
+  path.dataset.to = toId;
+  wires.appendChild(path);
+}
+function drawAllWires() {
+  wires.innerHTML = '';
+  drawWire('ceo', 'personal', '#60a5fa', { width: 2.0, flow: true });
+  drawWire('ceo', 'corp',     '#a855f7', { width: 2.0, flow: true });
+  DATA.personalChannels.forEach(c => drawWire('personal', c.id, '#60a5fa', { width: 1.5, flow: true }));
+  DATA.corpChannels.forEach(c => drawWire('corp', c.id, '#a855f7', { width: 1.5, flow: true }));
+  // Hanasignmall.kr → ERP (산하 강한 연결)
+  drawWire('self-mall', 'erp', '#22d3ee', { width: 2.2, flow: true });
+  depts.forEach(d => d.links.forEach(t => drawWire(d.id, t, d.color, { width: 1.0, opacity: 0.30 })));
+}
+
+// === CAMERA ===
+let camX = 0, camY = 0, camS = 1;
+function applyCam() {
+  world.style.transform = `translate(${camX}px, ${camY}px) scale(${camS})`;
+}
+function fitView() {
+  const vw = window.innerWidth, vh = window.innerHeight;
+  const sx = (vw - 100) / STAGE_W;
+  const sy = (vh - 160) / STAGE_H;
+  camS = Math.min(sx, sy);
+  camX = (vw - STAGE_W * camS) / 2;
+  camY = (vh - STAGE_H * camS) / 2;
+  applyCam();
+}
+function cameraTo(id) {
+  const r = POS[id]; if (!r) return;
+  const vw = window.innerWidth, vh = window.innerHeight;
+  let zoom;
+  if (id === 'ceo') zoom = 1.4;
+  else if (id === 'personal' || id === 'corp') zoom = 1.3;
+  else if (depts.find(x => x.id === id)) zoom = 1.3; // 부서는 확장된 컨텐츠 보여줘야 해서 줌 살짝 줄임
+  else zoom = 1.9;
+  // 부서일 때 카드가 아래로 펼쳐지므로 화면 위쪽으로 살짝 이동
+  const isDept = !!depts.find(x => x.id === id);
+  camS = zoom;
+  camX = vw/2 - r.x * camS;
+  camY = (isDept ? vh*0.35 : vh*0.5) - r.y * camS;
+  applyCam();
+}
+
+// === INTERACTION STAGES ===
+let currentId = null;     // 현재 focus된 노드
+let currentStage = 0;     // 0 = none, 1 = lit, 2 = zoomed
+const taskPanel = document.getElementById('taskPanel');
+
+function nodeClick(id) {
+  if (currentId === id && currentStage === 1) {
+    // 2차: 확대
+    setStage(id, 2);
+  } else if (currentId === id && currentStage === 2) {
+    // 3번째 = 초기화
+    closeAll();
+  } else {
+    // 새로운 노드: 1차 = 빛
+    setStage(id, 1);
+  }
+}
+
+function setStage(id, stage) {
+  // 청소
+  document.querySelectorAll('.node.lit, .node.zoomed').forEach(n => {
+    n.classList.remove('lit', 'zoomed');
+  });
+  document.querySelectorAll('svg.wires path.focus-wire').forEach(p => p.classList.remove('focus-wire'));
+  taskPanel.classList.remove('show');
+
+  if (!id) {
+    world.classList.remove('has-focus');
+    currentId = null; currentStage = 0;
+    fitView();
+    return;
+  }
+
+  world.classList.add('has-focus');
+  currentId = id;
+  currentStage = stage;
+
+  const rec = POS[id]; if (!rec) return;
+
+  // 연결된 노드
+  const connected = new Set([id]);
+  wires.querySelectorAll('path').forEach(p => {
+    if (p.dataset.from === id || p.dataset.to === id) {
+      p.classList.add('focus-wire');
+      connected.add(p.dataset.from); connected.add(p.dataset.to);
+    }
+  });
+
+  if (stage === 1) {
+    // 1차: 빛만
+    connected.forEach(cid => POS[cid]?.el.classList.add('lit'));
+  } else if (stage === 2) {
+    // 2차: 확대 + 컨텐츠
+    connected.forEach(cid => POS[cid]?.el.classList.add('lit'));
+    rec.el.classList.remove('lit');
+    rec.el.classList.add('zoomed');
+    cameraTo(id);
+  }
+}
+
+function closeAll() {
+  setStage(null);
+}
+
+// === 멤버 클릭 → task panel ===
+function showTasks(deptId, memberName) {
+  const d = depts.find(x => x.id === deptId);
+  if (!d) return;
+  const m = d.members.find(x => x.name === memberName);
+  if (!m) return;
+
+  document.getElementById('tpName').textContent = `${m.name} ${m.role}`;
+  document.getElementById('tpRole').textContent = `${d.name} · ${m.title || ''}`;
+
+  const stats = { active: 0, routine: 0, hold: 0, planned: 0 };
+  const groups = { '진행중': [], '정기': [], '상시': [], '보류': [], '예정': [] };
+
+  if (m.tasks) {
+    m.tasks.forEach(t => {
+      const k = t.status === '상시' ? '정기' : t.status;
+      if (!groups[k]) groups[k] = [];
+      groups[k].push(t);
+      if (t.status === '진행중') stats.active++;
+      else if (t.status === '보류') stats.hold++;
+      else if (t.status === '예정') stats.planned++;
+      else stats.routine++;
+    });
+  }
+
+  const statsEl = document.getElementById('tpStats');
+  if (m.tasks) {
+    statsEl.innerHTML = `
+      ${stats.active  ? `<span class="st active">진행중 ${stats.active}</span>` : ''}
+      ${stats.routine ? `<span class="st routine">정기 ${stats.routine}</span>` : ''}
+      ${stats.hold    ? `<span class="st hold">보류 ${stats.hold}</span>` : ''}
+      ${stats.planned ? `<span class="st planned">예정 ${stats.planned}</span>` : ''}
+    `;
+  } else {
+    statsEl.innerHTML = '';
+  }
+
+  const body = document.getElementById('tpBody');
+  if (!m.tasks) {
+    body.innerHTML = `
+      <div class="tp-empty">
+        <div class="ic">◇</div>
+        업무 인터뷰 대기 중<br>
+        <span style="font-size:10px; color:var(--text-3); letter-spacing:0.1em;">박상준 차장에게 전달 필요</span>
+      </div>`;
+  } else {
+    let html = '';
+    const order = [
+      { key: '진행중', cls: 's-active', label: '진행중' },
+      { key: '정기',   cls: 's-routine', label: '정기 / 상시' },
+      { key: '보류',   cls: 's-hold',    label: '보류' },
+      { key: '예정',   cls: 's-planned', label: '예정' }
+    ];
+    order.forEach(({key, cls, label}) => {
+      if (groups[key] && groups[key].length) {
+        html += `<div class="task-group ${cls}">
+          <h4>${label} <span class="cnt">${groups[key].length}</span></h4>`;
+        groups[key].forEach(t => {
+          const prio = t.prio || 'l';
+          const prioLabel = prio === 'h' ? '상' : prio === 'm' ? '중' : '하';
+          html += `<div class="task-item">
+            <span class="tdot"></span>
+            <span class="tname">${t.name}${t.detail ? ` <b>${t.detail}</b>` : ''}</span>
+            <span class="prio ${prio}">${prioLabel}</span>
+          </div>`;
+        });
+        html += `</div>`;
+      }
+    });
+    body.innerHTML = html;
+  }
+
+  taskPanel.classList.add('show');
+}
+
+// === EVENT BINDINGS ===
+document.getElementById('taskClose').addEventListener('click', () => taskPanel.classList.remove('show'));
+
+// === DRAG (pan camera) ===
+const stageEl = document.getElementById('stage');
+let isDragging = false, dragStart = null, recentlyDragged = false;
+
+stageEl.addEventListener('mousedown', (e) => {
+  if (e.button !== 0) return;
+  if (e.target.closest('.task-panel') || e.target.closest('.controls') || e.target.closest('.topbar') || e.target.closest('.legend')) return;
+  // 노드 위에서 mousedown이어도 일단 드래그 후보로 저장 (5px 미만이면 클릭으로 처리)
+  dragStart = { camX, camY, x: e.clientX, y: e.clientY, onNode: !!e.target.closest('.node') };
+});
+
+window.addEventListener('mousemove', (e) => {
+  if (!dragStart) return;
+  const dx = e.clientX - dragStart.x;
+  const dy = e.clientY - dragStart.y;
+  if (!isDragging && Math.hypot(dx, dy) > 5) {
+    isDragging = true;
+    stageEl.classList.add('dragging');
+  }
+  if (isDragging) {
+    camX = dragStart.camX + dx;
+    camY = dragStart.camY + dy;
+    applyCam();
+  }
+});
+
+window.addEventListener('mouseup', () => {
+  if (isDragging) {
+    recentlyDragged = true;
+    setTimeout(() => { recentlyDragged = false; }, 60);
+    stageEl.classList.remove('dragging');
+  }
+  isDragging = false;
+  dragStart = null;
+});
+
+stageEl.addEventListener('click', (e) => {
+  if (recentlyDragged) { e.stopPropagation(); return; }
+  if (e.target.closest('.node')) return;
+  if (e.target.closest('.task-panel')) return;
+  closeAll();
+}, true);
+document.getElementById('btnFit').addEventListener('click', closeAll);
+
+document.getElementById('stage').addEventListener('wheel', (e) => {
+  e.preventDefault();
+  const factor = e.deltaY > 0 ? 0.9 : 1.1;
+  const ns = Math.max(0.3, Math.min(3.5, camS * factor));
+  const mx = e.clientX, my = e.clientY;
+  const wx = (mx - camX) / camS;
+  const wy = (my - camY) / camS;
+  camS = ns;
+  camX = mx - wx * camS;
+  camY = my - wy * camS;
+  world.style.transition = 'none';
+  applyCam();
+  requestAnimationFrame(() => { world.style.transition = ''; });
+}, { passive: false });
+
+document.getElementById('today').textContent = new Date().toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' }).toUpperCase();
+
+function init() {
+  fitView();
+  drawAllWires();
+  setTimeout(() => { drawAllWires(); fitView(); }, 200);
+}
+if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
+else init();
+window.addEventListener(
