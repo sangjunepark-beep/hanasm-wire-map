@@ -169,11 +169,18 @@ svg.wires path.flow {
   position: relative;
 }
 
-/* 1차 클릭 = 빛 (바운스 제거, 글로우만) */
+/* 1차 클릭 = 빛 (강하게) */
 .node.lit .frame {
   filter:
-    drop-shadow(0 0 22px var(--c1, var(--blue-2)))
-    drop-shadow(0 0 40px var(--c2, var(--purple-2)));
+    drop-shadow(0 0 28px var(--c1, var(--blue-2)))
+    drop-shadow(0 0 56px var(--c2, var(--purple-2)))
+    drop-shadow(0 0 80px var(--c1, var(--blue-2)));
+}
+.node.lit { transform: translate(-50%,-50%) scale(1.07); transition: transform 0.3s ease; }
+.world.has-focus svg.wires path.focus-wire {
+  opacity: 1 !important;
+  stroke-width: 3 !important;
+  filter: drop-shadow(0 0 14px currentColor) drop-shadow(0 0 28px currentColor) !important;
 }
 
 /* 2차 클릭 = 확대 */
@@ -1151,12 +1158,4 @@ document.getElementById('today').textContent = new Date().toLocaleDateString('en
 
 function init() {
   fitView(); drawAllWires();
-  setTimeout(() => { drawAllWires(); fitView(); }, 200);
-  setTimeout(() => { drawAllWires(); fitView(); }, 600);
-}
-if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
-window.addEventListener('resize', () => { fitView(); drawAllWires(); });
-</script>
-</body>
-</html>
-                          
+  setTimeout(() => { drawAllWi
