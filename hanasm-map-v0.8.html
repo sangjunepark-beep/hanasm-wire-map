@@ -1160,12 +1160,11 @@ stageEl.addEventListener('wheel', (e) => {
   const mx = e.clientX, my = e.clientY;
   const wx = (mx - camX) / camS, wy = (my - camY) / camS;
   camS = ns; camX = mx - wx * camS; camY = my - wy * camS;
+  world.style.transition = "none"; applyCam();
+  requestAnimationFrame(() => world.style.transition = "");
+}, { passive: false });
 
-if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
-window.addEventListener('resize', () => { fitView(); drawAllWires(); });
-</script>
-</body>
-</html>
+document.getElementById("today").textContent = new Date().toLocaleDateString("en-US", { month:"short", day:"numeric", year:"numeric" }).toUpperCase();
 
 function init() {
   fitView();
