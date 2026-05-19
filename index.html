@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>HANASM · 와이어 맵 v0.7</title>
+<title>HANASM · 와이어 맵 v0.8</title>
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
 :root {
@@ -11,7 +11,7 @@
   --blue-1: #93c5fd;   --blue-2: #60a5fa;   --blue-3: #3b82f6;
   --cyan: #22d3ee; --pink: #f472b6; --amber: #fbbf24;
   --green: #34d399; --orange: #fb923c; --red: #f87171;
-  --bg-0: #14163a; --bg-1: #1a1d44; --bg-2: #232652;
+  --bg-0: #050614; --bg-1: #08091c; --bg-2: #0d0f24;
   --line: rgba(167,139,250,0.22);
   --line-2: rgba(96,165,250,0.26);
   --text-1: #f3f4fb; --text-2: #c5c9e0; --text-3: #8a8fad;
@@ -37,14 +37,8 @@ body::before {
   background-image:
     linear-gradient(rgba(167,139,250,0.025) 1px, transparent 1px),
     linear-gradient(90deg, rgba(96,165,250,0.025) 1px, transparent 1px);
-  background-size: 80px 80px;
-  background-position: center;
+  background-size: 80px 80px; background-position: center;
   mask-image: radial-gradient(ellipse at center, black 20%, transparent 75%);
-}
-body::after {
-  content: ""; position: fixed; inset: 0; pointer-events: none; z-index: 1;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence baseFrequency='0.85' /%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.6'/%3E%3C/svg%3E");
-  opacity: 0.025; mix-blend-mode: overlay;
 }
 
 /* TOP BAR */
@@ -71,7 +65,7 @@ body::after {
 .title .date { font-size: 11px; color: var(--text-3); letter-spacing: 0.05em; }
 .hint {
   font-size: 10.5px; color: var(--text-2); font-weight: 500;
-  background: rgba(24,26,66,0.78);
+  background: rgba(8,9,28,0.78);
   padding: 8px 14px;
   border: 1px solid var(--line);
   pointer-events: auto;
@@ -83,7 +77,7 @@ body::after {
 /* LEGEND / CONTROLS */
 .legend, .controls {
   position: fixed; bottom: 18px; z-index: 100;
-  background: rgba(24,26,66,0.78);
+  background: rgba(8,9,28,0.78);
   border: 1px solid var(--line);
   padding: 12px 14px;
   font-size: 11px;
@@ -123,7 +117,7 @@ body::after {
 .stage.dragging .world { transition: none !important; }
 .world {
   position: absolute; left: 0; top: 0;
-  width: 2400px; height: 1400px;
+  width: 2700px; height: 1400px;
   transform-origin: 0 0;
   transition: transform 0.7s cubic-bezier(.4,.0,.15,1);
 }
@@ -131,7 +125,7 @@ body::after {
 /* WIRES */
 svg.wires {
   position: absolute; left: 0; top: 0;
-  width: 2400px; height: 1400px;
+  width: 2700px; height: 1400px;
   pointer-events: none; overflow: visible;
 }
 svg.wires path {
@@ -173,7 +167,6 @@ svg.wires path.flow {
   clip-path: polygon(11px 0%, 100% 0%, 100% calc(100% - 11px), calc(100% - 11px) 100%, 0% 100%, 0% 11px);
   position: relative;
 }
-.node .core::before, .node .core::after { display: none; }
 
 /* 1차 클릭 = 빛 + 바운스 */
 .node.lit .frame {
@@ -195,9 +188,7 @@ svg.wires path.flow {
       drop-shadow(0 0 58px var(--c2, var(--purple-2)))
       drop-shadow(0 0 88px var(--c1, var(--blue-2)));
   }
-  40% {
-    transform: translateY(0) scale(1);
-  }
+  40% { transform: translateY(0) scale(1); }
   55% {
     transform: translateY(-7px) scale(1.04);
     filter:
@@ -205,15 +196,11 @@ svg.wires path.flow {
       drop-shadow(0 0 48px var(--c2, var(--purple-2)))
       drop-shadow(0 0 70px var(--c1, var(--blue-2)));
   }
-  70% {
-    transform: translateY(0) scale(1);
-  }
-  82% {
-    transform: translateY(-3px) scale(1.015);
-  }
+  70% { transform: translateY(0) scale(1); }
+  82% { transform: translateY(-3px) scale(1.015); }
 }
 
-/* 2차 클릭 = 확대 + 컨텐츠 (zoomed) */
+/* 2차 클릭 = 확대 */
 .node.zoomed .frame {
   filter:
     drop-shadow(0 0 24px var(--c1, var(--blue-2)))
@@ -241,13 +228,13 @@ svg.wires path.flow {
   letter-spacing: 0.12em; text-transform: uppercase;
 }
 
-/* === Expanded content === */
+/* === Expanded === */
 .expanded {
   display: none;
   margin-top: 12px;
-  background: rgba(24,26,66,0.85);
+  background: rgba(8,9,28,0.88);
   border: 1px solid var(--line);
-  padding: 14px 14px;
+  padding: 14px;
   max-width: 320px;
   backdrop-filter: blur(20px);
   clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px);
@@ -261,17 +248,14 @@ svg.wires path.flow {
 .expanded .label {
   font-size: 9.5px; color: var(--text-3);
   letter-spacing: 0.18em; text-transform: uppercase;
-  font-weight: 700;
-  margin-bottom: 8px;
+  font-weight: 700; margin-bottom: 8px;
 }
 .expanded .desc {
   font-size: 11.5px; color: var(--text-2);
   line-height: 1.55; letter-spacing: 0.02em;
   margin-bottom: 10px;
 }
-.member-grid {
-  display: flex; flex-direction: column; gap: 5px;
-}
+.member-grid { display: flex; flex-direction: column; gap: 5px; }
 .member-chip {
   display: flex; align-items: center; justify-content: space-between;
   gap: 8px; padding: 6px 10px;
@@ -289,10 +273,7 @@ svg.wires path.flow {
   box-shadow: 0 0 12px rgba(167,139,250,0.3);
 }
 .member-chip .mname { display: flex; align-items: center; gap: 6px; }
-.member-chip .role-tag {
-  font-size: 9px; color: var(--text-3);
-  font-weight: 600; letter-spacing: 0.04em;
-}
+.member-chip .role-tag { font-size: 9px; color: var(--text-3); font-weight: 600; }
 .member-chip .badge {
   font-size: 9px; padding: 2px 7px;
   font-weight: 700; letter-spacing: 0.05em;
@@ -302,7 +283,7 @@ svg.wires path.flow {
 .member-chip .badge.has  { background: rgba(34,211,238,0.18); color: var(--cyan); }
 .member-chip .badge.none { background: rgba(138,143,173,0.16); color: var(--text-3); }
 
-/* === Node variants === */
+/* === Variants === */
 .node.ceo .frame { --c1: var(--cyan); --c2: var(--purple-1); }
 .node.ceo .core  { font-size: 18px; padding: 18px 28px; }
 
@@ -313,33 +294,38 @@ svg.wires path.flow {
 .node.biz-corp .core  { font-size: 16px; padding: 15px 24px; }
 
 .node.ch-personal .frame { --c1: var(--blue-1); --c2: var(--blue-3); }
-.node.ch-corp .frame { --c1: var(--purple-1); --c2: var(--purple-3); }
+.node.ch-corp .frame     { --c1: var(--purple-1); --c2: var(--purple-3); }
 
 .node.dept .frame { --c1: var(--dc, var(--blue-2)); --c2: var(--dc2, var(--purple-2)); }
 .node.dept .core  { font-size: 14px; padding: 13px 20px; }
 
-.node.erp .frame { --c1: var(--cyan); --c2: var(--blue-2); padding: 2px; }
-.node.erp .core  { font-size: 17px; padding: 16px 26px; letter-spacing: 0.06em; }
 .node.erp .frame {
+  --c1: var(--cyan); --c2: var(--blue-2); padding: 2px;
   filter:
     drop-shadow(0 0 18px var(--cyan))
     drop-shadow(0 0 32px var(--blue-2))
     drop-shadow(0 0 48px var(--cyan));
 }
+.node.erp .core { font-size: 17px; padding: 16px 26px; letter-spacing: 0.06em; }
+
+/* System nodes (Playauto, Ecount, Claude, GPT) */
+.node.sys .core { font-size: 13.5px; padding: 12px 18px; }
+.node.sys-playauto .frame { --c1: #fb923c; --c2: #fbbf24; }
+.node.sys-ecount   .frame { --c1: #34d399; --c2: #22d3ee; }
+.node.sys-claude20 .frame { --c1: #d97706; --c2: #f97316; }
+.node.sys-claude5  .frame { --c1: #a855f7; --c2: #d97706; }
+.node.sys-gpt      .frame { --c1: #10b981; --c2: #22d3ee; }
 
 /* === Dim non-focus === */
 .world.has-focus .node:not(.lit):not(.zoomed) { filter: saturate(0.3) brightness(0.5); }
 .world.has-focus svg.wires path:not(.focus-wire) { opacity: 0.04; }
-.world.has-focus svg.wires path.focus-wire {
-  opacity: 0.95;
-  stroke-width: 2.3 !important;
-}
+.world.has-focus svg.wires path.focus-wire { opacity: 0.95; stroke-width: 2.3 !important; }
 
-/* === Task Panel (member click) === */
+/* === Task Panel === */
 .task-panel {
   position: fixed; top: 70px; right: 18px; bottom: 80px;
   width: 380px;
-  background: rgba(24,26,66,0.92);
+  background: rgba(8,9,28,0.94);
   border: 1px solid var(--purple-2);
   padding: 0;
   z-index: 220;
@@ -351,13 +337,8 @@ svg.wires path.flow {
   pointer-events: none;
   clip-path: polygon(16px 0, 100% 0, 100% calc(100% - 16px), calc(100% - 16px) 100%, 0 100%, 0 16px);
 }
-.task-panel.show {
-  transform: translateX(0); opacity: 1; pointer-events: auto;
-}
-.task-panel .tp-head {
-  padding: 18px 20px 14px;
-  border-bottom: 1px solid var(--line);
-}
+.task-panel.show { transform: translateX(0); opacity: 1; pointer-events: auto; }
+.task-panel .tp-head { padding: 18px 20px 14px; border-bottom: 1px solid var(--line); }
 .task-panel .tp-head .tp-name {
   font-size: 15px; font-weight: 800; letter-spacing: 0.04em;
   background: linear-gradient(90deg, var(--blue-1), var(--purple-1));
@@ -366,12 +347,9 @@ svg.wires path.flow {
 }
 .task-panel .tp-head .tp-role {
   font-size: 10px; color: var(--text-3);
-  letter-spacing: 0.15em; text-transform: uppercase;
-  font-weight: 600;
+  letter-spacing: 0.15em; text-transform: uppercase; font-weight: 600;
 }
-.task-panel .tp-stats {
-  display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap;
-}
+.task-panel .tp-stats { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
 .task-panel .tp-stats .st {
   font-size: 9.5px; padding: 3px 8px;
   font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase;
@@ -382,9 +360,7 @@ svg.wires path.flow {
 .task-panel .tp-stats .st.hold    { background: rgba(251,146,60,0.20); color: var(--orange); }
 .task-panel .tp-stats .st.planned { background: rgba(138,143,173,0.20); color: var(--text-3); }
 
-.task-panel .tp-body {
-  flex: 1; overflow-y: auto; padding: 14px 20px 20px;
-}
+.task-panel .tp-body { flex: 1; overflow-y: auto; padding: 14px 20px 20px; }
 .task-panel .tp-body::-webkit-scrollbar { width: 4px; }
 .task-panel .tp-body::-webkit-scrollbar-thumb { background: var(--line-2); }
 .task-panel .tp-empty {
@@ -392,14 +368,8 @@ svg.wires path.flow {
   color: var(--text-3); font-size: 12px;
   line-height: 1.7; letter-spacing: 0.02em;
 }
-.task-panel .tp-empty .ic {
-  font-size: 26px; margin-bottom: 12px;
-  color: var(--purple-1);
-  letter-spacing: 0.2em;
-}
-.task-group {
-  margin-bottom: 14px;
-}
+.task-panel .tp-empty .ic { font-size: 26px; margin-bottom: 12px; color: var(--purple-1); letter-spacing: 0.2em; }
+.task-group { margin-bottom: 14px; }
 .task-group h4 {
   font-size: 10px; color: var(--text-3); font-weight: 700;
   letter-spacing: 0.18em; text-transform: uppercase;
@@ -409,8 +379,7 @@ svg.wires path.flow {
 }
 .task-group h4 .cnt {
   font-size: 10px; padding: 1px 7px;
-  background: rgba(255,255,255,0.05);
-  color: var(--text-2);
+  background: rgba(255,255,255,0.05); color: var(--text-2);
   clip-path: polygon(3px 0, 100% 0, 100% calc(100% - 3px), calc(100% - 3px) 100%, 0 100%, 0 3px);
 }
 .task-item {
@@ -456,15 +425,15 @@ svg.wires path.flow {
 <div class="topbar">
   <div class="title">
     <h1>HANASM · WIRE MAP</h1>
-    <span class="ver">v0.7</span>
+    <span class="ver">v0.8</span>
     <span class="date" id="today"></span>
   </div>
-  <div class="hint">클릭 → 빛 · 더블 = 확대 · 드래그 = 이동 · 휠 = 줌</div>
+  <div class="hint">클릭 = 빛 · 더블 = 확대 · 드래그 = 이동 · 휠 = 줌</div>
 </div>
 
 <div class="stage" id="stage">
   <div class="world" id="world">
-    <svg class="wires" id="wires" viewBox="0 0 2400 1400"></svg>
+    <svg class="wires" id="wires" viewBox="0 0 2700 1400"></svg>
   </div>
 </div>
 
@@ -490,14 +459,11 @@ svg.wires path.flow {
 </aside>
 
 <script>
-const STAGE_W = 2400, STAGE_H = 1400;
+const STAGE_W = 2700, STAGE_H = 1400;
 const CX = STAGE_W / 2, CY = STAGE_H / 2;
 
-// === DATA ===
-// 업무 데이터: 박상준, 홍재이, 임정민 (웹팀), 이하나 (경영지원팀)
-// status: 정기·진행중·예정·보류·상시 / prio: h(상)·m(중)·l(하)
+// ============ TASKS ============
 const TASKS = {
-  // 박상준 차장 - 웹팀 총괄
   parksj: [
     { name:"네이버 광고 운영·입찰 조정", status:"정기", prio:"h" },
     { name:"SEO 개선 / 검색 노출 최적화", status:"진행중", prio:"h" },
@@ -508,7 +474,21 @@ const TASKS = {
     { name:"팀 업무 분장 · 관리", status:"상시", prio:"m" },
     { name:"신규몰(로켓출력공장) 운영", status:"진행중", prio:"h" }
   ],
-  // 홍재이 주임 - 상품등록·운영
+  hwangki: [
+    { name:"상세페이지 디자인 (개인·법인 전 채널)", status:"정기", prio:"h" },
+    { name:"랜딩페이지 디자인", status:"정기", prio:"h" },
+    { name:"배너 디자인 (광고·프로모션)", status:"정기", prio:"h" },
+    { name:"디자인 시안 검수·디렉팅", status:"상시", prio:"h" },
+    { name:"신상품 등록용 디자인", status:"정기", prio:"m" },
+    { name:"상세페이지 개선·리뉴얼", status:"진행중", prio:"m" }
+  ],
+  kimeh: [
+    { name:"상세페이지 디자인", status:"정기", prio:"h" },
+    { name:"랜딩페이지 디자인", status:"정기", prio:"m" },
+    { name:"배너 디자인", status:"정기", prio:"m" },
+    { name:"신상품 디자인 작업", status:"정기", prio:"m" },
+    { name:"오픈마켓 썸네일·이벤트 이미지", status:"정기", prio:"m" }
+  ],
   hongjy: [
     { name:"개인 결제창 정리 (월)", status:"정기", prio:"m" },
     { name:"ESM·11번가 판매기간 연장/중지 (월)", status:"정기", prio:"m" },
@@ -541,7 +521,6 @@ const TASKS = {
     { name:"부착용투명알림판 신상 등록", status:"보류", prio:"m", detail:"가격대기" },
     { name:"현황판 상품페이지·코드 업데이트", status:"보류", prio:"l", detail:"준비중" }
   ],
-  // 임정민 주임 - 콘텐츠/SNS
   limjm: [
     { name:"일일 출고사진 정리·출고사례 (고도몰·신규몰)", status:"정기", prio:"m" },
     { name:"게시판·오뚜기 출고사례 (신규몰)", status:"정기", prio:"m" },
@@ -556,7 +535,13 @@ const TASKS = {
     { name:"시공사례 신규몰 업로드", status:"예정", prio:"m" },
     { name:"전월 출고사진 상품별 정리", status:"예정", prio:"l" }
   ],
-  // 이하나 대리 - 회계·경리·총무
+  chunhj: [
+    { name:"오전 9시 전 채널 주문 수집", status:"정기", prio:"h", detail:"매일" },
+    { name:"오후 1시 전 채널 주문 수집", status:"정기", prio:"h", detail:"매일" },
+    { name:"업체현황시트 정리·업데이트", status:"정기", prio:"h" },
+    { name:"전 채널 고객 문의 대응", status:"정기", prio:"h" },
+    { name:"CS팀 업무 분장 · 총괄", status:"상시", prio:"m" }
+  ],
   leehn: [
     { name:"하나사인몰 경리일보 작성", status:"정기", prio:"h", detail:"통장·매출·세금" },
     { name:"경리일보 결재", status:"정기", prio:"h" },
@@ -577,24 +562,38 @@ const TASKS = {
   ]
 };
 
+// ============ DATA ============
 const DATA = {
-  ceo: { id:"ceo", name:"김한열", sub:"CEO",
-         desc:"하나사인몰 대표 · 전사 의사결정 · 사업 방향 총괄" },
-  personal: { id:"personal", name:"개인사업자", sub:"PERSONAL",
-              desc:"네이버 스마트스토어 채널 3개를 운영하는 개인사업자 단위" },
-  corp: { id:"corp", name:"법인사업자", sub:"CORP · MAIN",
-          desc:"자사몰 + 오픈마켓 다채널 운영. 회사 메인 사업자" },
+  ceo: { id:"ceo", name:"김한열", sub:"CEO", desc:"하나사인몰 대표 · 전사 의사결정 · 사업 방향 총괄" },
+  personal: { id:"personal", name:"개인사업자", sub:"PERSONAL", desc:"네이버 스마트스토어 채널 3개를 운영하는 개인사업자 단위" },
+  corp: { id:"corp", name:"법인사업자", sub:"CORP · MAIN", desc:"자사몰 + 오픈마켓 다채널 운영. 회사 메인 사업자" },
   erp: { id:"erp", name:"ERP", sub:"내부 시스템 · CORE",
          brand:"#22d3ee",
-         desc:"Hanasignmall.kr 산하 사내 ERP 시스템 · CS·디자인·제작실 운영 핵심" },
+         desc:"Hanasignmall.kr 산하 사내 ERP · CS·디자인·제작실 운영 핵심" },
+  playauto: { id:"playauto", name:"플레이오토", sub:"주문수집 SYS",
+              brand:"#fb923c",
+              desc:"CS팀 전 채널 주문 수집 프로그램 (오전 9시 / 오후 1시 운영)" },
+  ecount:   { id:"ecount", name:"이카운트", sub:"견적·세금계산서 SYS",
+              brand:"#34d399",
+              desc:"견적서 발행 (CS) + 세금계산서 발행 (이하나 대리) · CS와 경영지원이 유기적으로 얽힘" },
+  claude20: { id:"claude20", name:"Claude Max 20×", sub:"AI · 팀 공용",
+              brand:"#d97706",
+              desc:"클로드 맥스 20X · 팀별 공용 (개발팀 제외 전사)" },
+  claude5:  { id:"claude5", name:"Claude Max 5×", sub:"AI · 개발 전용",
+              brand:"#a855f7",
+              desc:"클로드 맥스 5X · 개발팀 별도 사용" },
+  gpt:      { id:"gpt", name:"GPT Plus", sub:"AI · 전사 1계정",
+              brand:"#10b981",
+              desc:"GPT Plus 1개 계정 · 전사 공용" },
+
   personalChannels: [
     { id:"ss-hana",   name:"하나몰",       sub:"SMARTSTORE", brand:"#60a5fa", desc:"네이버 스마트스토어 · 하나몰 (메인)" },
     { id:"ss-baron",  name:"더바른사인",   sub:"SMARTSTORE", brand:"#60a5fa", desc:"네이버 스마트스토어 · 더바른사인" },
     { id:"ss-rocket", name:"로켓출력공장", sub:"SMARTSTORE", brand:"#60a5fa", desc:"네이버 스마트스토어 · 신규 · 시트/페트/포맥스/폼보드/DTF" }
   ],
   corpChannels: [
-    { id:"godo",      name:"Hanasignmall.com", sub:"자사몰 · 고도몰",       brand:"#a855f7", desc:"자사몰 1 · 고도몰 (외부 솔루션)" },
-    { id:"self-mall", name:"Hanasignmall.kr",  sub:"자사몰 · 자체개발몰",   brand:"#c084fc", desc:"자사몰 2 · 자체개발몰 · ERP 산하" },
+    { id:"godo",      name:"Hanasignmall.com", sub:"자사몰 · 고도몰",     brand:"#a855f7", desc:"자사몰 1 · 고도몰 (외부 솔루션)" },
+    { id:"self-mall", name:"Hanasignmall.kr",  sub:"자사몰 · 자체개발몰", brand:"#c084fc", desc:"자사몰 2 · 자체개발몰 · ERP 산하" },
     { id:"coupang",   name:"쿠팡",         sub:"오픈마켓", brand:"#f472b6", desc:"쿠팡 · 보류 업무 다수 누적 (7건)" },
     { id:"11st",      name:"11번가",       sub:"오픈마켓", brand:"#ec4899", desc:"11번가 · 판매기간 연장 관리" },
     { id:"auction",   name:"옥션",         sub:"ESM",      brand:"#fbbf24", desc:"옥션 (ESM)" },
@@ -602,20 +601,20 @@ const DATA = {
   ],
   departments: [
     { id:"web", name:"웹팀", color:"#60a5fa", color2:"#a855f7",
-      desc:"웹운영 · 광고 · SEO · 콘텐츠 · 상품등록 (5명)",
+      desc:"개인·법인 전 사업자 운영 (5명) · 상품/디자인/SNS",
       links:["personal","corp"],
       members:[
         { name:"박상준", role:"차장", title:"웹팀 총괄", tasks: TASKS.parksj },
-        { name:"황국인", role:"과장", title:"웹디자인팀장", tasks: null },
-        { name:"김은혜", role:"주임", title:"웹디자이너", tasks: null },
-        { name:"홍재이", role:"주임", title:"상품등록·운영", tasks: TASKS.hongjy },
-        { name:"임정민", role:"주임", title:"콘텐츠·SNS", tasks: TASKS.limjm }
+        { name:"황국인", role:"과장", title:"디자인 (상세·랜딩·배너)", tasks: TASKS.hwangki },
+        { name:"김은혜", role:"주임", title:"디자인 (상세·랜딩·배너)", tasks: TASKS.kimeh },
+        { name:"홍재이", role:"주임", title:"상품관리 (개인·법인)", tasks: TASKS.hongjy },
+        { name:"임정민", role:"주임", title:"SNS (인스타·블로그·유튜브)", tasks: TASKS.limjm }
       ]},
     { id:"cs", name:"CS팀", color:"#a855f7", color2:"#22d3ee",
-      desc:"전 채널 고객 상담 · 문의 응대 (5명) · ERP 사용",
+      desc:"오전 9시·오후 1시 전 채널 주문 수집 → 업체현황시트 정리 (5명) · ERP 사용",
       links:["personal","corp","erp"],
       members:[
-        { name:"천현정", role:"차장", title:"CS팀 총괄", tasks: null },
+        { name:"천현정", role:"차장", title:"CS팀 총괄", tasks: TASKS.chunhj },
         { name:"정현주", role:"과장", title:"CS", tasks: null },
         { name:"김민주", role:"대리", title:"CS", tasks: null },
         { name:"김정란", role:"주임", title:"CS", tasks: null },
@@ -648,9 +647,7 @@ const DATA = {
     { id:"sales", name:"외부영업", color:"#ec4899", color2:"#a855f7",
       desc:"외부 영업 (1명)",
       links:["corp"],
-      members:[
-        { name:"이영호", role:"과장", title:"외부영업", tasks: null }
-      ]},
+      members:[ { name:"이영호", role:"과장", title:"외부영업", tasks: null } ]},
     { id:"factory2", name:"2공장", color:"#3b82f6", color2:"#22d3ee",
       desc:"제작 · 시공 (2명)",
       links:["personal","corp"],
@@ -674,6 +671,10 @@ const world = document.getElementById('world');
 const wires = document.getElementById('wires');
 const POS = {};
 
+// camera state
+let camX = 0, camY = 0, camS = 1;
+let recentlyDragged = false;
+
 function placeNode(node, x, y, cls) {
   const div = document.createElement('div');
   div.className = `node ${cls}`;
@@ -683,32 +684,24 @@ function placeNode(node, x, y, cls) {
   if (node.color)  div.style.setProperty('--dc', node.color);
   if (node.color2) div.style.setProperty('--dc2', node.color2);
 
-  const frame = document.createElement('div');
-  frame.className = 'frame';
-  const core = document.createElement('div');
-  core.className = 'core';
+  const frame = document.createElement('div'); frame.className = 'frame';
+  const core = document.createElement('div'); core.className = 'core';
   if (node.brand) {
-    const dot = document.createElement('span');
-    dot.className = 'dot';
+    const dot = document.createElement('span'); dot.className = 'dot';
     dot.style.setProperty('--c', node.brand);
     core.appendChild(dot);
   }
-  const txt = document.createElement('span');
-  txt.textContent = node.name;
+  const txt = document.createElement('span'); txt.textContent = node.name;
   core.appendChild(txt);
   frame.appendChild(core);
   div.appendChild(frame);
 
   if (node.sub) {
-    const sub = document.createElement('div');
-    sub.className = 'sub';
-    sub.textContent = node.sub;
+    const sub = document.createElement('div'); sub.className = 'sub'; sub.textContent = node.sub;
     div.appendChild(sub);
   }
 
-  // Expanded content
-  const exp = document.createElement('div');
-  exp.className = 'expanded';
+  const exp = document.createElement('div'); exp.className = 'expanded';
   if (node.desc) {
     const lbl = document.createElement('div'); lbl.className = 'label'; lbl.textContent = 'INFO';
     const dsc = document.createElement('div'); dsc.className = 'desc'; dsc.textContent = node.desc;
@@ -718,8 +711,7 @@ function placeNode(node, x, y, cls) {
     const lbl = document.createElement('div'); lbl.className = 'label';
     lbl.textContent = `MEMBERS · ${node.members.length}`;
     exp.appendChild(lbl);
-    const grid = document.createElement('div');
-    grid.className = 'member-grid';
+    const grid = document.createElement('div'); grid.className = 'member-grid';
     node.members.forEach(m => {
       const chip = document.createElement('div');
       chip.className = 'member-chip';
@@ -741,14 +733,14 @@ function placeNode(node, x, y, cls) {
   POS[node.id] = { x, y, el: div, node };
   div.addEventListener('click', (e) => {
     e.stopPropagation();
-    if (typeof recentlyDragged !== 'undefined' && recentlyDragged) return;
+    if (recentlyDragged) return;
     nodeClick(node.id);
   });
 }
 
-// === LAYOUT ===
+// ============ LAYOUT ============
 const POS_X = { ceo: CX, bizP: CX - 470, bizC: CX + 470, chP: CX - 970, chC: CX + 970 };
-const DEPT_TOP_Y = 210; const DEPT_BOT_Y = 1190;
+const DEPT_TOP_Y = 210, DEPT_BOT_Y = 1190;
 
 placeNode(DATA.ceo, POS_X.ceo, CY, 'ceo');
 placeNode(DATA.personal, POS_X.bizP, CY, 'biz-personal');
@@ -769,15 +761,18 @@ function spreadX(items, gap) {
 spreadX(depts.slice(0, 4), 510).forEach(({it, x}) => placeNode(it, x, DEPT_TOP_Y, 'dept'));
 spreadX(depts.slice(4),    510).forEach(({it, x}) => placeNode(it, x, DEPT_BOT_Y, 'dept'));
 
-// ERP - Hanasignmall.kr 산하 (오른쪽 채널 라인 옆)
-const ERP_X = POS_X.chC + 220;
-const ERP_Y = CY;
-placeNode(DATA.erp, ERP_X, ERP_Y, 'erp');
+// 시스템 컬럼 (우측 끝) - Playauto / Ecount / ERP / Claude×2 / GPT
+const SYS_X = POS_X.chC + 280;
+placeNode(DATA.playauto, SYS_X, CY - 410, 'sys sys-playauto');
+placeNode(DATA.ecount,   SYS_X, CY - 240, 'sys sys-ecount');
+placeNode(DATA.erp,      SYS_X, CY - 60,  'erp');
+placeNode(DATA.claude20, SYS_X, CY + 110, 'sys sys-claude20');
+placeNode(DATA.claude5,  SYS_X, CY + 270, 'sys sys-claude5');
+placeNode(DATA.gpt,      SYS_X, CY + 420, 'sys sys-gpt');
 
-// === WIRES ===
+// ============ WIRES ============
 function nodeSize(id) {
   const el = POS[id]?.el; if (!el) return { w: 120, h: 50 };
-  // 사용된 사이즈는 frame 기준 (확장된 내용 제외)
   const frame = el.querySelector('.frame');
   if (frame) return { w: frame.offsetWidth || 120, h: frame.offsetHeight || 50 };
   return { w: el.offsetWidth || 120, h: el.offsetHeight || 50 };
@@ -833,13 +828,16 @@ function drawAllWires() {
   drawWire('ceo', 'corp',     '#a855f7', { width: 2.0, flow: true });
   DATA.personalChannels.forEach(c => drawWire('personal', c.id, '#60a5fa', { width: 1.5, flow: true }));
   DATA.corpChannels.forEach(c => drawWire('corp', c.id, '#a855f7', { width: 1.5, flow: true }));
-  // Hanasignmall.kr → ERP (산하 강한 연결)
   drawWire('self-mall', 'erp', '#22d3ee', { width: 2.2, flow: true });
+  // 시스템 연결
+  drawWire('cs', 'playauto', '#fb923c', { width: 1.4, flow: true });
+  drawWire('cs', 'ecount',   '#34d399', { width: 1.2, flow: true, opacity: 0.7 });
+  drawWire('fin', 'ecount',  '#34d399', { width: 1.4, flow: true });
+  drawWire('dev', 'claude5', '#a855f7', { width: 1.4, flow: true });
   depts.forEach(d => d.links.forEach(t => drawWire(d.id, t, d.color, { width: 1.0, opacity: 0.30 })));
 }
 
-// === CAMERA ===
-let camX = 0, camY = 0, camS = 1;
+// ============ CAMERA ============
 function applyCam() {
   world.style.transform = `translate(${camX}px, ${camY}px) scale(${camS})`;
 }
@@ -858,9 +856,8 @@ function cameraTo(id) {
   let zoom;
   if (id === 'ceo') zoom = 1.4;
   else if (id === 'personal' || id === 'corp') zoom = 1.3;
-  else if (depts.find(x => x.id === id)) zoom = 1.3; // 부서는 확장된 컨텐츠 보여줘야 해서 줌 살짝 줄임
+  else if (depts.find(x => x.id === id)) zoom = 1.3;
   else zoom = 1.9;
-  // 부서일 때 카드가 아래로 펼쳐지므로 화면 위쪽으로 살짝 이동
   const isDept = !!depts.find(x => x.id === id);
   camS = zoom;
   camX = vw/2 - r.x * camS;
@@ -868,29 +865,22 @@ function cameraTo(id) {
   applyCam();
 }
 
-// === INTERACTION STAGES ===
-let currentId = null;     // 현재 focus된 노드
-let currentStage = 0;     // 0 = none, 1 = lit, 2 = zoomed
+// ============ INTERACTION ============
+let currentId = null, currentStage = 0;
 const taskPanel = document.getElementById('taskPanel');
 
 function nodeClick(id) {
   if (currentId === id && currentStage === 1) {
-    // 2차: 확대
     setStage(id, 2);
   } else if (currentId === id && currentStage === 2) {
-    // 3번째 = 초기화
     closeAll();
   } else {
-    // 새로운 노드: 1차 = 빛
     setStage(id, 1);
   }
 }
 
 function setStage(id, stage) {
-  // 청소
-  document.querySelectorAll('.node.lit, .node.zoomed').forEach(n => {
-    n.classList.remove('lit', 'zoomed');
-  });
+  document.querySelectorAll('.node.lit, .node.zoomed').forEach(n => n.classList.remove('lit', 'zoomed'));
   document.querySelectorAll('svg.wires path.focus-wire').forEach(p => p.classList.remove('focus-wire'));
   taskPanel.classList.remove('show');
 
@@ -904,10 +894,8 @@ function setStage(id, stage) {
   world.classList.add('has-focus');
   currentId = id;
   currentStage = stage;
-
   const rec = POS[id]; if (!rec) return;
 
-  // 연결된 노드
   const connected = new Set([id]);
   wires.querySelectorAll('path').forEach(p => {
     if (p.dataset.from === id || p.dataset.to === id) {
@@ -917,10 +905,8 @@ function setStage(id, stage) {
   });
 
   if (stage === 1) {
-    // 1차: 빛만
     connected.forEach(cid => POS[cid]?.el.classList.add('lit'));
   } else if (stage === 2) {
-    // 2차: 확대 + 컨텐츠
     connected.forEach(cid => POS[cid]?.el.classList.add('lit'));
     rec.el.classList.remove('lit');
     rec.el.classList.add('zoomed');
@@ -928,11 +914,9 @@ function setStage(id, stage) {
   }
 }
 
-function closeAll() {
-  setStage(null);
-}
+function closeAll() { setStage(null); }
 
-// === 멤버 클릭 → task panel ===
+// ============ TASKS ============
 function showTasks(deptId, memberName) {
   const d = depts.find(x => x.id === deptId);
   if (!d) return;
@@ -944,7 +928,6 @@ function showTasks(deptId, memberName) {
 
   const stats = { active: 0, routine: 0, hold: 0, planned: 0 };
   const groups = { '진행중': [], '정기': [], '상시': [], '보류': [], '예정': [] };
-
   if (m.tasks) {
     m.tasks.forEach(t => {
       const k = t.status === '상시' ? '정기' : t.status;
@@ -980,15 +963,14 @@ function showTasks(deptId, memberName) {
   } else {
     let html = '';
     const order = [
-      { key: '진행중', cls: 's-active', label: '진행중' },
-      { key: '정기',   cls: 's-routine', label: '정기 / 상시' },
-      { key: '보류',   cls: 's-hold',    label: '보류' },
-      { key: '예정',   cls: 's-planned', label: '예정' }
+      { key:'진행중', cls:'s-active',  label:'진행중' },
+      { key:'정기',   cls:'s-routine', label:'정기 / 상시' },
+      { key:'보류',   cls:'s-hold',    label:'보류' },
+      { key:'예정',   cls:'s-planned', label:'예정' }
     ];
     order.forEach(({key, cls, label}) => {
       if (groups[key] && groups[key].length) {
-        html += `<div class="task-group ${cls}">
-          <h4>${label} <span class="cnt">${groups[key].length}</span></h4>`;
+        html += `<div class="task-group ${cls}"><h4>${label} <span class="cnt">${groups[key].length}</span></h4>`;
         groups[key].forEach(t => {
           const prio = t.prio || 'l';
           const prioLabel = prio === 'h' ? '상' : prio === 'm' ? '중' : '하';
@@ -1003,79 +985,19 @@ function showTasks(deptId, memberName) {
     });
     body.innerHTML = html;
   }
-
   taskPanel.classList.add('show');
 }
 
-// === EVENT BINDINGS ===
+// ============ EVENTS ============
 document.getElementById('taskClose').addEventListener('click', () => taskPanel.classList.remove('show'));
 
-// === DRAG (pan camera) ===
 const stageEl = document.getElementById('stage');
-let isDragging = false, dragStart = null, recentlyDragged = false;
+let isDragging = false, dragStart = null;
 
 stageEl.addEventListener('mousedown', (e) => {
   if (e.button !== 0) return;
   if (e.target.closest('.task-panel') || e.target.closest('.controls') || e.target.closest('.topbar') || e.target.closest('.legend')) return;
-  // 노드 위에서 mousedown이어도 일단 드래그 후보로 저장 (5px 미만이면 클릭으로 처리)
-  dragStart = { camX, camY, x: e.clientX, y: e.clientY, onNode: !!e.target.closest('.node') };
+  dragStart = { camX, camY, x: e.clientX, y: e.clientY };
 });
 
-window.addEventListener('mousemove', (e) => {
-  if (!dragStart) return;
-  const dx = e.clientX - dragStart.x;
-  const dy = e.clientY - dragStart.y;
-  if (!isDragging && Math.hypot(dx, dy) > 5) {
-    isDragging = true;
-    stageEl.classList.add('dragging');
-  }
-  if (isDragging) {
-    camX = dragStart.camX + dx;
-    camY = dragStart.camY + dy;
-    applyCam();
-  }
-});
-
-window.addEventListener('mouseup', () => {
-  if (isDragging) {
-    recentlyDragged = true;
-    setTimeout(() => { recentlyDragged = false; }, 60);
-    stageEl.classList.remove('dragging');
-  }
-  isDragging = false;
-  dragStart = null;
-});
-
-stageEl.addEventListener('click', (e) => {
-  if (recentlyDragged) { e.stopPropagation(); return; }
-  if (e.target.closest('.node')) return;
-  if (e.target.closest('.task-panel')) return;
-  closeAll();
-}, true);
-document.getElementById('btnFit').addEventListener('click', closeAll);
-
-document.getElementById('stage').addEventListener('wheel', (e) => {
-  e.preventDefault();
-  const factor = e.deltaY > 0 ? 0.9 : 1.1;
-  const ns = Math.max(0.3, Math.min(3.5, camS * factor));
-  const mx = e.clientX, my = e.clientY;
-  const wx = (mx - camX) / camS;
-  const wy = (my - camY) / camS;
-  camS = ns;
-  camX = mx - wx * camS;
-  camY = my - wy * camS;
-  world.style.transition = 'none';
-  applyCam();
-  requestAnimationFrame(() => { world.style.transition = ''; });
-}, { passive: false });
-
-document.getElementById('today').textContent = new Date().toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' }).toUpperCase();
-
-function init() {
-  fitView();
-  drawAllWires();
-  setTimeout(() => { drawAllWires(); fitView(); }, 200);
-}
-if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
-else init();
-window.addEventListener(
+window.addEventListen
