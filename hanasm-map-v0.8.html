@@ -795,16 +795,53 @@ function drawWire(fromId, toId, color, opts={}) {
   path.dataset.to = toId;
   wires.appendChild(path);
 }
+function drawRegion(x, y, w, h, color, label) {
+  const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+  rect.setAttribute('x', x); rect.setAttribute('y', y);
+  rect.setAttribute('width', w); rect.setAttribute('height', h);
+  rect.setAttribute('fill', color + '14');
+  rect.setAttribute('stroke', color);
+  rect.setAttribute('stroke-width', '2.5');
+  rect.setAttribute('stroke-dasharray', '14 10');
+  rect.setAttribute('rx', '20');
+  rect.style.opacity = '0.55';
+  rect.style.filter = `drop-shadow(0 0 18px ${color})`;
+  wires.appendChild(rect);
+
+  const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+  text.setAttribute('x', x + w/2); text.setAttribute('y', y - 16);
+  text.setAttribute('fill', color);
+  text.setAttribute('text-anchor', 'middle');
+  text.setAttribute('font-size', '28');
+  text.setAttribute('font-weight', '800');
+  text.setAttribute('letter-spacing', '6');
+  text.style.filter = `drop-shadow(0 0 12px ${color})`;
+  text.textContent = label;
+  wires.appendChild(text);
+}
+
 function drawAllWires() {
   wires.innerHTML = '';
+
+  // 판매처 영역 박스 - 좌(개인) / 우(법인)
+  drawRegion(70, 350, 360, 700, '#60a5fa', 'PERSONAL');
+  drawRegion(2030, 280, 360, 900, '#a855f7', 'CORP');
   drawWire('ceo', 'personal', '#60a5fa', { width: 2.0, flow: true });
   drawWire('ceo', 'corp',     '#a855f7', { width: 2.0, flow: true });
   DATA.personalChannels.forEach(c => drawWire('personal', c.id, '#60a5fa', { width: 1.5, flow: true }));
   DATA.corpChannels.forEach(c => drawWire('corp', c.id, '#a855f7', { width: 1.5, flow: true }));
   drawWire('self-mall', 'erp', '#22d3ee', { width: 2.2, flow: true });
+  // 시스템
   drawWire('cs', 'playauto', '#fb923c', { width: 1.6, flow: true });
   drawWire('cs', 'ecount',   '#34d399', { width: 1.4, flow: true });
   drawWire('fin', 'ecount',  '#34d399', { width: 1.6, flow: true });
+  // 부서 간 업무 흐름
+  drawWire('design', 'web',  '#f472b6', { width: 1.4, flow: true });   // 디자인 → 웹팀 (상세·랜딩·배너)
+  drawWire('web', 'cs',      '#60a5fa', { width: 1.6, flow: true });   // 웹팀 ↔ CS (노출→피드백 유기적 연결)
+  drawWire('cs', 'design',   '#a855f7', { width: 1.4, flow: true });   // CS → 디자인 (콜견적 주문)
+  drawWire('design', 'product', '#f472b6', { width: 1.4, flow: true }); // 디자인 → 제작실
+  drawWire('product', 'factory2', '#2dd4bf', { width: 1.4, flow: true }); // 제작실 → 2공장 (게시판·오뚜기)
+  drawWire('cs', 'erp',      '#22d3ee', { width: 1.4, flow: true });   // CS 콜견적 매출 → ERP
   depts.forEach(d => d.links.forEach(t => drawWire(d.id, t, d.color, { width: 1.0, opacity: 0.30 })));
 }
 
@@ -814,10 +851,15 @@ function applyCam() {
 }
 function fitView() {
   const vw = window.innerWidth, vh = window.innerHeight;
-  // 가로 여백 240(좌우 legend/controls 영역 + 패딩), 세로 여백 200(상단 topbar + 하단 패딩)
-  const sx = (vw - 280) / STAGE_W;
-  const sy = (vh - 220) / STAGE_H;
-  camS = Math.min(sx, sy) * 0.92; // 추가 8% 여유
+  const isMobile = vw < 768;
+  const padX = isMobile ? 30 : 280;
+  const padY = isMobile ? 100 : 220;
+  const sx = (vw - padX) / STAGE_W;
+  const sy = (vh - padY) / STAGE_H;
+  let s = Math.min(sx, sy) * (isMobile ? 1.0 : 0.92);
+  // 모바일에서 최소 가독 줌 보장 (가로 스크롤은 드래그로 가능)
+  if (isMobile) s = Math.max(s, 0.42);
+  camS = s;
   camX = (vw - STAGE_W * camS) / 2;
   camY = (vh - STAGE_H * camS) / 2;
   applyCam();
@@ -873,19 +915,23 @@ function setStage(id, stage) {
   const isDeptNode = (nid) => !!depts.find(x => x.id === nid);
 
   if (isDept) {
-    // 부서 클릭 → BFS로 와이어 따라 모든 연결 노드 (다른 부서 제외, CEO 포함)
+    // 부서 클릭 → BFS로 와이어 따라 인과 체인 끝까지 (다른 부서도 허용)
     let frontier = new Set([id]);
     for (let step = 0; step < 4; step++) {
       const next = new Set();
       wires.querySelectorAll('path').forEach(p => {
         const f = p.dataset.from, t = p.dataset.to;
-        if (frontier.has(f) && !connected.has(t) && (!isDeptNode(t) || t === id)) next.add(t);
-        if (frontier.has(t) && !connected.has(f) && (!isDeptNode(f) || f === id)) next.add(f);
+        if (frontier.has(f) && !connected.has(t)) next.add(t);
+        if (frontier.has(t) && !connected.has(f)) next.add(f);
       });
       next.forEach(n => connected.add(n));
       if (next.size === 0) break;
       frontier = next;
     }
+    // 사업자가 포함되면 산하 채널 보장 + ERP 산하
+    if (connected.has('personal')) DATA.personalChannels.forEach(c => connected.add(c.id));
+    if (connected.has('corp'))     DATA.corpChannels.forEach(c => connected.add(c.id));
+    if (connected.has('self-mall')) connected.add('erp');
     connected.add('ceo');
   } else {
     // 비부서 노드 클릭 → 직접 연결만
@@ -988,58 +1034,4 @@ function showTasks(deptId, memberName) {
 }
 
 // ============ EVENTS ============
-document.getElementById('taskClose').addEventListener('click', () => taskPanel.classList.remove('show'));
-
-const stageEl = document.getElementById('stage');
-let isDragging = false, dragStart = null;
-
-stageEl.addEventListener('mousedown', (e) => {
-  if (e.button !== 0) return;
-  if (e.target.closest('.task-panel') || e.target.closest('.controls') || e.target.closest('.topbar') || e.target.closest('.legend')) return;
-  dragStart = { camX, camY, x: e.clientX, y: e.clientY };
-});
-
-window.addEventListener('mousemove', (e) => {
-  if (!dragStart) return;
-  const dx = e.clientX - dragStart.x, dy = e.clientY - dragStart.y;
-  if (!isDragging && Math.hypot(dx, dy) > 5) { isDragging = true; stageEl.classList.add('dragging'); }
-  if (isDragging) { camX = dragStart.camX + dx; camY = dragStart.camY + dy; applyCam(); }
-});
-
-window.addEventListener('mouseup', () => {
-  if (isDragging) { recentlyDragged = true; setTimeout(() => recentlyDragged = false, 60); stageEl.classList.remove('dragging'); }
-  isDragging = false; dragStart = null;
-});
-
-stageEl.addEventListener('click', (e) => {
-  if (recentlyDragged) { e.stopPropagation(); return; }
-  if (e.target.closest('.node') || e.target.closest('.task-panel')) return;
-  closeAll();
-}, true);
-
-document.getElementById('btnFit').addEventListener('click', closeAll);
-
-stageEl.addEventListener('wheel', (e) => {
-  e.preventDefault();
-  const factor = e.deltaY > 0 ? 0.9 : 1.1;
-  const ns = Math.max(0.3, Math.min(3.5, camS * factor));
-  const mx = e.clientX, my = e.clientY;
-  const wx = (mx - camX) / camS, wy = (my - camY) / camS;
-  camS = ns; camX = mx - wx * camS; camY = my - wy * camS;
-  world.style.transition = 'none'; applyCam();
-  requestAnimationFrame(() => world.style.transition = '');
-}, { passive: false });
-
-document.getElementById('today').textContent = new Date().toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' }).toUpperCase();
-
-function init() {
-  fitView(); drawAllWires();
-  setTimeout(() => { drawAllWires(); fitView(); }, 200);
-  setTimeout(() => { drawAllWires(); fitView(); }, 600);
-}
-if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
-window.addEventListener('resize', () => { fitView(); drawAllWires(); });
-</script>
-</body>
-</html>
-                                          
+document.getElementById('taskC
