@@ -970,9 +970,9 @@ const DATA = {
               desc:"GPT Plus 1개 계정 · 전사 공용" },
 
   personalChannels: [
-    { id:"ss-hana",   name:"하나몰",       sub:"SMARTSTORE", brand:"#60a5fa", desc:"네이버 스마트스토어 · 하나몰 (메인)", ad:["네이버 검색광고","ADBOOST 일부"] },
-    { id:"ss-baron",  name:"더바른사인",   sub:"SMARTSTORE", brand:"#60a5fa", desc:"네이버 스마트스토어 · 더바른사인", ad:["네이버 검색광고","ADBOOST 일부"] },
-    { id:"ss-rocket", name:"로켓출력공장", sub:"SMARTSTORE", brand:"#60a5fa", desc:"네이버 스마트스토어 · 신규 · 시트/페트/포맥스/폼보드/DTF", ad:["네이버 검색광고","ADBOOST 일부"] }
+    { id:"ss-hana",   name:"하나몰",       sub:"SMARTSTORE", brand:"#60a5fa", desc:"네이버 스마트스토어 · 하나몰 (메인) · ADBOOST 단독 진행", ad:["네이버 검색광고","ADBOOST"] },
+    { id:"ss-baron",  name:"더바른사인",   sub:"SMARTSTORE", brand:"#60a5fa", desc:"네이버 스마트스토어 · 더바른사인", ad:["네이버 검색광고"] },
+    { id:"ss-rocket", name:"로켓출력공장", sub:"SMARTSTORE", brand:"#60a5fa", desc:"네이버 스마트스토어 · 신규 · 시트/페트/포맥스/폼보드/DTF", ad:["네이버 검색광고"] }
   ],
   corpChannels: [
     { id:"godo",      name:"Hanasignmall.com", sub:"자사몰 · 고도몰",     brand:"#a855f7", desc:"자사몰 1 · 고도몰 (외부 솔루션) · 파워링크 점진 이전 예정", ad:["네이버 파워링크"] },
@@ -1680,38 +1680,22 @@ window.addEventListener('resize', () => { fitView(); drawAllWires(); });
 <script>
 const PROJECTS = {
   ad:      { name:'광고', items:[
-    { name:'네이버 검색광고 신상품 추가', prio:'h' },
-    { name:'구글애즈 신규몰 확대', prio:'h' },
-    { name:'ADBOOST 효율 검증·확장', prio:'m' },
-    { name:'쿠팡 AI 광고 최적화', prio:'m' },
-    { name:'고도몰 → 신규몰 파워링크 이전', prio:'h' }
+    { name:'네이버 검색광고 에이전트 빌드 (일일보고 가동 · AI 입찰 미완)', prio:'h' }
   ]},
   ai:      { name:'AI·자동화', items:[
-    { name:'해피톡 대체 멀티채팅플랫폼 (김준범 대표)', prio:'h' },
-    { name:'챗봇 / RAG 도입', prio:'m' },
-    { name:'상품 등록 자동화', prio:'m' },
-    { name:'CS 자동응답 / 견적 자동화', prio:'m' }
+    { name:'AI 챗봇 / RAG 앵커DB (전상품 DB화 · 주차스티커 진행)', prio:'h' }
   ]},
-  seo:     { name:'SEO·노출', items:[
-    { name:'AI 검색 노출 대응 (GEO)', prio:'h' },
-    { name:'구조화 데이터 / 스키마', prio:'m' },
-    { name:'블로그·유튜브 콘텐츠 SEO', prio:'m' }
-  ]},
+  seo:     { name:'SEO·노출', items:[] },
   product: { name:'신상품·등록', items:[
-    { name:'부착용 투명알림판 (가격 대기)', prio:'m' },
-    { name:'금손간판 신상품 등록 (12건)', prio:'h' },
-    { name:'DTF 상품 출시', prio:'m' }
+    { name:'주력제품 가격인상 (홍재이 · 주차→A형 · 6월 중순까지)', prio:'h' },
+    { name:'어드민 카테고리·토글 정리 (LLM 70% · 스톱)', prio:'m' }
   ]},
   system:  { name:'시스템·자사몰', items:[
-    { name:'Hanasignmall.kr 고도화', prio:'h' },
-    { name:'ERP 운영 기능 확장', prio:'h' },
-    { name:'쿠팡 상세 일괄 작업 자동화', prio:'m' }
+    { name:'웹팀 KPI 업무표 시스템 (1차 완료 · 5월말 시작)', prio:'h' },
+    { name:'ERP/플레이오토 마스터 상품 (채널 옵션 별도 · 확대 검토)', prio:'h' },
+    { name:'가상계좌 콘솔 (토스 API · 80% 스톱 · 보존)', prio:'l' }
   ]},
-  offline: { name:'오프라인·영업', items:[
-    { name:'카탈로그 제작·배포', prio:'m' },
-    { name:'전단지·DM 캠페인', prio:'l' },
-    { name:'외부영업 콜·방문 확대', prio:'m' }
-  ]}
+  offline: { name:'오프라인·영업', items:[] }
 };
 const PCATS = ['ad','ai','seo','product','system','offline'];
 function renderProjects() {
