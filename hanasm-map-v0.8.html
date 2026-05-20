@@ -563,13 +563,13 @@ const CX = STAGE_W / 2, CY = STAGE_H / 2;
 const TASKS = {
   parksj: [
     { name:"네이버 광고 운영·입찰 조정", status:"정기", prio:"h" },
-    { name:"SEO 개선 / 검색 노출 최적화", status:"진행중", prio:"h" },
+    { name:"SEO 개선 / 검색 노출 최적화", status:"정기", prio:"h" },
     { name:"데이터 분석 · 매출 전략", status:"정기", prio:"h" },
-    { name:"AI · 자동화 도입 검토", status:"진행중", prio:"m" },
+    { name:"AI · 자동화 도입 검토", status:"정기", prio:"m" },
     { name:"상품 · 상세페이지 기획", status:"정기", prio:"h" },
     { name:"개발팀 커뮤니케이션", status:"상시", prio:"m" },
     { name:"팀 업무 분장 · 관리", status:"상시", prio:"m" },
-    { name:"신규몰(로켓출력공장) 운영", status:"진행중", prio:"h" }
+    { name:"신규몰(로켓출력공장) 운영", status:"정기", prio:"h" }
   ],
   hwangki: [
     { name:"상세페이지 디자인 (개인·법인 전 채널)", status:"정기", prio:"h" },
@@ -577,7 +577,7 @@ const TASKS = {
     { name:"배너 디자인 (광고·프로모션)", status:"정기", prio:"h" },
     { name:"디자인 시안 검수·디렉팅", status:"상시", prio:"h" },
     { name:"신상품 등록용 디자인", status:"정기", prio:"m" },
-    { name:"상세페이지 개선·리뉴얼", status:"진행중", prio:"m" }
+    { name:"상세페이지 개선·리뉴얼", status:"정기", prio:"m" }
   ],
   kimeh: [
     { name:"상세페이지 디자인", status:"정기", prio:"h" },
@@ -597,26 +597,26 @@ const TASKS = {
     { name:"네이버페이 취소건 확인", status:"정기", prio:"m" },
     { name:"주별 주문현황 (금)", status:"정기", prio:"m" },
     { name:"각 사이트 문의/배송·출고지연 확인", status:"정기", prio:"h" },
-    { name:"전 사이트 가격 수정", status:"진행중", prio:"h", detail:"주차스티커·A형·게시판" },
-    { name:"오픈마켓·고도몰 자사몰 매칭", status:"진행중", prio:"h", detail:"627/737 (85%)" },
-    { name:"신규몰 현장맞춤소재 업로드", status:"진행중", prio:"m" },
-    { name:"신규몰·고도몰 A형 가격 정리", status:"예정", prio:"h" },
-    { name:"채널 매칭 기준 (1:N/1:1) 확인", status:"예정", prio:"h" },
-    { name:"경쟁사 벤치마킹 리포트", status:"예정", prio:"m", detail:"20/100 (20%)" },
-    { name:"상세페이지 부착·설치영상 업데이트", status:"예정", prio:"m", detail:"67/862 (7.8%)" },
-    { name:"해피톡·포스팅 데이터 검수", status:"예정", prio:"l" },
-    { name:"쿠팡 A형 재등록", status:"보류", prio:"h", detail:"754/929 (81%)" },
-    { name:"쿠팡 A형 상단이미지 수정", status:"보류", prio:"h", detail:"754/929 (81%)" },
-    { name:"쿠팡 상단 공통이미지 변경", status:"보류", prio:"m", detail:"798/1635 (49%)" },
-    { name:"쿠팡 하단 공통이미지 변경", status:"보류", prio:"m", detail:"798/1635 (49%)" },
-    { name:"쿠팡 유튜브 영상 위치 수정", status:"보류", prio:"l", detail:"798/1635 (49%)" },
-    { name:"쿠팡 옵션 배송메시지 삭제", status:"보류", prio:"l", detail:"798/1635 (49%)" },
-    { name:"쿠팡 광고노출 A형 썸네일 수정", status:"보류", prio:"h", detail:"426/794 (54%)" },
-    { name:"신규몰 안내판 2차 카테고리", status:"보류", prio:"m", detail:"10/565 (2%)" },
-    { name:"금손간판 신상품 등록", status:"보류", prio:"h", detail:"12건 · 가격대기" },
-    { name:"시공사례 신규몰 카테고리 정리", status:"보류", prio:"l" },
-    { name:"부착용투명알림판 신상 등록", status:"보류", prio:"m", detail:"가격대기" },
-    { name:"현황판 상품페이지·코드 업데이트", status:"보류", prio:"l", detail:"준비중" }
+    { name:"전 사이트 가격 수정", status:"정기", prio:"h", detail:"주차스티커·A형·게시판" },
+    { name:"오픈마켓·고도몰 자사몰 매칭", status:"정기", prio:"h", detail:"627/737 (85%)" },
+    { name:"신규몰 현장맞춤소재 업로드", status:"정기", prio:"m" },
+    { name:"신규몰·고도몰 A형 가격 정리", status:"정기", prio:"h" },
+    { name:"채널 매칭 기준 (1:N/1:1) 확인", status:"정기", prio:"h" },
+    { name:"경쟁사 벤치마킹 리포트", status:"정기", prio:"m", detail:"20/100 (20%)" },
+    { name:"상세페이지 부착·설치영상 업데이트", status:"정기", prio:"m", detail:"67/862 (7.8%)" },
+    { name:"해피톡·포스팅 데이터 검수", status:"정기", prio:"l" },
+    { name:"쿠팡 A형 재등록", status:"정기", prio:"h", detail:"754/929 (81%)" },
+    { name:"쿠팡 A형 상단이미지 수정", status:"정기", prio:"h", detail:"754/929 (81%)" },
+    { name:"쿠팡 상단 공통이미지 변경", status:"정기", prio:"m", detail:"798/1635 (49%)" },
+    { name:"쿠팡 하단 공통이미지 변경", status:"정기", prio:"m", detail:"798/1635 (49%)" },
+    { name:"쿠팡 유튜브 영상 위치 수정", status:"정기", prio:"l", detail:"798/1635 (49%)" },
+    { name:"쿠팡 옵션 배송메시지 삭제", status:"정기", prio:"l", detail:"798/1635 (49%)" },
+    { name:"쿠팡 광고노출 A형 썸네일 수정", status:"정기", prio:"h", detail:"426/794 (54%)" },
+    { name:"신규몰 안내판 2차 카테고리", status:"정기", prio:"m", detail:"10/565 (2%)" },
+    { name:"금손간판 신상품 등록", status:"정기", prio:"h", detail:"12건 · 가격대기" },
+    { name:"시공사례 신규몰 카테고리 정리", status:"정기", prio:"l" },
+    { name:"부착용투명알림판 신상 등록", status:"정기", prio:"m", detail:"가격대기" },
+    { name:"현황판 상품페이지·코드 업데이트", status:"정기", prio:"l", detail:"준비중" }
   ],
   limjm: [
     { name:"일일 출고사진 정리·출고사례 (고도몰·신규몰)", status:"정기", prio:"m" },
@@ -628,9 +628,9 @@ const TASKS = {
     { name:"AI 이미지·영상 제작", status:"정기", prio:"h" },
     { name:"인스타그램 릴스 제작·업로드", status:"정기", prio:"h" },
     { name:"유튜브 쇼츠 업로드 (릴스 동일)", status:"정기", prio:"m" },
-    { name:"시공사례 블로그/인스타 포스팅", status:"예정", prio:"m" },
-    { name:"시공사례 신규몰 업로드", status:"예정", prio:"m" },
-    { name:"전월 출고사진 상품별 정리", status:"예정", prio:"l" }
+    { name:"시공사례 블로그/인스타 포스팅", status:"정기", prio:"m" },
+    { name:"시공사례 신규몰 업로드", status:"정기", prio:"m" },
+    { name:"전월 출고사진 상품별 정리", status:"정기", prio:"l" }
   ],
   chunhj: [
     { name:"오전 9시 전 채널 주문 수집", status:"정기", prio:"h", detail:"매일" },
@@ -838,29 +838,17 @@ function placeNode(node, x, y, cls) {
       grid.appendChild(chip);
     });
     exp.appendChild(grid);
-    // 진행중·예정 업무 자동 모음
-    const active = [], planned = [];
+    // 우선순위 상(高) 업무 자동 모음 (가벼운 미리보기)
+    const high = [];
     node.members.forEach(m => {
       if (!m.tasks) return;
-      m.tasks.forEach(t => {
-        if (t.status === '진행중') active.push({ ...t, who: m.name });
-        else if (t.status === '예정') planned.push({ ...t, who: m.name });
-      });
+      m.tasks.forEach(t => { if (t.prio === 'h') high.push({ ...t, who: m.name }); });
     });
-    if (active.length || planned.length) {
-      let html = '';
-      if (active.length) {
-        html += `<div class="label" style="margin-top:10px">진행중 · ${active.length}</div>`;
-        active.slice(0, 5).forEach(t => {
-          html += `<div class="pl-item active"><span class="pl-dot"></span><span class="pl-name">${t.name}</span><span class="pl-by">${t.who}</span></div>`;
-        });
-      }
-      if (planned.length) {
-        html += `<div class="label" style="margin-top:8px">예정 · ${planned.length}</div>`;
-        planned.slice(0, 3).forEach(t => {
-          html += `<div class="pl-item planned"><span class="pl-dot"></span><span class="pl-name">${t.name}</span><span class="pl-by">${t.who}</span></div>`;
-        });
-      }
+    if (high.length) {
+      let html = `<div class="label" style="margin-top:10px">핵심 업무 · ${high.length}</div>`;
+      high.slice(0, 6).forEach(t => {
+        html += `<div class="pl-item active"><span class="pl-dot"></span><span class="pl-name">${t.name}</span><span class="pl-by">${t.who}</span></div>`;
+      });
       const wrap = document.createElement('div');
       wrap.innerHTML = html;
       while (wrap.firstChild) exp.appendChild(wrap.firstChild);
@@ -1149,8 +1137,8 @@ function showTasks(deptId, memberName) {
   document.getElementById('tpName').textContent = `${m.name} ${m.role}`;
   document.getElementById('tpRole').textContent = `${d.name} · ${m.title || ''}`;
 
-  const stats = { active: 0, routine: 0, hold: 0, planned: 0 };
-  const groups = { '진행중': [], '정기': [], '상시': [], '보류': [], '예정': [] };
+  const stats = { routine: 0, aux: 0 };
+  const groups = { '정기': [], '상시': [] };
   if (m.tasks) {
     m.tasks.forEach(t => {
       const k = t.status === '상시' ? '정기' : t.status;
@@ -1166,10 +1154,8 @@ function showTasks(deptId, memberName) {
   const statsEl = document.getElementById('tpStats');
   if (m.tasks) {
     statsEl.innerHTML = `
-      ${stats.active  ? `<span class="st active">진행중 ${stats.active}</span>` : ''}
       ${stats.routine ? `<span class="st routine">정기 ${stats.routine}</span>` : ''}
-      ${stats.hold    ? `<span class="st hold">보류 ${stats.hold}</span>` : ''}
-      ${stats.planned ? `<span class="st planned">예정 ${stats.planned}</span>` : ''}
+      ${stats.aux     ? `<span class="st active">상시 ${stats.aux}</span>` : ''}
     `;
   } else {
     statsEl.innerHTML = '';
@@ -1186,10 +1172,8 @@ function showTasks(deptId, memberName) {
   } else {
     let html = '';
     const order = [
-      { key:'진행중', cls:'s-active',  label:'진행중' },
-      { key:'정기',   cls:'s-routine', label:'정기 / 상시' },
-      { key:'보류',   cls:'s-hold',    label:'보류' },
-      { key:'예정',   cls:'s-planned', label:'예정' }
+      { key:'정기', cls:'s-routine', label:'정기' },
+      { key:'상시', cls:'s-active',  label:'상시' }
     ];
     order.forEach(({key, cls, label}) => {
       if (groups[key] && groups[key].length) {
