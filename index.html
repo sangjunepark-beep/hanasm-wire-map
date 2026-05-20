@@ -1143,20 +1143,22 @@ function drawDevRegion() {
     maxX = Math.max(maxX, r.x + w/2);
     maxY = Math.max(maxY, r.y + h/2);
   });
-  const pad = 40;
+  const padX = 40;
+  const padTop = 80;
+  const padBottom = 40;
   const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
-  rect.setAttribute('x', minX - pad);
-  rect.setAttribute('y', minY - pad);
-  rect.setAttribute('width',  (maxX - minX) + pad*2);
-  rect.setAttribute('height', (maxY - minY) + pad*2);
+  rect.setAttribute('x', minX - padX);
+  rect.setAttribute('y', minY - padTop);
+  rect.setAttribute('width',  (maxX - minX) + padX*2);
+  rect.setAttribute('height', (maxY - minY) + padTop + padBottom);
   rect.setAttribute('rx', 28);
   rect.setAttribute('class', 'dev-region');
   // wires SVG의 첫 자식으로 삽입 (배경 깊이)
   wires.insertBefore(rect, wires.firstChild);
 
   const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-  text.setAttribute('x', minX - pad + 18);
-  text.setAttribute('y', minY - pad + 28);
+  text.setAttribute('x', minX - padX + 22);
+  text.setAttribute('y', minY - padTop + 38);
   text.setAttribute('fill', 'rgba(34,211,238,0.55)');
   text.setAttribute('font-size', '14');
   text.setAttribute('font-weight', '800');
@@ -1761,4 +1763,3 @@ document.getElementById('ppClose').addEventListener('click', () => {
 
 </body>
 </html>
-                      
