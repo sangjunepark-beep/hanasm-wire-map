@@ -1705,8 +1705,12 @@ function renderProjects() {
   let html = '';
   PCATS.forEach(key => {
     const cat = PROJECTS[key];
-    const order = saved[key] || cat.items.map(i => i.name);
-    const items = order.map(n => cat.items.find(i => i.name === n)).filter(Boolean);
+    const savedOrder = saved[key] || [];
+    // 저장된 순서 중 현재 PROJECTS에 여전히 존재하는 항목만
+    const fromSaved = savedOrder.map(n => cat.items.find(i => i.name === n)).filter(Boolean);
+    // 저장 순서에 없는 새 항목은 PROJECTS 정의 순서로 뒤에 자동 추가
+    const missing = cat.items.filter(i => !fromSaved.find(m => m.name === i.name));
+    const items = [...fromSaved, ...missing];
     html += '<div class="cat ' + key + '" data-cat="' + key + '"><div class="cat-h">' + cat.name + ' <span class="cnt">' + items.length + '</span></div><div class="proj-list" data-list="' + key + '">';
     items.forEach(it => {
       const label = it.prio === 'h' ? '상' : it.prio === 'm' ? '중' : '하';
