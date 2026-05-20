@@ -981,7 +981,15 @@ const DATA = {
   chat:     { id:"chat",  name:"채팅상담", sub:"CS · 해피톡 통합", brand:"#f472b6",
               desc:"해피톡으로 통합 관리",
               channels:["네이버 톡톡 (스마트스토어 3개)","카카오 비즈니스","고도몰","신규몰"] },
-  nas:      { id:"nas",   name:"NAS", sub:"중요 데이터 저장소", brand:"#22d3ee",
+  prtEpson: { id:"prtEpson", name:"EPSON SC-S80610L", sub:"에코솔벤 · 1500폭", brand:"#fbbf24",
+              desc:"제작실 출력장비 ①  Epson SureColor SC-S80610L · 잉크: 에코솔벤 · 1500폭 · 가능 소재: 투명PVC-IT-30000, 화이트 캘-IT-2000(자전거스티커 외), 반사지·야광지·홀로그램(단/출력용), 플렉스(조명·비조명)" },
+  prtHp:    { id:"prtHp", name:"HP 라텍스 800W", sub:"친환경 무취 · 1500폭", brand:"#34d399",
+              desc:"제작실 출력장비 ②  HP 라텍스 800W · 친환경 무취 인쇄 · 1500폭 · 소재: 배너·직물·포스터·캔버스·벽지·비닐·투명PET / 투명리무버·투명무점착(주차스티커) / 라텍스 전용 화이트캘(IT-100/100G/200/2000G) / UV PET 원단 / 골드·실버 헤어라인·거울 PET / 빽릿·라텍스 전용 벽지 / 반사지·야광지 홀로그램" },
+  prtExt:   { id:"prtExt", name:"EXTREME 1800 R1", sub:"수성잉크 · 1800폭", brand:"#60a5fa",
+              desc:"제작실 출력장비 ③  EXTREME 1800 R1 · 수성잉크 · 1800폭 · 소재: 합성지·캘·캘리무버·PET·현수막·부직포·텐트천·캔버스천" },
+  prtUv:    { id:"prtUv", name:"평판 UV 프린터", sub:"UV · 1200×2400mm", brand:"#a855f7",
+              desc:"제작실 출력장비 ④  평판 UV 프린터 · 1200×2400mm · 소재: 포맥스·아크릴 투명리무버·투명무점착(주차스티커) / PVC(캘) / UV PET·가죽·천·타일·철판 / 골드·실버 헤어라인·거울 PET / 반사지·야광지 홀로그램" },
+    nas:      { id:"nas",   name:"NAS", sub:"중요 데이터 저장소", brand:"#22d3ee",
               desc:"사내 NAS · 192.168.0.200/201 · ERP 서버 백업 · 디자인팀 시안 DB · 웹팀 DB 및 문서 일체 · 와이어 맵·내부 문서 호스팅 · Docker 운영 (개발팀)" },
   ig:       { id:"ig",    name:"인스타그램",   sub:"SNS · 임정민 주임", brand:"#E1306C", desc:"인스타 게시글 · 릴스 · AI 이미지/영상" },
   nblog:    { id:"nblog", name:"네이버 블로그", sub:"SNS · 임정민 주임", brand:"#03C75A", desc:"네이버 블로그 포스팅 · 검색 노출 확인" },
@@ -1221,6 +1229,10 @@ placeNode(DATA.yt,    520, 80,  'sys sys-yt');
 // ERP → Hanasignmall.kr (self-mall) 우측에 산하로
 placeNode(DATA.erp, 1965, 380, 'erp');
 placeNode(DATA.nas, 1965, 540, 'sys sys-nas');
+placeNode(DATA.prtEpson, 2240, 1030, 'sys sys-prt');
+placeNode(DATA.prtHp,    2240, 1120, 'sys sys-prt');
+placeNode(DATA.prtExt,   2240, 1210, 'sys sys-prt');
+placeNode(DATA.prtUv,    2240, 1300, 'sys sys-prt');
 
 // ============ WIRES ============
 function nodeSize(id) {
@@ -1388,6 +1400,10 @@ function drawAllWires() {
   // NAS → 부서 (factory2 제외) 7곳 - 옅은 시스템 와이어
   ['web','cs','design','dev','fin','sales','product'].forEach(deptId => {
     drawWire('nas', deptId, '#22d3ee', WEAK, 'system');
+  });
+  // 제작실 → 출력장비 4종
+  ['prtEpson','prtHp','prtExt','prtUv'].forEach(pid => {
+    drawWire('product', pid, '#c084fc', NORMAL, 'system');
   });
   // 채널 → 웹팀 숨김 와이어 (채널 클릭 시에만 강조)
   [...DATA.personalChannels, ...DATA.corpChannels].forEach(ch => {
@@ -1856,6 +1872,7 @@ document.getElementById('ppClose').addEventListener('click', () => {
     erp: 'system', playauto: 'system', ecount: 'system', nas: 'system',
     call: 'talk', chat: 'talk',
     ig: 'sns', nblog: 'sns', yt: 'sns',
+    prtEpson: 'system', prtHp: 'system', prtExt: 'system', prtUv: 'system',
     'ss-hana': 'channel', 'ss-baron': 'channel', 'ss-rocket': 'channel',
     godo: 'channel', 'self-mall': 'channel', coupang: 'channel', '11st': 'channel', auction: 'channel', gmarket: 'channel'
   };
