@@ -1126,6 +1126,8 @@ function drawAllWires() {
   drawWire('web', 'nblog', '#03C75A', NORMAL);
   drawWire('web', 'yt',    '#FF0000', NORMAL);
   depts.forEach(d => d.links.forEach(t => drawWire(d.id, t, '#a5b4fc', WEAK)));
+  // 채널 → 웹팀 숨김 와이어 (평소 X, 채널 클릭 시 강조됨)
+  [...DATA.personalChannels, ...DATA.corpChannels].forEach(ch => drawWire(ch.id, 'web', '#60a5fa', { width: 1.4, opacity: 0 }));
   return;
   drawWire('ceo', 'personal', '#60a5fa', { width: 2.0, flow: true });
   drawWire('ceo', 'corp',     '#a855f7', { width: 2.0, flow: true });
