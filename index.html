@@ -1273,4 +1273,14 @@ stageEl.addEventListener('click', (e) => {
   if (e.target.closest('.node') || e.target.closest('.task-panel')) return;
   closeAll();
 }, true);
-document.getElementById
+document.getElementById('today').textContent = new Date().toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' }).toUpperCase();
+function init() {
+  fitView(); drawAllWires();
+  setTimeout(() => { drawAllWires(); fitView(); }, 200);
+  setTimeout(() => { drawAllWires(); fitView(); }, 600);
+}
+if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
+window.addEventListener('resize', () => { fitView(); drawAllWires(); });
+</script>
+</body>
+</html>
