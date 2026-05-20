@@ -1020,7 +1020,7 @@ placeNode(DATA.ig,    180, 80,  'sys sys-ig');
 placeNode(DATA.nblog, 350, 80,  'sys sys-nblog');
 placeNode(DATA.yt,    520, 80,  'sys sys-yt');
 // ERP → Hanasignmall.kr (self-mall) 우측에 산하로
-placeNode(DATA.erp, POS_X.chC + 180, CY - 50, 'erp');
+placeNode(DATA.erp, 1965, 380, 'erp');
 
 // ============ WIRES ============
 function nodeSize(id) {
@@ -1228,19 +1228,9 @@ function setStage(id, stage) {
         connected.add(p.dataset.from); connected.add(p.dataset.to);
       }
     });
-    // 사업자 산하 채널 + 점선 애니메이션 와이어
-    if (connected.has('personal')) {
-      DATA.personalChannels.forEach(c => {
-        connected.add(c.id);
-        wires.querySelectorAll(`path[data-from="personal"][data-to="${c.id}"], path[data-from="${c.id}"][data-to="personal"]`).forEach(p => p.classList.add('focus-wire','flow'));
-      });
-    }
-    if (connected.has('corp')) {
-      DATA.corpChannels.forEach(c => {
-        connected.add(c.id);
-        wires.querySelectorAll(`path[data-from="corp"][data-to="${c.id}"], path[data-from="${c.id}"][data-to="corp"]`).forEach(p => p.classList.add('focus-wire','flow'));
-      });
-    }
+    // 사업자 산하 채널 노드만 lit (와이어 추가 강조 X - 이중표시 방지)
+    if (connected.has('personal')) DATA.personalChannels.forEach(c => connected.add(c.id));
+    if (connected.has('corp'))     DATA.corpChannels.forEach(c => connected.add(c.id));
     if (connected.has('self-mall')) connected.add('erp');
     connected.add('ceo');
   } else {
