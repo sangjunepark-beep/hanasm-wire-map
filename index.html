@@ -32,14 +32,7 @@ body {
     radial-gradient(circle at 50% 50%, rgba(34,211,238,0.025), transparent 55%),
     linear-gradient(180deg, #050614 0%, #07091b 50%, #050614 100%);
 }
-body::before {
-  content: ""; position: fixed; inset: 0; pointer-events: none; z-index: 1;
-  background-image:
-    linear-gradient(rgba(167,139,250,0.025) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(96,165,250,0.025) 1px, transparent 1px);
-  background-size: 80px 80px; background-position: center;
-  mask-image: radial-gradient(ellipse at center, black 20%, transparent 75%);
-}
+/* grid bg removed for perf */
 
 /* TOP BAR */
 .topbar {
@@ -73,7 +66,7 @@ body::before {
   padding: 8px 14px;
   border: 1px solid var(--line);
   pointer-events: auto;
-  backdrop-filter: blur(20px);
+  /* backdrop-filter removed for perf */
   letter-spacing: 0.06em; text-transform: uppercase;
   clip-path: polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px);
 }
@@ -85,7 +78,7 @@ body::before {
   border: 1px solid var(--line);
   padding: 12px 14px;
   font-size: 11px;
-  backdrop-filter: blur(20px);
+  /* backdrop-filter removed for perf */
   clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px);
 }
 .legend { left: 18px; }
@@ -116,8 +109,6 @@ body::before {
 .stage {
   position: fixed; inset: 0; z-index: 2; overflow: hidden;
   cursor: grab;
-  perspective: 1800px;
-  perspective-origin: 50% 50%;
 }
 .stage.dragging { cursor: grabbing; }
 .stage.dragging .world { transition: none !important; }
@@ -125,8 +116,7 @@ body::before {
   position: absolute; left: 0; top: 0;
   width: 2400px; height: 1400px;
   transform-origin: 0 0;
-  transform-style: preserve-3d;
-  transition: transform 0.85s cubic-bezier(.2,.7,.15,1);
+  transition: transform 0.5s cubic-bezier(.2,.7,.15,1);
 }
 
 /* WIRES */
@@ -139,7 +129,6 @@ svg.wires path {
   fill: none; stroke-linecap: round; stroke-linejoin: round;
   opacity: 0.85;
   stroke-width: 2;
-  filter: drop-shadow(0 0 4px currentColor);
   transition: opacity 0.2s;
 }
 svg.wires path.flow {
@@ -158,8 +147,8 @@ svg.wires path.flow {
   position: relative; padding: 1.5px;
   background: linear-gradient(135deg, var(--c1, var(--blue-2)), var(--c2, var(--purple-2)));
   clip-path: polygon(12px 0%, 100% 0%, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0% 100%, 0% 12px);
-  filter: drop-shadow(0 0 8px var(--c1, var(--blue-2))) drop-shadow(0 0 16px var(--c2, var(--purple-2)));
-  transition: filter 0.2s ease;
+  box-shadow: 0 0 12px var(--c1, var(--blue-2));
+  transition: box-shadow 0.2s ease;
 }
 .node .core {
   display: flex; align-items: center; gap: 12px;
@@ -175,55 +164,30 @@ svg.wires path.flow {
 
 /* 1차 클릭 = 빛 */
 .node.lit .frame {
-  filter: drop-shadow(0 0 18px var(--c1, var(--blue-2))) drop-shadow(0 0 36px var(--c2, var(--purple-2)));
+  box-shadow: 0 0 24px var(--c1, var(--blue-2));
 }
-.node.lit { transform: translate(-50%,-50%) scale(1.05); transition: transform 0.2s ease; }
+.node.lit { transform: translate(-50%,-50%) scale(1.04); transition: transform 0.2s ease; }
 .world.has-focus svg.wires path.focus-wire {
   opacity: 1 !important;
   stroke-width: 3 !important;
-  filter: drop-shadow(0 0 14px currentColor) drop-shadow(0 0 28px currentColor) !important;
 }
 
-/* 2차 클릭 = 3D 정면 시점 (앞으로 튀어나옴) */
+/* 2차 클릭 = 확대 */
 .node.zoomed {
-  transform: translate(-50%,-50%) translateZ(80px) scale(1.18);
+  transform: translate(-50%,-50%) scale(1.15);
   z-index: 60;
 }
 .node.zoomed .frame {
-  filter: drop-shadow(0 0 24px var(--c1, var(--blue-2))) drop-shadow(0 0 48px var(--c2, var(--purple-2)));
-}
-.world.has-focus .node:not(.lit):not(.zoomed) {
-  transform: translate(-50%,-50%) translateZ(-160px) scale(0.92);
-  filter: blur(1.5px) saturate(0.25) brightness(0.45) !important;
-  transition: transform 0.55s cubic-bezier(.2,.7,.15,1), filter 0.4s;
-}
-.world.has-focus .node.lit {
-  transform: translate(-50%,-50%) translateZ(20px) scale(1.05);
+  filter: drop-shadow(0 0 18px var(--c1, var(--blue-2)));
 }
 
 .node:hover { z-index: 50; }
-.node:hover .frame {
-  filter: drop-shadow(0 0 14px var(--c1, var(--blue-2))) drop-shadow(0 0 24px var(--c2, var(--purple-2)));
-}
-
-/* 호버 시 연결 노드 미리보기 (체험감) */
-.node.prelit .frame {
-  filter: drop-shadow(0 0 12px var(--c1, var(--blue-2))) drop-shadow(0 0 22px var(--c2, var(--purple-2)));
-}
+.node:hover .frame { box-shadow: 0 0 20px var(--c1, var(--blue-2)); }
+.node.prelit .frame { box-shadow: 0 0 18px var(--c1, var(--blue-2)); }
 svg.wires path.preview-wire {
   opacity: 0.75 !important;
   stroke-width: 2.6 !important;
 }
-
-/* 페이지 로드 시 노드 stagger 등장 */
-.node {
-  animation: nodeIn 0.5s cubic-bezier(.2,.7,.2,1) backwards;
-}
-@keyframes nodeIn {
-  from { opacity: 0; transform: translate(-50%,-50%) scale(0.85); }
-  to   { opacity: 1; transform: translate(-50%,-50%) scale(1); }
-}
-.node.lit { animation: none; }
 
 .dot {
   width: 8px; height: 8px; flex-shrink: 0;
@@ -248,7 +212,7 @@ svg.wires path.preview-wire {
   background: rgba(8,9,28,0.92);
   border: 1px solid var(--c1, var(--purple-2));
   padding: 14px 16px;
-  backdrop-filter: blur(24px);
+  /* perf */
   box-shadow: 0 18px 50px rgba(0,0,0,0.6), 0 0 24px color-mix(in srgb, var(--c1, #a855f7) 30%, transparent);
   clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px);
   animation: expandFly 0.45s cubic-bezier(.2,.8,.2,1);
@@ -363,7 +327,7 @@ svg.wires path.preview-wire {
   border: 1px solid var(--purple-2);
   padding: 0;
   z-index: 220;
-  backdrop-filter: blur(30px);
+  /* perf */
   box-shadow: -10px 0 40px rgba(0,0,0,0.55), 0 0 30px rgba(168,85,247,0.2);
   display: flex; flex-direction: column;
   transform: translateX(420px); opacity: 0;
@@ -489,7 +453,7 @@ svg.wires path.preview-wire {
   border: 1.5px solid rgba(251,146,60,0.5);
   padding: 12px 22px;
   min-width: 380px; max-width: 720px;
-  backdrop-filter: blur(20px);
+  /* backdrop-filter removed for perf */
   box-shadow: 0 0 24px rgba(251,146,60,0.20);
   clip-path: polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px);
 }
@@ -1284,3 +1248,4 @@ window.addEventListener('resize', () => { fitView(); drawAllWires(); });
 </script>
 </body>
 </html>
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                
