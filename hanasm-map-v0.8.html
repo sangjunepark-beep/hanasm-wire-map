@@ -1161,8 +1161,12 @@ function drawAllWires() {
   drawWire('web', 'nblog', '#03C75A', NORMAL);
   drawWire('web', 'yt',    '#FF0000', NORMAL);
   depts.forEach(d => d.links.forEach(t => drawWire(d.id, t, '#a5b4fc', WEAK)));
-  // 채널 → 웹팀 숨김 와이어 (평소 X, 채널 클릭 시 강조됨)
-  [...DATA.personalChannels, ...DATA.corpChannels].forEach(ch => drawWire(ch.id, 'web', '#60a5fa', { width: 1.4, opacity: 0 }));
+  // 채널 → 웹팀 숨김 와이어 (채널 클릭 시에만 강조)
+  [...DATA.personalChannels, ...DATA.corpChannels].forEach(ch => {
+    drawWire(ch.id, 'web', '#60a5fa', { width: 1.4, opacity: 0 });
+    const p = wires.lastChild;
+    if (p && p.classList) p.classList.add('ch-web');
+  });
   return;
   drawWire('ceo', 'personal', '#60a5fa', { width: 2.0, flow: true });
   drawWire('ceo', 'corp',     '#a855f7', { width: 2.0, flow: true });
@@ -1295,9 +1299,11 @@ function setStage(id, stage) {
     });
   }
 
-  // 와이어 강조: 클릭한 노드와 직접 연결된 wire만 (호버와 동일하게 깔끔)
+  // 와이어 강조: 클릭 노드 직접 연결만 (ch-web은 채널 클릭 시만)
+  const isChannel = [...DATA.personalChannels, ...DATA.corpChannels].some(x => x.id === id);
   wires.querySelectorAll('path').forEach(p => {
     if (p.dataset.from === id || p.dataset.to === id) {
+      if (p.classList.contains('ch-web') && !isChannel) return;
       p.classList.add('focus-wire');
     }
   });
