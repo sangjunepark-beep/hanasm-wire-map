@@ -1726,6 +1726,38 @@ if (document.readyState === 'loading') document.addEventListener('DOMContentLoad
 // 임시 비활성화 — editToggle 버튼이 첫 <script> 바깥에 있어 null 에러 발생했음
 // 다음 세션: 토글 버튼 DOM 위치를 <script> 앞으로 이동 + DOMContentLoaded 안에서 바인딩
 
+// 사용자 정리 디폴트 레이아웃 (localStorage 없는 신규 방문자에게 적용)
+const DEFAULT_LAYOUT = {
+  dev:        { x: 1953.20, y:  211.97 },
+  erp:        { x: 1955.27, y:   73.72 },
+  'self-mall':{ x: 2168.60, y:   72.65 },
+  nas:        { x: 2111.76, y:  161.34 },
+  product:    { x: 1955.17, y: 1197.86 },
+  coupang:    { x: 2170.00, y:  530.63 },
+  '11st':     { x: 2166.07, y:  702.26 },
+  auction:    { x: 2166.07, y:  871.92 },
+  gmarket:    { x: 2166.07, y: 1035.68 },
+  playauto:   { x:  943.66, y:  385.90 },
+  ecount:     { x:  945.16, y:  531.39 },
+  call:       { x:  943.66, y:   81.97 },
+  chat:       { x: 1094.58, y:   81.97 },
+  prtUv:      { x: 1815.33, y: 1313.76 },
+  prtExt:     { x: 1932.66, y: 1409.77 },
+  prtHp:      { x: 2053.54, y: 1326.59 },
+  prtEpson:   { x: 2131.16, y: 1228.03 },
+  godo:       { x: 2168.03, y:  368.25 }
+};
+function applyDefaultLayout() {
+  Object.keys(DEFAULT_LAYOUT).forEach(id => {
+    const r = POS[id]; if (!r) return;
+    r.x = DEFAULT_LAYOUT[id].x;
+    r.y = DEFAULT_LAYOUT[id].y;
+    r.el.style.left = r.x + 'px';
+    r.el.style.top  = r.y + 'px';
+  });
+}
+applyDefaultLayout();
+
 function loadPositions() {
   try {
     const saved = JSON.parse(localStorage.getItem('hanasm.positions') || '{}');
