@@ -565,7 +565,7 @@ svg.wires path.preview-wire {
 }
 .proj-toggle:hover { background: rgba(167,139,250,0.18); color: #fff; }
 .chip-bar {
-  position: fixed; bottom: 18px; left: 16px; z-index: 105;
+  position: fixed; bottom: 132px; left: 18px; z-index: 105;
   display: flex; gap: 6px; flex-wrap: wrap; max-width: 60vw;
 }
 .chip {
@@ -1579,6 +1579,9 @@ function showTasks(deptId, memberName) {
     });
     body.innerHTML = html;
   }
+  // 신규 프로젝트 패널 자동 닫음 (겹침 방지)
+  const pp = document.getElementById('projPanel');
+  if (pp) pp.classList.remove('show');
   taskPanel.classList.add('show');
 }
 
@@ -1692,7 +1695,6 @@ const PROJECTS = {
     { name:'AI 챗봇 / RAG 앵커DB (전상품 DB화 · 주차스티커 진행)', prio:'h',
       desc:'하나사인몰 전상품 DB화 작업. 모든 상품 데이터 엑셀 정리 중. 게시판·입간판 카테고리 완료 → 대표 보고. 현재 주차스티커 정리 중. 완료된 것부터 노드데이터로 만들어 외주 챗봇 DB로 투입.', owner:'박상준' }
   ]},
-  seo:     { name:'SEO·노출', items:[] },
   product: { name:'신상품·등록', items:[
     { name:'주력제품 가격인상 (홍재이 · 주차→A형 · 6월 중순까지)', prio:'h',
       desc:'홍재이 주임 진행 중. 이번 주 주차스티커 완료 예상, 차주 A형입간판 진행 예정. 제품 수가 많아 6월 초·중순까지 이어질 수 있음.', owner:'홍재이' },
@@ -1709,7 +1711,7 @@ const PROJECTS = {
   ]},
   offline: { name:'오프라인·영업', items:[] }
 };
-const PCATS = ['ad','ai','seo','product','system','offline'];
+const PCATS = ['ad','ai','product','system','offline'];
 function renderProjects() {
   const body = document.getElementById('ppBody');
   if (!body) return;
@@ -1755,9 +1757,11 @@ function renderProjects() {
     });
   });
 }
-// 페이지 로드 시 기본 펼침
-setTimeout(() => { document.getElementById('projPanel').classList.add('show'); renderProjects(); }, 500);
+// 페이지 로드 시 초기 렌더만 (자동 펼침 X)
+setTimeout(() => { renderProjects(); }, 500);
 document.getElementById('projToggle').addEventListener('click', () => {
+  const tp = document.getElementById('taskPanel');
+  if (tp) tp.classList.remove('show');
   document.getElementById('projPanel').classList.add('show');
   renderProjects();
 });
