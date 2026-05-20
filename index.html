@@ -843,15 +843,15 @@ const DATA = {
       links:["corp","cs","design"],
       members:[ { name:"이영호", role:"과장", title:"외부영업 · 견적 협업", tasks: null } ]},
     { id:"factory2", name:"2공장", color:"#3b82f6", color2:"#22d3ee",
-      desc:"제작 · 시공 (2명) · CS·디자인팀·ERP 연결",
-      links:["cs","design","erp"],
+      desc:"제작 · 시공 (2명) · CS·디자인·제작실·ERP 연결",
+      links:["cs","design","erp","product"],
       members:[
         { name:"최두학", role:"공장장", title:"공장 총괄", tasks: null },
         { name:"김현우", role:"주임", title:"제작", tasks: null }
       ]},
     { id:"product", name:"제작실", color:"#c084fc", color2:"#60a5fa",
-      desc:"제작실 · 출력 (4명) · CS·디자인팀·ERP 연결",
-      links:["cs","design","erp"],
+      desc:"제작실 · 출력 (4명) · CS·디자인·2공장·ERP 연결",
+      links:["cs","design","erp","factory2"],
       members:[
         { name:"이지은", role:"대리", title:"출력·합지·재단·포장 (멀티)", tasks: TASKS.leeje },
         { name:"우연형", role:"대리", title:"제작", tasks: null },
