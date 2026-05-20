@@ -1486,13 +1486,14 @@ function setStage(id, stage) {
       }
     });
     // 사업자 산하 채널 + 점선 애니메이션 와이어 (flow)
-    if (connected.has('personal')) {
+    // 디자인팀은 채널 강조 제외 (사용자 요청)
+    if (connected.has('personal') && id !== 'design') {
       DATA.personalChannels.forEach(c => {
         connected.add(c.id);
         wires.querySelectorAll(`path[data-from="personal"][data-to="${c.id}"], path[data-from="${c.id}"][data-to="personal"]`).forEach(p => p.classList.add('focus-wire','flow'));
       });
     }
-    if (connected.has('corp')) {
+    if (connected.has('corp') && id !== 'design') {
       DATA.corpChannels.forEach(c => {
         connected.add(c.id);
         wires.querySelectorAll(`path[data-from="corp"][data-to="${c.id}"], path[data-from="${c.id}"][data-to="corp"]`).forEach(p => p.classList.add('focus-wire','flow'));
