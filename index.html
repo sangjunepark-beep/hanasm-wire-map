@@ -945,8 +945,8 @@ function placeNode(node, x, y, cls) {
 const POS_X = { ceo: CX, bizP: CX - 470, bizC: CX + 470, chP: CX - 970, chC: CX + 970 };
 const DEPT_TOP_Y = 210, DEPT_BOT_Y = 1190;
 
-placeNode(DATA.ceo, POS_X.ceo, CY - 200, 'ceo');
-  placeNode(DATA.hanasm, POS_X.ceo, CY - 30, 'hanasm');
+placeNode(DATA.ceo, POS_X.ceo, CY - 280, 'ceo');
+  placeNode(DATA.hanasm, POS_X.ceo, CY, 'hanasm');
 placeNode(DATA.personal, POS_X.bizP, CY, 'biz-personal');
 placeNode(DATA.corp,     POS_X.bizC, CY, 'biz-corp');
 
@@ -966,7 +966,7 @@ spreadX(depts.slice(0, 4), 510).forEach(({it, x}) => placeNode(it, x, DEPT_TOP_Y
 spreadX(depts.slice(4),    510).forEach(({it, x}) => placeNode(it, x, DEPT_BOT_Y, 'dept'));
 
 // 플레이오토 + 이카운트 → CS팀 위쪽 영역 (CS팀 X=945 근처)
-placeNode(DATA.playauto, 1170, 380, 'sys sys-playauto');
+placeNode(DATA.playauto, 1200, 420, 'sys sys-playauto');
 placeNode(DATA.ecount,   1080, 80, 'sys sys-ecount');
 // SNS 3종 → 웹팀 위쪽 (X=435 근처)
 placeNode(DATA.ig,    180, 80,  'sys sys-ig');
