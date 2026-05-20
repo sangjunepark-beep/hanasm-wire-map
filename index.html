@@ -164,7 +164,7 @@ svg.wires path.flow {
 
 /* 1차 클릭 = 빛 */
 .node.lit .frame {
-  box-shadow: 0 0 24px var(--c1, var(--blue-2));
+  box-shadow: 0 0 14px var(--c1, var(--blue-2));
 }
 .node.lit { transform: translate(-50%,-50%) scale(1.04); transition: transform 0.2s ease; }
 .world.has-focus svg.wires path.focus-wire {
@@ -183,9 +183,9 @@ svg.wires path.flow {
   transform-origin: center bottom;
   transition: transform 0.55s cubic-bezier(.2,.7,.15,1);
   box-shadow:
-    0 0 30px var(--c1, var(--blue-2)),
-    0 0 60px var(--c2, var(--purple-2)),
-    0 25px 50px rgba(0,0,0,0.7);
+    0 0 16px var(--c1, var(--blue-2)),
+    0 0 28px var(--c2, var(--purple-2)),
+    0 15px 30px rgba(0,0,0,0.55);
 }
 /* 패널은 회전 X (글씨 정상) */
 .node.zoomed .expanded {
@@ -200,8 +200,8 @@ svg.wires path.flow {
 }
 
 .node:hover { z-index: 50; }
-.node:hover .frame { box-shadow: 0 0 20px var(--c1, var(--blue-2)); }
-.node.prelit .frame { box-shadow: 0 0 18px var(--c1, var(--blue-2)); }
+.node:hover .frame { box-shadow: 0 0 12px var(--c1, var(--blue-2)); }
+.node.prelit .frame { box-shadow: 0 0 10px var(--c1, var(--blue-2)); }
 svg.wires path.preview-wire {
   opacity: 0.75 !important;
   stroke-width: 2.6 !important;
@@ -379,7 +379,7 @@ svg.wires path.preview-wire {
 /* === Dim non-focus === */
 .world.has-focus .node:not(.lit):not(.zoomed) { filter: saturate(0.15) brightness(0.32); }
 .world.has-focus svg.wires path:not(.focus-wire) { opacity: 0.015; }
-.world.has-focus svg.wires path.focus-wire { opacity: 1.0; stroke-width: 2.8 !important; filter: drop-shadow(0 0 4px currentColor); }
+.world.has-focus svg.wires path.focus-wire { opacity: 0.92; stroke-width: 2.4 !important; filter: drop-shadow(0 0 2px currentColor); }
 .world.has-focus svg.wires .dev-region { opacity: 0.15; }
 
 /* === Task Panel === */
