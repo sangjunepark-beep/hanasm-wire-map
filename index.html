@@ -622,7 +622,17 @@ body.edit-mode .node .frame { outline: 2px dashed rgba(251,191,36,0.6); outline-
 .cat { margin-bottom: 14px; }
 .cat-h { display: flex; justify-content: space-between; align-items: center; font-size: 10px; font-weight: 800; letter-spacing: 0.16em; text-transform: uppercase; color: var(--cat-c, #c5c9e0); padding: 6px 4px; margin-bottom: 6px; border-bottom: 1px dashed rgba(167,139,250,0.22); }
 .cat-h .cnt { font-size: 9.5px; padding: 1px 7px; background: rgba(255,255,255,0.04); color: #c5c9e0; clip-path: polygon(3px 0, 100% 0, 100% calc(100% - 3px), calc(100% - 3px) 100%, 0 100%, 0 3px); }
-.proj-list { display: flex; flex-direction: column; gap: 5px; min-height: 8px; }
+.proj-list { display: flex; flex-direction: column; gap: 10px; min-height: 8px; counter-reset: pi; }
+.proj-item.flat-item { counter-increment: pi; padding: 0; background: transparent; border: none; clip-path: none; border-left: none; flex-direction: column; gap: 0; }
+.pi-tag { display: inline-block; font-size: 9.5px; font-weight: 800; letter-spacing: 0.16em; text-transform: uppercase; padding: 3px 9px; margin-bottom: 4px; background: rgba(255,255,255,0.04); color: var(--cat-c, #c5c9e0); border-left: 3px solid var(--cat-c, #a855f7); clip-path: polygon(2px 0, 100% 0, 100% calc(100% - 2px), calc(100% - 2px) 100%, 0 100%, 0 2px); align-self: flex-start; }
+.pi-num { display: inline-flex; align-items: center; justify-content: center; min-width: 22px; height: 22px; padding: 0 4px; background: rgba(167,139,250,0.15); color: var(--cat-c, #c084fc); font-size: 10px; font-weight: 800; letter-spacing: 0; clip-path: polygon(3px 0, 100% 0, 100% calc(100% - 3px), calc(100% - 3px) 100%, 0 100%, 0 3px); }
+.pi-num::before { content: counter(pi); }
+.proj-item.flat-item .pi-row { display: flex; align-items: center; gap: 8px; padding: 8px 10px; background: rgba(167,139,250,0.06); border: 1px solid rgba(167,139,250,0.18); border-left: 2px solid var(--cat-c, #a855f7); font-size: 11.5px; color: #f3f4fb; font-weight: 600; letter-spacing: 0.015em; clip-path: polygon(5px 0, 100% 0, 100% calc(100% - 5px), calc(100% - 5px) 100%, 0 100%, 0 5px); cursor: pointer; }
+.proj-item.flat-item.ad      { --cat-c: #fbbf24; }
+.proj-item.flat-item.ai      { --cat-c: #c084fc; }
+.proj-item.flat-item.product { --cat-c: #34d399; }
+.proj-item.flat-item.system  { --cat-c: #60a5fa; }
+.proj-item.flat-item.offline { --cat-c: #fb923c; }
 .proj-item { display: flex; flex-direction: column; gap: 6px; padding: 8px 10px; background: rgba(167,139,250,0.06); border: 1px solid rgba(167,139,250,0.18); border-left: 2px solid var(--cat-c, #a855f7); font-size: 11.5px; color: #f3f4fb; font-weight: 600; cursor: pointer; letter-spacing: 0.015em; clip-path: polygon(5px 0, 100% 0, 100% calc(100% - 5px), calc(100% - 5px) 100%, 0 100%, 0 5px); }
 .proj-item .pi-row { display: flex; align-items: center; gap: 8px; }
 .proj-item .pi-handle { cursor: grab; }
@@ -1760,41 +1770,52 @@ const PCATS = ['ad','ai','product','system','offline'];
 function renderProjects() {
   const body = document.getElementById('ppBody');
   if (!body) return;
-  const saved = JSON.parse(localStorage.getItem('hanasm.projects') || '{}');
-  let html = '';
+  // 평면화: [{cat, item}]
+  const all = [];
   PCATS.forEach(key => {
-    const cat = PROJECTS[key];
-    const savedOrder = saved[key] || [];
-    // 저장된 순서 중 현재 PROJECTS에 여전히 존재하는 항목만
-    const fromSaved = savedOrder.map(n => cat.items.find(i => i.name === n)).filter(Boolean);
-    // 저장 순서에 없는 새 항목은 PROJECTS 정의 순서로 뒤에 자동 추가
-    const missing = cat.items.filter(i => !fromSaved.find(m => m.name === i.name));
-    const items = [...fromSaved, ...missing];
-    html += '<div class="cat ' + key + '" data-cat="' + key + '"><div class="cat-h">' + cat.name + ' <span class="cnt">' + items.length + '</span></div><div class="proj-list" data-list="' + key + '">';
-    items.forEach(it => {
-      const label = it.prio === 'h' ? '상' : it.prio === 'm' ? '중' : '하';
-      const descHtml = it.desc ? '<div class="pi-desc">' + (it.owner ? '<span class="pi-owner">' + it.owner + '</span>' : '') + it.desc + '</div>' : '';
-      html += '<div class="proj-item" data-name="' + it.name + '"><div class="pi-row"><span class="pi-handle">⋮⋮</span><span class="pi-name">' + it.name + '</span><span class="pi-prio ' + it.prio + '">' + label + '</span></div>' + descHtml + '</div>';
-    });
-    html += '</div></div>';
+    (PROJECTS[key].items || []).forEach(it => all.push({ cat: key, item: it }));
   });
+  // 저장 순서 ['cat:name', ...] 따라 정렬
+  const savedOrder = JSON.parse(localStorage.getItem('hanasm.projects.flat') || '[]');
+  const keyOf = (cat, name) => cat + '::' + name;
+  const map = new Map(all.map(e => [keyOf(e.cat, e.item.name), e]));
+  const ordered = [];
+  savedOrder.forEach(k => {
+    if (map.has(k)) { ordered.push(map.get(k)); map.delete(k); }
+  });
+  // 저장에 없는 새 항목은 뒤로
+  map.forEach(v => ordered.push(v));
+
+  let html = '<div class="proj-list flat" data-list="flat">';
+  ordered.forEach(e => {
+    const it = e.item;
+    const label = it.prio === 'h' ? '상' : it.prio === 'm' ? '중' : '하';
+    const catName = PROJECTS[e.cat].name;
+    const descHtml = it.desc ? '<div class="pi-desc">' + (it.owner ? '<span class="pi-owner">' + it.owner + '</span>' : '') + it.desc + '</div>' : '';
+    const k = keyOf(e.cat, it.name);
+    html += '<div class="proj-item flat-item ' + e.cat + '" data-key="' + k + '" data-cat="' + e.cat + '" data-name="' + it.name + '">'
+          + '<div class="pi-tag">' + catName + '</div>'
+          + '<div class="pi-row">'
+          +   '<span class="pi-handle">⋮⋮</span>'
+          +   '<span class="pi-num"></span>'
+          +   '<span class="pi-name">' + it.name + '</span>'
+          +   '<span class="pi-prio ' + it.prio + '">' + label + '</span>'
+          + '</div>'
+          + descHtml
+          + '</div>';
+  });
+  html += '</div>';
   body.innerHTML = html;
+
   if (typeof Sortable !== 'undefined') {
-    document.querySelectorAll('.proj-list').forEach(list => {
-      Sortable.create(list, {
-        group: 'projects', animation: 180, ghostClass: 'sortable-ghost',
-        handle: '.pi-handle',
-        onEnd: () => {
-          const next = {};
-          document.querySelectorAll('.proj-list').forEach(l => {
-            next[l.dataset.list] = [...l.querySelectorAll('.proj-item')].map(x => x.dataset.name);
-          });
-          localStorage.setItem('hanasm.projects', JSON.stringify(next));
-        }
-      });
+    Sortable.create(document.querySelector('.proj-list.flat'), {
+      animation: 180, ghostClass: 'sortable-ghost', handle: '.pi-handle',
+      onEnd: () => {
+        const order = [...document.querySelectorAll('.proj-list.flat .proj-item')].map(x => x.dataset.key);
+        localStorage.setItem('hanasm.projects.flat', JSON.stringify(order));
+      }
     });
   }
-  // 항목 클릭 시 상세 desc 펼침/접기 (드래그 핸들 제외)
   document.querySelectorAll('.proj-item').forEach(el => {
     el.addEventListener('click', (e) => {
       if (e.target.closest('.pi-handle')) return;
