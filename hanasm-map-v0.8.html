@@ -1080,6 +1080,8 @@ function drawAllWires() {
   drawWire('web', 'nblog', '#03C75A', NORMAL);
   drawWire('web', 'yt',    '#FF0000', NORMAL);
   depts.forEach(d => d.links.forEach(t => drawWire(d.id, t, '#a5b4fc', WEAK)));
+  // 모든 채널 → 웹팀 옅은 연결
+  [...DATA.personalChannels, ...DATA.corpChannels].forEach(c => drawWire(c.id, 'web', '#60a5fa', { width: 0.7, opacity: 0.10 }));
   return;
   drawWire('ceo', 'personal', '#60a5fa', { width: 2.0, flow: true });
   drawWire('ceo', 'corp',     '#a855f7', { width: 2.0, flow: true });
