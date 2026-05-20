@@ -1239,6 +1239,14 @@ function setStage(id, stage) {
         wires.querySelectorAll(`path[data-from="corp"][data-to="${c.id}"], path[data-from="${c.id}"][data-to="corp"]`).forEach(p => p.classList.add('focus-wire','flow'));
       });
     }
+    // ERP 사용 부서 자동 (ERP가 connected에 있으면 CS/디자인/제작실/2공장 자동 추가)
+    if (connected.has('erp')) {
+      ['cs','design','product','factory2'].forEach(deptId => {
+        if (deptId === id) return;
+        connected.add(deptId);
+        wires.querySelectorAll(`path[data-from="erp"][data-to="${deptId}"], path[data-from="${deptId}"][data-to="erp"]`).forEach(p => p.classList.add('focus-wire','flow'));
+      });
+    }
     if (connected.has('self-mall')) connected.add('erp');
     connected.add('ceo');
   } else {
