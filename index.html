@@ -1126,8 +1126,6 @@ function drawAllWires() {
   drawWire('web', 'nblog', '#03C75A', NORMAL);
   drawWire('web', 'yt',    '#FF0000', NORMAL);
   depts.forEach(d => d.links.forEach(t => drawWire(d.id, t, '#a5b4fc', WEAK)));
-  // 모든 채널 → 웹팀 옅은 연결
-  [...DATA.personalChannels, ...DATA.corpChannels].forEach(c => drawWire(c.id, 'web', '#60a5fa', { width: 0.7, opacity: 0.10 }));
   return;
   drawWire('ceo', 'personal', '#60a5fa', { width: 2.0, flow: true });
   drawWire('ceo', 'corp',     '#a855f7', { width: 2.0, flow: true });
@@ -1228,9 +1226,19 @@ function setStage(id, stage) {
         connected.add(p.dataset.from); connected.add(p.dataset.to);
       }
     });
-    // 사업자 산하 채널 노드만 lit (와이어 추가 강조 X - 이중표시 방지)
-    if (connected.has('personal')) DATA.personalChannels.forEach(c => connected.add(c.id));
-    if (connected.has('corp'))     DATA.corpChannels.forEach(c => connected.add(c.id));
+    // 사업자 산하 채널 + 점선 애니메이션 와이어 (flow)
+    if (connected.has('personal')) {
+      DATA.personalChannels.forEach(c => {
+        connected.add(c.id);
+        wires.querySelectorAll(`path[data-from="personal"][data-to="${c.id}"], path[data-from="${c.id}"][data-to="personal"]`).forEach(p => p.classList.add('focus-wire','flow'));
+      });
+    }
+    if (connected.has('corp')) {
+      DATA.corpChannels.forEach(c => {
+        connected.add(c.id);
+        wires.querySelectorAll(`path[data-from="corp"][data-to="${c.id}"], path[data-from="${c.id}"][data-to="corp"]`).forEach(p => p.classList.add('focus-wire','flow'));
+      });
+    }
     if (connected.has('self-mall')) connected.add('erp');
     connected.add('ceo');
   } else {
