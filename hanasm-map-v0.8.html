@@ -371,6 +371,7 @@ svg.wires path.preview-wire {
 .node.sys-yt    .frame { --c1: #FF0000; --c2: #f87171; }
 .node.sys-call  .frame { --c1: #60a5fa; --c2: #34d399; }
 .node.sys-chat  .frame { --c1: #f472b6; --c2: #a855f7; }
+.node.sys-nas   .frame { --c1: #22d3ee; --c2: #3b82f6; }
 .node.sys-claude20 .frame { --c1: #d97706; --c2: #f97316; }
 .node.sys-claude5  .frame { --c1: #a855f7; --c2: #d97706; }
 .node.sys-gpt      .frame { --c1: #10b981; --c2: #22d3ee; }
@@ -782,6 +783,8 @@ const DATA = {
   chat:     { id:"chat",  name:"채팅상담", sub:"CS · 해피톡 통합", brand:"#f472b6",
               desc:"해피톡으로 통합 관리",
               channels:["네이버 톡톡 (스마트스토어 3개)","카카오 비즈니스","고도몰","신규몰"] },
+  nas:      { id:"nas",   name:"NAS", sub:"내부 서버 · 사내망", brand:"#22d3ee",
+              desc:"사내 NAS · 와이어 맵·내부 문서 호스팅 · Docker 운영 (개발팀)" },
   ig:       { id:"ig",    name:"인스타그램",   sub:"SNS · 임정민 주임", brand:"#E1306C", desc:"인스타 게시글 · 릴스 · AI 이미지/영상" },
   nblog:    { id:"nblog", name:"네이버 블로그", sub:"SNS · 임정민 주임", brand:"#03C75A", desc:"네이버 블로그 포스팅 · 검색 노출 확인" },
   yt:       { id:"yt",    name:"유튜브",       sub:"SNS · 임정민 주임", brand:"#FF0000", desc:"유튜브 쇼츠 (인스타 릴스 동일 영상)" },
@@ -1028,7 +1031,9 @@ function spreadY(items, gap) {
   return items.map((it, i) => ({ it, y: CY - total/2 + i*gap }));
 }
 spreadY(DATA.personalChannels, 165).forEach(({it, y}) => placeNode(it, POS_X.chP, y, 'ch-personal'));
-spreadY(DATA.corpChannels, 150).forEach(({it, y}) => placeNode(it, POS_X.chC, y, 'ch-corp'));
+spreadY(DATA.corpChannels.filter(c=>c.id!=='self-mall'), 150).forEach(({it, y}) => placeNode(it, POS_X.chC, y, 'ch-corp'));
+const selfMall = DATA.corpChannels.find(c => c.id === 'self-mall');
+placeNode(selfMall, 1965, 540, 'ch-corp');
 
 const depts = DATA.departments;
 function spreadX(items, gap) {
@@ -1049,6 +1054,7 @@ placeNode(DATA.nblog, 350, 80,  'sys sys-nblog');
 placeNode(DATA.yt,    520, 80,  'sys sys-yt');
 // ERP → Hanasignmall.kr (self-mall) 우측에 산하로
 placeNode(DATA.erp, 1965, 380, 'erp');
+placeNode(DATA.nas, 1965, 700, 'sys sys-nas');
 
 // ============ WIRES ============
 function nodeSize(id) {
@@ -1122,6 +1128,28 @@ function drawRegion(x, y, w, h, color, label) {
 
 function drawAllWires() {
   wires.innerHTML = '';
+  // 개발팀 영역 박스 (베이스)
+  const region = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+  region.setAttribute('x', 1855); region.setAttribute('y', 170);
+  region.setAttribute('width', 220); region.setAttribute('height', 620);
+  region.setAttribute('fill', 'rgba(34,211,238,0.05)');
+  region.setAttribute('stroke', 'rgba(34,211,238,0.32)');
+  region.setAttribute('stroke-width', '1.5');
+  region.setAttribute('stroke-dasharray', '8 6');
+  region.setAttribute('rx', '22');
+  region.style.filter = 'drop-shadow(0 0 12px rgba(34,211,238,0.3))';
+  wires.appendChild(region);
+  // 영역 라벨
+  const label = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+  label.setAttribute('x', 1965); label.setAttribute('y', 158);
+  label.setAttribute('fill', '#22d3ee');
+  label.setAttribute('text-anchor', 'middle');
+  label.setAttribute('font-size', '14');
+  label.setAttribute('font-weight', '800');
+  label.setAttribute('letter-spacing', '4');
+  label.style.filter = 'drop-shadow(0 0 8px #22d3ee)';
+  label.textContent = 'DEV';
+  wires.appendChild(label);
   const WEAK   = { width: 1.0, opacity: 0.18 };  // 약한 연결
   const NORMAL = { width: 1.4, opacity: 0.28 };  // 보통
   const STRONG = { width: 2.4, opacity: 0.45 };  // 강한 핵심
