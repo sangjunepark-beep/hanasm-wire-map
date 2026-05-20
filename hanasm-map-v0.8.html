@@ -1375,6 +1375,10 @@ function drawAllWires() {
   drawWire('web', 'nblog', '#03C75A', NORMAL, 'sns');
   drawWire('web', 'yt',    '#FF0000', NORMAL, 'sns');
   depts.forEach(d => d.links.forEach(t => drawWire(d.id, t, '#a5b4fc', WEAK, 'dept')));
+  // NAS → 부서 (factory2 제외) 7곳 - 옅은 시스템 와이어
+  ['web','cs','design','dev','fin','sales','product'].forEach(deptId => {
+    drawWire('nas', deptId, '#22d3ee', WEAK, 'system');
+  });
   // 채널 → 웹팀 숨김 와이어 (채널 클릭 시에만 강조)
   [...DATA.personalChannels, ...DATA.corpChannels].forEach(ch => {
     drawWire(ch.id, 'web', '#60a5fa', { width: 1.4, opacity: 0 }, 'ch-web');
@@ -1516,16 +1520,17 @@ function setStage(id, stage) {
         connected.add(p.dataset.from); connected.add(p.dataset.to);
       }
     });
-    // NAS 클릭: 시안/문서 사용 부서 5곳 바운스 (와이어 없이 강조)
+    // NAS 클릭: 부서 7곳 (factory2 제외) 바운스 + flow 와이어 강조
     if (id === 'nas') {
-      const nasUsers = ['web', 'fin', 'cs', 'design', 'product'];
+      const nasUsers = ['web', 'cs', 'design', 'dev', 'fin', 'sales', 'product'];
       nasUsers.forEach(deptId => {
         connected.add(deptId);
+        // NAS↔부서 와이어 강조
+        wires.querySelectorAll(`path[data-from="nas"][data-to="${deptId}"], path[data-from="${deptId}"][data-to="nas"]`).forEach(p => p.classList.add('focus-wire','flow'));
         const el = POS[deptId]?.el;
         if (el) {
-          // 재트리거를 위해 잠깐 클래스 제거 후 부착
           el.classList.remove('bounce');
-          void el.offsetWidth; // reflow
+          void el.offsetWidth;
           el.classList.add('bounce');
           setTimeout(() => el.classList.remove('bounce'), 750);
         }
