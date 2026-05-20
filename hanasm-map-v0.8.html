@@ -1229,13 +1229,25 @@ function edge(id, side) {
   return { x: r.x, y: r.y };
 }
 function orthoPath(p1, p2, mode) {
-  // 비대칭 베지에 - 도착지 쪽으로 모여드는 묶음 효과 (출발 0.3, 도착 0.65)
+  // 동적 control - 거리가 한쪽으로 치우치면 대칭, 비스듬하면 약한 비대칭
   if (mode === 'H') {
     const dx = p2.x - p1.x;
-    return `M${p1.x},${p1.y} C${p1.x + dx*0.30},${p1.y} ${p2.x - dx*0.65},${p2.y} ${p2.x},${p2.y}`;
+    const adx = Math.abs(dx);
+    const ady = Math.abs(p2.y - p1.y);
+    // 같은 높이 가까이 → 대칭 부드러운 곡선
+    if (ady < 80 || adx < 220) {
+      return `M${p1.x},${p1.y} C${p1.x + dx*0.42},${p1.y} ${p2.x - dx*0.42},${p2.y} ${p2.x},${p2.y}`;
+    }
+    // 비스듬한 경우만 약한 비대칭 (도착지 쪽 0.55)
+    return `M${p1.x},${p1.y} C${p1.x + dx*0.35},${p1.y} ${p2.x - dx*0.55},${p2.y} ${p2.x},${p2.y}`;
   } else {
     const dy = p2.y - p1.y;
-    return `M${p1.x},${p1.y} C${p1.x},${p1.y + dy*0.30} ${p2.x},${p2.y - dy*0.65} ${p2.x},${p2.y}`;
+    const ady = Math.abs(dy);
+    const adx = Math.abs(p2.x - p1.x);
+    if (adx < 80 || ady < 220) {
+      return `M${p1.x},${p1.y} C${p1.x},${p1.y + dy*0.42} ${p2.x},${p2.y - dy*0.42} ${p2.x},${p2.y}`;
+    }
+    return `M${p1.x},${p1.y} C${p1.x},${p1.y + dy*0.35} ${p2.x},${p2.y - dy*0.55} ${p2.x},${p2.y}`;
   }
 }
 function drawWire(fromId, toId, color, opts={}, cat=null) {
