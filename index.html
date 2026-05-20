@@ -563,6 +563,9 @@ svg.wires path.preview-wire {
   clip-path: polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px);
 }
 .proj-toggle:hover { background: rgba(167,139,250,0.18); color: #fff; }
+body.edit-mode .node { cursor: move; }
+body.edit-mode .node .frame { outline: 2px dashed rgba(251,191,36,0.6); outline-offset: 3px; }
+#editToggle.active { background: rgba(251,191,36,0.25) !important; }
 .proj-panel {
   position: fixed; top: 60px; right: 18px; bottom: 80px;
   width: 360px; z-index: 210;
@@ -1428,9 +1431,68 @@ function init() {
   setTimeout(() => { drawAllWires(); fitView(); }, 600);
 }
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
+
+// ===== 편집 모드: 노드 드래그 + 위치 저장 =====
+let editMode = false;
+let nodeDrag = null;
+const editBtn = document.getElementById('editToggle');
+
+function loadPositions() {
+  const saved = JSON.parse(localStorage.getItem('hanasm.positions') || '{}');
+  Object.keys(saved).forEach(id => {
+    if (POS[id]) {
+      POS[id].x = saved[id].x;
+      POS[id].y = saved[id].y;
+      POS[id].el.style.left = saved[id].x + 'px';
+      POS[id].el.style.top  = saved[id].y + 'px';
+    }
+  });
+  drawAllWires();
+}
+loadPositions();
+
+editBtn.addEventListener('click', () => {
+  editMode = !editMode;
+  document.body.classList.toggle('edit-mode', editMode);
+  editBtn.classList.toggle('active', editMode);
+  editBtn.textContent = editMode ? '✓ 저장' : '✎ 편집';
+  if (!editMode) {
+    const positions = {};
+    Object.keys(POS).forEach(id => positions[id] = { x: POS[id].x, y: POS[id].y });
+    localStorage.setItem('hanasm.positions', JSON.stringify(positions));
+  }
+});
+
+// 노드 mousedown (편집 모드)
+document.querySelectorAll('.node').forEach(div => {
+  div.addEventListener('mousedown', (e) => {
+    if (!editMode) return;
+    e.stopPropagation();
+    e.preventDefault();
+    const id = div.dataset.id;
+    const rec = POS[id]; if (!rec) return;
+    nodeDrag = { id, startX: rec.x, startY: rec.y, mouseX: e.clientX, mouseY: e.clientY };
+  });
+});
+
+window.addEventListener('mousemove', (e) => {
+  if (!nodeDrag) return;
+  const dx = (e.clientX - nodeDrag.mouseX) / camS;
+  const dy = (e.clientY - nodeDrag.mouseY) / camS;
+  const newX = nodeDrag.startX + dx;
+  const newY = nodeDrag.startY + dy;
+  const rec = POS[nodeDrag.id];
+  rec.x = newX; rec.y = newY;
+  rec.el.style.left = newX + 'px';
+  rec.el.style.top  = newY + 'px';
+  drawAllWires();
+});
+window.addEventListener('mouseup', () => { nodeDrag = null; });
+
 window.addEventListener('resize', () => { fitView(); drawAllWires(); });
 </script>
 
+<button class="proj-toggle" id="editToggle" style="right:200px;background:rgba(8,9,28,0.8);border-color:#fbbf24;color:#fbbf24">✎ 편집</button>
 <button class="proj-toggle" id="projToggle">≡ 신규 프로젝트</button>
 <aside class="proj-panel" id="projPanel">
   <div class="pp-head">
