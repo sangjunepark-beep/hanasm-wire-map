@@ -469,6 +469,106 @@ svg.wires path.preview-wire {
 }
 .task-panel .close-x:hover { color: var(--text-1); }
 
+/* === Projects (신규 진행/검토) 패널 === */
+.proj-panel {
+  position: fixed; top: 60px; right: 18px; bottom: 80px;
+  width: 360px;
+  background: rgba(8,9,28,0.94);
+  border: 1px solid var(--purple-2);
+  z-index: 210;
+  display: flex; flex-direction: column;
+  transform: translateX(400px); opacity: 0;
+  transition: transform 0.45s cubic-bezier(.2,.7,.2,1), opacity 0.3s;
+  pointer-events: none;
+  clip-path: polygon(14px 0, 100% 0, 100% calc(100% - 14px), calc(100% - 14px) 100%, 0 100%, 0 14px);
+  box-shadow: -10px 0 40px rgba(0,0,0,0.55);
+}
+.proj-panel.show { transform: translateX(0); opacity: 1; pointer-events: auto; }
+.proj-panel .pp-head {
+  padding: 14px 18px 12px;
+  border-bottom: 1px solid var(--line);
+  display: flex; justify-content: space-between; align-items: center;
+}
+.proj-panel .pp-title {
+  font-size: 12px; font-weight: 800; letter-spacing: 0.14em;
+  text-transform: uppercase;
+  background: linear-gradient(90deg, var(--purple-1), var(--blue-1));
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+.proj-panel .pp-x {
+  cursor: pointer; color: var(--text-3); font-size: 14px; padding: 4px;
+}
+.proj-panel .pp-x:hover { color: var(--text-1); }
+.proj-panel .pp-body { flex: 1; overflow-y: auto; padding: 12px 14px 18px; }
+.proj-panel .pp-body::-webkit-scrollbar { width: 4px; }
+.proj-panel .pp-body::-webkit-scrollbar-thumb { background: var(--line-2); }
+
+.cat {
+  margin-bottom: 14px;
+}
+.cat-h {
+  display: flex; justify-content: space-between; align-items: center;
+  font-size: 10px; font-weight: 800;
+  letter-spacing: 0.16em; text-transform: uppercase;
+  color: var(--cat-c, var(--text-2));
+  padding: 6px 4px; margin-bottom: 6px;
+  border-bottom: 1px dashed var(--line);
+}
+.cat-h .cnt {
+  font-size: 9.5px; padding: 1px 7px;
+  background: rgba(255,255,255,0.04); color: var(--text-2);
+  clip-path: polygon(3px 0, 100% 0, 100% calc(100% - 3px), calc(100% - 3px) 100%, 0 100%, 0 3px);
+}
+.proj-list { display: flex; flex-direction: column; gap: 5px; }
+.proj-item {
+  display: flex; align-items: center; gap: 8px;
+  padding: 8px 10px;
+  background: rgba(167,139,250,0.06);
+  border: 1px solid var(--line);
+  border-left: 2px solid var(--cat-c, var(--purple-2));
+  font-size: 11.5px; color: var(--text-1); font-weight: 600;
+  cursor: grab;
+  transition: background 0.15s, transform 0.15s;
+  letter-spacing: 0.015em;
+  clip-path: polygon(5px 0, 100% 0, 100% calc(100% - 5px), calc(100% - 5px) 100%, 0 100%, 0 5px);
+}
+.proj-item:hover { background: rgba(167,139,250,0.14); }
+.proj-item.dragging { opacity: 0.4; cursor: grabbing; }
+.proj-item .pi-handle { color: var(--text-3); font-size: 10px; cursor: grab; }
+.proj-item .pi-name { flex: 1; }
+.proj-item .pi-prio {
+  font-size: 9px; padding: 1px 5px;
+  font-weight: 800; letter-spacing: 0.04em;
+  clip-path: polygon(2px 0, 100% 0, 100% calc(100% - 2px), calc(100% - 2px) 100%, 0 100%, 0 2px);
+}
+.proj-item .pi-prio.h { background: rgba(248,113,113,0.20); color: var(--red); }
+.proj-item .pi-prio.m { background: rgba(251,191,36,0.20); color: var(--amber); }
+.proj-item .pi-prio.l { background: rgba(148,163,184,0.20); color: var(--text-3); }
+
+.cat.ad      { --cat-c: #fbbf24; }
+.cat.ai      { --cat-c: #c084fc; }
+.cat.seo     { --cat-c: #22d3ee; }
+.cat.product { --cat-c: #34d399; }
+.cat.system  { --cat-c: #60a5fa; }
+.cat.offline { --cat-c: #fb923c; }
+
+.cat .cat-h { color: var(--cat-c); }
+.cat .proj-item { border-left-color: var(--cat-c); }
+
+/* 토글 버튼 */
+.proj-toggle {
+  position: fixed; top: 16px; right: 16px;
+  z-index: 110;
+  background: rgba(8,9,28,0.78);
+  border: 1px solid var(--purple-2);
+  color: var(--purple-1);
+  padding: 8px 14px; font-size: 11px;
+  font-family: inherit; font-weight: 700; cursor: pointer;
+  letter-spacing: 0.12em; text-transform: uppercase;
+  clip-path: polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px);
+}
+.proj-toggle:hover { background: rgba(167,139,250,0.18); color: var(--text-1); }
+
 /* === Mobile === */
 @media (max-width: 768px) {
   .node .core { font-size: 12px; padding: 9px 14px; gap: 8px; }
@@ -578,6 +678,96 @@ svg.wires path.preview-wire {
     <span class="ip-by">— 김준범 대표</span>
   </div>
 </div>
+
+<button class="proj-toggle" id="projToggle">≡ 신규 프로젝트</button>
+
+<aside class="proj-panel" id="projPanel">
+  <div class="pp-head">
+    <div class="pp-title">신규 프로젝트 보드</div>
+    <span class="pp-x" id="ppClose">✕</span>
+  </div>
+  <div class="pp-body" id="ppBody"></div>
+</aside>
+
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js">
+// ========== 신규 프로젝트 보드 ==========
+const PROJECTS = {
+  ad:      { name:'광고', items:[
+    { name:'네이버 검색광고 신상품 추가', prio:'h' },
+    { name:'구글애즈 신규몰 확대', prio:'h' },
+    { name:'ADBOOST 효율 검증·확장', prio:'m' },
+    { name:'쿠팡 AI 광고 최적화', prio:'m' },
+    { name:'고도몰 → 신규몰 파워링크 이전', prio:'h' }
+  ]},
+  ai:      { name:'AI·자동화', items:[
+    { name:'해피톡 대체 멀티채팅플랫폼 (김준범 대표)', prio:'h' },
+    { name:'챗봇 / RAG 도입', prio:'m' },
+    { name:'상품 등록 자동화', prio:'m' },
+    { name:'CS 자동응답 / 견적 자동화', prio:'m' }
+  ]},
+  seo:     { name:'SEO·노출', items:[
+    { name:'AI 검색 노출 대응 (GEO)', prio:'h' },
+    { name:'구조화 데이터 / 스키마', prio:'m' },
+    { name:'블로그·유튜브 콘텐츠 SEO', prio:'m' }
+  ]},
+  product: { name:'신상품·등록', items:[
+    { name:'부착용 투명알림판 (가격 대기)', prio:'m' },
+    { name:'금손간판 신상품 등록 (12건)', prio:'h' },
+    { name:'DTF 상품 출시 (로켓출력공장)', prio:'m' }
+  ]},
+  system:  { name:'시스템·자사몰', items:[
+    { name:'Hanasignmall.kr 고도화', prio:'h' },
+    { name:'ERP 운영 기능 확장', prio:'h' },
+    { name:'쿠팡 상세 일괄 작업 자동화', prio:'m' }
+  ]},
+  offline: { name:'오프라인·영업', items:[
+    { name:'카탈로그 제작·배포', prio:'m' },
+    { name:'전단지·DM 캠페인', prio:'l' },
+    { name:'외부영업 콜·방문 확대', prio:'m' }
+  ]}
+};
+const PCATS = ['ad','ai','seo','product','system','offline'];
+
+function renderProjects() {
+  const body = document.getElementById('ppBody');
+  if (!body) return;
+  const saved = JSON.parse(localStorage.getItem('hanasm.projects') || '{}');
+  let html = '';
+  PCATS.forEach(key => {
+    const cat = PROJECTS[key];
+    const order = saved[key] || cat.items.map(i => i.name);
+    const items = order.map(n => cat.items.find(i => i.name === n)).filter(Boolean);
+    html += '<div class="cat ' + key + '" data-cat="' + key + '"><div class="cat-h">' + cat.name + ' <span class="cnt">' + items.length + '</span></div><div class="proj-list" data-list="' + key + '">';
+    items.forEach(it => {
+      const label = it.prio === 'h' ? '상' : it.prio === 'm' ? '중' : '하';
+      html += '<div class="proj-item" data-name="' + it.name + '"><span class="pi-handle">⋮⋮</span><span class="pi-name">' + it.name + '</span><span class="pi-prio ' + it.prio + '">' + label + '</span></div>';
+    });
+    html += '</div></div>';
+  });
+  body.innerHTML = html;
+  if (typeof Sortable !== 'undefined') {
+    document.querySelectorAll('.proj-list').forEach(list => {
+      Sortable.create(list, {
+        group: 'projects', animation: 180, ghostClass: 'dragging',
+        onEnd: () => {
+          const next = {};
+          document.querySelectorAll('.proj-list').forEach(l => {
+            next[l.dataset.list] = [...l.querySelectorAll('.proj-item')].map(x => x.dataset.name);
+          });
+          localStorage.setItem('hanasm.projects', JSON.stringify(next));
+        }
+      });
+    });
+  }
+}
+document.getElementById('projToggle').addEventListener('click', () => {
+  document.getElementById('projPanel').classList.add('show');
+  renderProjects();
+});
+document.getElementById('ppClose').addEventListener('click', () => {
+  document.getElementById('projPanel').classList.remove('show');
+});
+</script>
 
 <aside class="task-panel" id="taskPanel">
   <span class="close-x" id="taskClose">✕</span>
@@ -1249,104 +1439,6 @@ function showTasks(deptId, memberName) {
   }
 
   const statsEl = document.getElementById('tpStats');
-  if (m.tasks) {
-    statsEl.innerHTML = `
-      ${stats.routine ? `<span class="st routine">정기 ${stats.routine}</span>` : ''}
-      ${stats.aux     ? `<span class="st active">상시 ${stats.aux}</span>` : ''}
-    `;
-  } else {
-    statsEl.innerHTML = '';
-  }
-
-  const body = document.getElementById('tpBody');
-  if (!m.tasks) {
-    body.innerHTML = `
-      <div class="tp-empty">
-        <div class="ic">◇</div>
-        업무 인터뷰 대기 중<br>
-        <span style="font-size:10px; color:var(--text-3); letter-spacing:0.1em;">박상준 차장에게 전달 필요</span>
-      </div>`;
-  } else {
-    let html = '';
-    const order = [
-      { key:'정기', cls:'s-routine', label:'정기' },
-      { key:'상시', cls:'s-active',  label:'상시' }
-    ];
-    order.forEach(({key, cls, label}) => {
-      if (groups[key] && groups[key].length) {
-        html += `<div class="task-group ${cls}"><h4>${label} <span class="cnt">${groups[key].length}</span></h4>`;
-        groups[key].forEach(t => {
-          const prio = t.prio || 'l';
-          const prioLabel = prio === 'h' ? '상' : prio === 'm' ? '중' : '하';
-          html += `<div class="task-item">
-            <span class="tdot"></span>
-            <span class="tname">${t.name}${t.detail ? ` <b>${t.detail}</b>` : ''}</span>
-            <span class="prio ${prio}">${prioLabel}</span>
-          </div>`;
-        });
-        html += `</div>`;
-      }
-    });
-    body.innerHTML = html;
-  }
-  taskPanel.classList.add('show');
-}
-
-// ============ EVENTS ============
-document.getElementById('taskClose').addEventListener('click', () => taskPanel.classList.remove('show'));
-
-const stageEl = document.getElementById('stage');
-let isDragging = false, dragStart = null;
-
-stageEl.addEventListener('mousedown', (e) => {
-  if (e.button !== 0) return;
-  if (e.target.closest('.task-panel') || e.target.closest('.controls') || e.target.closest('.topbar') || e.target.closest('.legend')) return;
-  dragStart = { camX, camY, x: e.clientX, y: e.clientY };
-});
-
-window.addEventListener('mousemove', (e) => {
-  if (!dragStart) return;
-  const dx = e.clientX - dragStart.x, dy = e.clientY - dragStart.y;
-  if (!isDragging && Math.hypot(dx, dy) > 5) { isDragging = true; stageEl.classList.add('dragging'); }
-  if (isDragging) { camX = dragStart.camX + dx; camY = dragStart.camY + dy; applyCam(); }
-});
-
-window.addEventListener('mouseup', () => {
-  if (isDragging) { recentlyDragged = true; setTimeout(() => recentlyDragged = false, 60); stageEl.classList.remove('dragging'); }
-  isDragging = false; dragStart = null;
-});
-
-// Touch 지원 (모바일)
-stageEl.addEventListener('touchstart', (e) => {
-  if (e.target.closest('.task-panel') || e.target.closest('.controls') || e.target.closest('.topbar') || e.target.closest('.legend')) return;
-  if (e.touches.length === 1) {
-    dragStart = { camX, camY, x: e.touches[0].clientX, y: e.touches[0].clientY };
-  }
-}, { passive: true });
-stageEl.addEventListener('touchmove', (e) => {
-  if (!dragStart || e.touches.length !== 1) return;
-  const dx = e.touches[0].clientX - dragStart.x, dy = e.touches[0].clientY - dragStart.y;
-  if (!isDragging && Math.hypot(dx, dy) > 5) { isDragging = true; stageEl.classList.add('dragging'); }
-  if (isDragging) { camX = dragStart.camX + dx; camY = dragStart.camY + dy; applyCam(); e.preventDefault(); }
-}, { passive: false });
-stageEl.addEventListener('touchend', () => {
-  if (isDragging) { recentlyDragged = true; setTimeout(() => recentlyDragged = false, 60); stageEl.classList.remove('dragging'); }
-  isDragging = false; dragStart = null;
-});
-stageEl.addEventListener('click', (e) => {
-  if (recentlyDragged) { e.stopPropagation(); return; }
-  if (e.target.closest('.node') || e.target.closest('.task-panel')) return;
-  closeAll();
-}, true);
-document.getElementById('today').textContent = new Date().toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' }).toUpperCase();
-function init() {
-  fitView(); drawAllWires();
-  setTimeout(() => { drawAllWires(); fitView(); }, 200);
-  setTimeout(() => { drawAllWires(); fitView(); }, 600);
-}
-if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
-window.addEventListener('resize', () => { fitView(); drawAllWires(); });
-</script>
+  if (m.t</script>
 </body>
 </html>
-                                                                                    
