@@ -933,13 +933,13 @@ function edge(id, side) {
   return { x: r.x, y: r.y };
 }
 function orthoPath(p1, p2, mode) {
-  // 부드러운 S 베지에 (스크린샷 스타일)
+  // 부드러운 S 베지에 - 곡률 줄여 깔끔하게
   if (mode === 'H') {
     const dx = p2.x - p1.x;
-    return `M${p1.x},${p1.y} C${p1.x + dx*0.55},${p1.y} ${p2.x - dx*0.55},${p2.y} ${p2.x},${p2.y}`;
+    return `M${p1.x},${p1.y} C${p1.x + dx*0.4},${p1.y} ${p2.x - dx*0.4},${p2.y} ${p2.x},${p2.y}`;
   } else {
     const dy = p2.y - p1.y;
-    return `M${p1.x},${p1.y} C${p1.x},${p1.y + dy*0.55} ${p2.x},${p2.y - dy*0.55} ${p2.x},${p2.y}`;
+    return `M${p1.x},${p1.y} C${p1.x},${p1.y + dy*0.4} ${p2.x},${p2.y - dy*0.4} ${p2.x},${p2.y}`;
   }
 }
 function drawWire(fromId, toId, color, opts={}) {
@@ -988,6 +988,24 @@ function drawRegion(x, y, w, h, color, label) {
 
 function drawAllWires() {
   wires.innerHTML = '';
+  const O = { width: 1.3, opacity: 0.22 };  // 일관된 평시 스타일
+  // 핵심 와이어
+  drawWire('ceo', 'personal', '#fbbf24', O);
+  drawWire('ceo', 'corp',     '#fbbf24', O);
+  DATA.personalChannels.forEach(c => drawWire('personal', c.id, '#60a5fa', O));
+  DATA.corpChannels.forEach(c => drawWire('corp', c.id, '#a855f7', O));
+  drawWire('self-mall', 'erp', '#22d3ee', O);
+  drawWire('cs', 'playauto', '#fb923c', O);
+  drawWire('cs', 'ecount',   '#34d399', O);
+  drawWire('fin', 'ecount',  '#34d399', O);
+  drawWire('design', 'web',  '#f472b6', O);
+  drawWire('web', 'cs',      '#60a5fa', O);
+  drawWire('cs', 'design',   '#a855f7', O);
+  drawWire('design', 'product', '#f472b6', O);
+  drawWire('cs', 'erp',      '#22d3ee', O);
+  drawWire('sales', 'web',   '#ec4899', O);
+  depts.forEach(d => d.links.forEach(t => drawWire(d.id, t, d.color, O)));
+  return;
   drawWire('ceo', 'personal', '#60a5fa', { width: 2.0, flow: true });
   drawWire('ceo', 'corp',     '#a855f7', { width: 2.0, flow: true });
   DATA.personalChannels.forEach(c => drawWire('personal', c.id, '#60a5fa', { width: 1.5, flow: true }));
@@ -1247,4 +1265,4 @@ window.addEventListener('resize', () => { fitView(); drawAllWires(); });
 </script>
 </body>
 </html>
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   
+                                                                                                                                                                                                                                                                                                                                                                 
