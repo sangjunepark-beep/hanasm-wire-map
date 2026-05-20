@@ -1455,6 +1455,7 @@ loadPositions();
 window.addEventListener('resize', () => { fitView(); drawAllWires(); });
 </script>
 
+<button class="proj-toggle" id="undoBtn" style="right: 290px; display: none;">↶ 되돌리기 <span id="undoCnt" style="opacity:0.7;">0</span></button>
 <button class="proj-toggle" id="editToggle" style="right: 175px;">✎ 편집</button>
 <button class="proj-toggle" id="projToggle">≡ 신규 프로젝트</button>
 <aside class="proj-panel" id="projPanel">
@@ -1544,21 +1545,65 @@ document.getElementById('ppClose').addEventListener('click', () => {
   document.getElementById('projPanel').classList.remove('show');
 });
 
-// ===== 편집 모드: 노드 드래그 + 위치 저장 =====
+// ===== 편집 모드: 노드 드래그 + 위치 저장 + Undo (최대 10) =====
 (function(){
   const editBtn = document.getElementById('editToggle');
+  const undoBtn = document.getElementById('undoBtn');
+  const undoCnt = document.getElementById('undoCnt');
   if (!editBtn) return;
   const worldEl = document.getElementById('world');
   let editMode = false;
   let nodeDrag = null;
+  const UNDO_MAX = 10;
+  const undoStack = []; // [{id, x, y}]
 
+  function refreshUndoUi() {
+    if (undoCnt) undoCnt.textContent = undoStack.length;
+    if (undoBtn) {
+      undoBtn.style.opacity = undoStack.length ? '1' : '0.45';
+      undoBtn.style.pointerEvents = undoStack.length ? 'auto' : 'none';
+    }
+  }
   function setEditMode(on) {
     editMode = on;
     document.body.classList.toggle('edit-mode', on);
     editBtn.classList.toggle('active', on);
     editBtn.textContent = on ? '✓ 편집 종료' : '✎ 편집';
+    if (undoBtn) undoBtn.style.display = on ? '' : 'none';
+    refreshUndoUi();
   }
   editBtn.addEventListener('click', () => setEditMode(!editMode));
+
+  function pushUndo(entry) {
+    undoStack.push(entry);
+    while (undoStack.length > UNDO_MAX) undoStack.shift();
+    refreshUndoUi();
+  }
+  function doUndo() {
+    if (!undoStack.length) return;
+    const last = undoStack.pop();
+    const r = POS[last.id];
+    if (r) {
+      r.x = last.x; r.y = last.y;
+      r.el.style.left = r.x + 'px';
+      r.el.style.top  = r.y + 'px';
+      try {
+        const saved = JSON.parse(localStorage.getItem('hanasm.positions') || '{}');
+        saved[last.id] = { x: last.x, y: last.y };
+        localStorage.setItem('hanasm.positions', JSON.stringify(saved));
+      } catch(err) {}
+      if (typeof drawAllWires === 'function') drawAllWires();
+    }
+    refreshUndoUi();
+  }
+  if (undoBtn) undoBtn.addEventListener('click', (e) => { e.stopPropagation(); doUndo(); });
+  window.addEventListener('keydown', (e) => {
+    if (!editMode) return;
+    if ((e.ctrlKey || e.metaKey) && (e.key === 'z' || e.key === 'Z')) {
+      e.preventDefault();
+      doUndo();
+    }
+  });
 
   worldEl.addEventListener('mousedown', (e) => {
     if (!editMode) return;
@@ -1571,7 +1616,8 @@ document.getElementById('ppClose').addEventListener('click', () => {
     nodeDrag = {
       id,
       sx: e.clientX, sy: e.clientY,
-      ox: POS[id].x, oy: POS[id].y
+      ox: POS[id].x, oy: POS[id].y,
+      moved: false
     };
     nodeEl.style.zIndex = 999;
   }, true);
@@ -1580,6 +1626,7 @@ document.getElementById('ppClose').addEventListener('click', () => {
     if (!nodeDrag) return;
     const dx = (e.clientX - nodeDrag.sx) / camS;
     const dy = (e.clientY - nodeDrag.sy) / camS;
+    if (!nodeDrag.moved && Math.hypot(dx, dy) > 1) nodeDrag.moved = true;
     const r = POS[nodeDrag.id];
     r.x = nodeDrag.ox + dx;
     r.y = nodeDrag.oy + dy;
@@ -1590,11 +1637,14 @@ document.getElementById('ppClose').addEventListener('click', () => {
 
   window.addEventListener('mouseup', () => {
     if (!nodeDrag) return;
-    try {
-      const saved = JSON.parse(localStorage.getItem('hanasm.positions') || '{}');
-      saved[nodeDrag.id] = { x: POS[nodeDrag.id].x, y: POS[nodeDrag.id].y };
-      localStorage.setItem('hanasm.positions', JSON.stringify(saved));
-    } catch(err) {}
+    if (nodeDrag.moved) {
+      pushUndo({ id: nodeDrag.id, x: nodeDrag.ox, y: nodeDrag.oy });
+      try {
+        const saved = JSON.parse(localStorage.getItem('hanasm.positions') || '{}');
+        saved[nodeDrag.id] = { x: POS[nodeDrag.id].x, y: POS[nodeDrag.id].y };
+        localStorage.setItem('hanasm.positions', JSON.stringify(saved));
+      } catch(err) {}
+    }
     POS[nodeDrag.id].el.style.zIndex = '';
     nodeDrag = null;
   });
@@ -1603,4 +1653,4 @@ document.getElementById('ppClose').addEventListener('click', () => {
 
 </body>
 </html>
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         
+                                                                                                                                                           
