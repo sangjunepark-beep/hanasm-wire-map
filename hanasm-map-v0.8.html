@@ -318,6 +318,12 @@ svg.wires path.preview-wire {
   content:""; width:8px; height:8px; border-radius:50%;
   background: conic-gradient(#4285F4 0deg 90deg, #EA4335 90deg 180deg, #FBBC05 180deg 270deg, #34A853 270deg 360deg);
 }
+.ad-item.coupang { border-left-color:#ED1C24; background:rgba(237,28,36,0.10); }
+.ad-item.coupang::before { color:#ED1C24; }
+.ad-item.esm     { border-left-color:#00ACE6; background:rgba(0,172,230,0.10); }
+.ad-item.esm::before { color:#00ACE6; }
+.ad-item.none    { border-left-color:#64748b; background:rgba(100,116,139,0.06); opacity:0.6; }
+.ad-item.none::before { color:#64748b; content:"○"; }
 
 /* === Variants === */
 .node.ceo .frame { --c1: var(--cyan); --c2: var(--purple-1); }
@@ -726,10 +732,10 @@ const DATA = {
   corpChannels: [
     { id:"godo",      name:"Hanasignmall.com", sub:"자사몰 · 고도몰",     brand:"#a855f7", desc:"자사몰 1 · 고도몰 (외부 솔루션) · 파워링크 점진 이전 예정", ad:["네이버 파워링크"] },
     { id:"self-mall", name:"Hanasignmall.kr",  sub:"자사몰 · 신규몰 (개발팀)", brand:"#c084fc", desc:"자사몰 2 · 자체개발몰 (신규몰) · 고도몰 파워링크 순차 연결 예정", ad:["구글애즈","네이버 검색광고 일부","예정: 고도몰 파워링크 이전"] },
-    { id:"coupang",   name:"쿠팡",         sub:"오픈마켓", brand:"#f472b6", desc:"쿠팡 · 보류 업무 다수 누적 (7건)", ad:[] },
-    { id:"11st",      name:"11번가",       sub:"오픈마켓", brand:"#ec4899", desc:"11번가 · 판매기간 연장 관리", ad:[] },
-    { id:"auction",   name:"옥션",         sub:"ESM",      brand:"#fbbf24", desc:"옥션 (ESM)", ad:[] },
-    { id:"gmarket",   name:"G마켓",        sub:"ESM",      brand:"#22d3ee", desc:"G마켓 (ESM)", ad:[] }
+    { id:"coupang",   name:"쿠팡",         sub:"오픈마켓", brand:"#f472b6", desc:"쿠팡 · 자체 AI 광고 진행 · 보류 업무 다수 누적 (7건)", ad:["쿠팡 자체 AI 광고"] },
+    { id:"11st",      name:"11번가",       sub:"오픈마켓", brand:"#ec4899", desc:"11번가 · 광고 X · 판매기간 연장 관리", ad:["광고 미집행"] },
+    { id:"auction",   name:"옥션",         sub:"ESM",      brand:"#fbbf24", desc:"옥션 (ESM) · ESM 자체 AI 광고 + 주력제품 별도", ad:["ESM 자체 AI 광고","지정 주력제품 별도 광고"] },
+    { id:"gmarket",   name:"G마켓",        sub:"ESM",      brand:"#22d3ee", desc:"G마켓 (ESM) · ESM 자체 AI 광고 + 주력제품 별도", ad:["ESM 자체 AI 광고","지정 주력제품 별도 광고"] }
   ],
   departments: [
     { id:"web", name:"웹팀", color:"#60a5fa", color2:"#a855f7",
@@ -847,9 +853,12 @@ function placeNode(node, x, y, cls) {
       const it = document.createElement('div');
       let cls = 'ad-item';
       if (a.startsWith('예정')) cls += ' future';
+      else if (a.includes('미집행')) cls += ' none';
       else if (a.includes('구글')) cls += ' google';
       else if (a.includes('네이버')) cls += ' naver';
       else if (a.includes('ADBOOST')) cls += ' adboost';
+      else if (a.includes('쿠팡')) cls += ' coupang';
+      else if (a.includes('ESM') || a.includes('주력제품')) cls += ' esm';
       it.className = cls;
       it.textContent = a;
       exp.appendChild(it);
@@ -1309,12 +1318,4 @@ stageEl.addEventListener('click', (e) => {
 document.getElementById('today').textContent = new Date().toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' }).toUpperCase();
 function init() {
   fitView(); drawAllWires();
-  setTimeout(() => { drawAllWires(); fitView(); }, 200);
-  setTimeout(() => { drawAllWires(); fitView(); }, 600);
-}
-if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
-window.addEventListener('resize', () => { fitView(); drawAllWires(); });
-</script>
-</body>
-</html>
-                                                                                                                                                                         
+  setTimeout(() => { drawAllWires(); fitView
