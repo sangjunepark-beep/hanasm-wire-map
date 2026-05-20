@@ -1730,6 +1730,7 @@ window.addEventListener('resize', () => { fitView(); drawAllWires(); });
 </script>
 
 <button class="proj-toggle" id="undoBtn" style="right: 290px; display: none;">↶ 되돌리기 <span id="undoCnt" style="opacity:0.7;">0</span></button>
+<button class="proj-toggle" id="shareBtn" style="right: 425px;" title="현재 레이아웃·필터·보드 순서를 URL로 복사 → 다른 컴에서 열면 그대로 적용">🔗 공유</button>
 <button class="proj-toggle" id="editToggle" style="right: 175px;">✎ 편집</button>
 <button class="proj-toggle" id="projToggle">≡ 신규 프로젝트</button>
 <aside class="proj-panel" id="projPanel">
@@ -1991,6 +1992,56 @@ document.getElementById('ppClose').addEventListener('click', () => {
     POS[nodeDrag.id].el.style.zIndex = '';
     nodeDrag = null;
   });
+})();
+
+// ===== 레이아웃·필터·보드 URL 공유 =====
+(function(){
+  function encodeState() {
+    const state = {
+      pos: JSON.parse(localStorage.getItem('hanasm.positions') || '{}'),
+      cat: JSON.parse(localStorage.getItem('hanasm.catFilter') || '[]'),
+      pj:  JSON.parse(localStorage.getItem('hanasm.projects.flat') || '[]')
+    };
+    const json = JSON.stringify(state);
+    return btoa(unescape(encodeURIComponent(json)));
+  }
+  function decodeState(b64) {
+    try { return JSON.parse(decodeURIComponent(escape(atob(b64)))); }
+    catch(e) { return null; }
+  }
+  // 페이지 로드 시 URL hash 확인 → 적용
+  function applyFromHash() {
+    const m = location.hash.match(/[#&]d=([^&]+)/);
+    if (!m) return false;
+    const state = decodeState(m[1]);
+    if (!state) return false;
+    if (state.pos) localStorage.setItem('hanasm.positions', JSON.stringify(state.pos));
+    if (state.cat) localStorage.setItem('hanasm.catFilter', JSON.stringify(state.cat));
+    if (state.pj)  localStorage.setItem('hanasm.projects.flat', JSON.stringify(state.pj));
+    return true;
+  }
+  if (location.hash.indexOf('d=') > -1) {
+    if (applyFromHash()) {
+      // hash 제거 후 새로고침으로 깔끔히 적용
+      history.replaceState(null, '', location.pathname + location.search);
+      location.reload();
+    }
+  }
+  // 공유 버튼
+  const btn = document.getElementById('shareBtn');
+  if (btn) {
+    btn.addEventListener('click', async () => {
+      const data = encodeState();
+      const url = location.origin + location.pathname + location.search + '#d=' + data;
+      try {
+        await navigator.clipboard.writeText(url);
+        btn.textContent = '✓ 복사됨';
+        setTimeout(() => btn.textContent = '🔗 공유', 1800);
+      } catch(e) {
+        prompt('이 URL을 복사하세요 (다른 컴에서 열면 그대로 적용)', url);
+      }
+    });
+  }
 })();
 </script>
 
