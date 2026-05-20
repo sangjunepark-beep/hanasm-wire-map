@@ -298,6 +298,17 @@ svg.wires path.preview-wire {
 .pl-item .pl-by { font-size: 9px; color: var(--text-3); font-weight: 600; }
 .pl-item.active   { --pl-c: #34d399; }
 .pl-item.planned  { --pl-c: #93c5fd; }
+.ad-item {
+  display: flex; align-items: center; gap: 7px;
+  padding: 5px 9px;
+  background: rgba(251,191,36,0.08);
+  border-left: 2px solid #fbbf24;
+  font-size: 10.5px; color: var(--text-2);
+  margin: 3px 0; letter-spacing: 0.015em;
+}
+.ad-item::before { content:"●"; color:#fbbf24; font-size:8px; }
+.ad-item.future::before { color:#94a3b8; }
+.ad-item.future { border-left-color:#94a3b8; background:rgba(148,163,184,0.06); }
 
 /* === Variants === */
 .node.ceo .frame { --c1: var(--cyan); --c2: var(--purple-1); }
@@ -699,17 +710,17 @@ const DATA = {
               desc:"GPT Plus 1개 계정 · 전사 공용" },
 
   personalChannels: [
-    { id:"ss-hana",   name:"하나몰",       sub:"SMARTSTORE", brand:"#60a5fa", desc:"네이버 스마트스토어 · 하나몰 (메인)" },
-    { id:"ss-baron",  name:"더바른사인",   sub:"SMARTSTORE", brand:"#60a5fa", desc:"네이버 스마트스토어 · 더바른사인" },
-    { id:"ss-rocket", name:"로켓출력공장", sub:"SMARTSTORE", brand:"#60a5fa", desc:"네이버 스마트스토어 · 신규 · 시트/페트/포맥스/폼보드/DTF" }
+    { id:"ss-hana",   name:"하나몰",       sub:"SMARTSTORE", brand:"#60a5fa", desc:"네이버 스마트스토어 · 하나몰 (메인)", ad:["네이버 검색광고","ADBOOST 일부"] },
+    { id:"ss-baron",  name:"더바른사인",   sub:"SMARTSTORE", brand:"#60a5fa", desc:"네이버 스마트스토어 · 더바른사인", ad:["네이버 검색광고","ADBOOST 일부"] },
+    { id:"ss-rocket", name:"로켓출력공장", sub:"SMARTSTORE", brand:"#60a5fa", desc:"네이버 스마트스토어 · 신규 · 시트/페트/포맥스/폼보드/DTF", ad:["네이버 검색광고","ADBOOST 일부"] }
   ],
   corpChannels: [
-    { id:"godo",      name:"Hanasignmall.com", sub:"자사몰 · 고도몰",     brand:"#a855f7", desc:"자사몰 1 · 고도몰 (외부 솔루션)" },
-    { id:"self-mall", name:"Hanasignmall.kr",  sub:"자사몰 · 자체개발몰", brand:"#c084fc", desc:"자사몰 2 · 자체개발몰 (개발팀 자체 개발 · ERP와 연결)" },
-    { id:"coupang",   name:"쿠팡",         sub:"오픈마켓", brand:"#f472b6", desc:"쿠팡 · 보류 업무 다수 누적 (7건)" },
-    { id:"11st",      name:"11번가",       sub:"오픈마켓", brand:"#ec4899", desc:"11번가 · 판매기간 연장 관리" },
-    { id:"auction",   name:"옥션",         sub:"ESM",      brand:"#fbbf24", desc:"옥션 (ESM)" },
-    { id:"gmarket",   name:"G마켓",        sub:"ESM",      brand:"#22d3ee", desc:"G마켓 (ESM)" }
+    { id:"godo",      name:"Hanasignmall.com", sub:"자사몰 · 고도몰",     brand:"#a855f7", desc:"자사몰 1 · 고도몰 (외부 솔루션) · 파워링크 점진 이전 예정", ad:["네이버 파워링크"] },
+    { id:"self-mall", name:"Hanasignmall.kr",  sub:"자사몰 · 신규몰 (개발팀)", brand:"#c084fc", desc:"자사몰 2 · 자체개발몰 (신규몰) · 고도몰 파워링크 순차 연결 예정", ad:["구글애즈","네이버 검색광고 일부","예정: 고도몰 파워링크 이전"] },
+    { id:"coupang",   name:"쿠팡",         sub:"오픈마켓", brand:"#f472b6", desc:"쿠팡 · 보류 업무 다수 누적 (7건)", ad:[] },
+    { id:"11st",      name:"11번가",       sub:"오픈마켓", brand:"#ec4899", desc:"11번가 · 판매기간 연장 관리", ad:[] },
+    { id:"auction",   name:"옥션",         sub:"ESM",      brand:"#fbbf24", desc:"옥션 (ESM)", ad:[] },
+    { id:"gmarket",   name:"G마켓",        sub:"ESM",      brand:"#22d3ee", desc:"G마켓 (ESM)", ad:[] }
   ],
   departments: [
     { id:"web", name:"웹팀", color:"#60a5fa", color2:"#a855f7",
@@ -818,6 +829,17 @@ function placeNode(node, x, y, cls) {
     const lbl = document.createElement('div'); lbl.className = 'label'; lbl.textContent = 'INFO';
     const dsc = document.createElement('div'); dsc.className = 'desc'; dsc.textContent = node.desc;
     exp.appendChild(lbl); exp.appendChild(dsc);
+  }
+  if (node.ad && node.ad.length) {
+    const lbl = document.createElement('div'); lbl.className = 'label'; lbl.style.marginTop = '8px';
+    lbl.textContent = `광고 집행 · ${node.ad.length}`;
+    exp.appendChild(lbl);
+    node.ad.forEach(a => {
+      const it = document.createElement('div');
+      it.className = 'ad-item' + (a.startsWith('예정') ? ' future' : '');
+      it.textContent = a;
+      exp.appendChild(it);
+    });
   }
   if (node.members) {
     const lbl = document.createElement('div'); lbl.className = 'label';
@@ -1267,18 +1289,4 @@ stageEl.addEventListener('touchend', () => {
 });
 stageEl.addEventListener('click', (e) => {
   if (recentlyDragged) { e.stopPropagation(); return; }
-  if (e.target.closest('.node') || e.target.closest('.task-panel')) return;
-  closeAll();
-}, true);
-document.getElementById('today').textContent = new Date().toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' }).toUpperCase();
-function init() {
-  fitView(); drawAllWires();
-  setTimeout(() => { drawAllWires(); fitView(); }, 200);
-  setTimeout(() => { drawAllWires(); fitView(); }, 600);
-}
-if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
-window.addEventListener('resize', () => { fitView(); drawAllWires(); });
-</script>
-</body>
-</html>
-                                                                                                                                                                                     
+  if (e.targ
