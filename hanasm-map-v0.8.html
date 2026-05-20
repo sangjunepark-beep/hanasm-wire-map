@@ -354,6 +354,9 @@ svg.wires path.preview-wire {
 .node.sys .core { font-size: 13.5px; padding: 12px 18px; }
 .node.sys-playauto .frame { --c1: #fb923c; --c2: #fbbf24; }
 .node.sys-ecount   .frame { --c1: #34d399; --c2: #22d3ee; }
+.node.sys-ig    .frame { --c1: #E1306C; --c2: #f472b6; }
+.node.sys-nblog .frame { --c1: #03C75A; --c2: #34d399; }
+.node.sys-yt    .frame { --c1: #FF0000; --c2: #f87171; }
 .node.sys-claude20 .frame { --c1: #d97706; --c2: #f97316; }
 .node.sys-claude5  .frame { --c1: #a855f7; --c2: #d97706; }
 .node.sys-gpt      .frame { --c1: #10b981; --c2: #22d3ee; }
@@ -714,6 +717,9 @@ const DATA = {
   ecount:   { id:"ecount", name:"이카운트", sub:"견적·세금계산서 SYS",
               brand:"#34d399",
               desc:"견적서 발행 (CS) + 세금계산서 발행 (이하나 대리) · CS와 경영지원이 유기적으로 얽힘" },
+  ig:       { id:"ig",    name:"인스타그램",   sub:"SNS · 임정민 주임", brand:"#E1306C", desc:"인스타 게시글 · 릴스 · AI 이미지/영상" },
+  nblog:    { id:"nblog", name:"네이버 블로그", sub:"SNS · 임정민 주임", brand:"#03C75A", desc:"네이버 블로그 포스팅 · 검색 노출 확인" },
+  yt:       { id:"yt",    name:"유튜브",       sub:"SNS · 임정민 주임", brand:"#FF0000", desc:"유튜브 쇼츠 (인스타 릴스 동일 영상)" },
   claude20: { id:"claude20", name:"Claude Max 20×", sub:"AI · 팀 공용",
               brand:"#d97706",
               desc:"클로드 맥스 20X · 팀별 공용 (개발팀 제외 전사)" },
@@ -958,6 +964,10 @@ spreadX(depts.slice(4),    510).forEach(({it, x}) => placeNode(it, x, DEPT_BOT_Y
 // 플레이오토 + 이카운트 → CS팀 위쪽 영역 (CS팀 X=945 근처)
 placeNode(DATA.playauto, 845, 80, 'sys sys-playauto');
 placeNode(DATA.ecount,   1080, 80, 'sys sys-ecount');
+// SNS 3종 → 웹팀 위쪽 (X=435 근처)
+placeNode(DATA.ig,    180, 80,  'sys sys-ig');
+placeNode(DATA.nblog, 350, 80,  'sys sys-nblog');
+placeNode(DATA.yt,    520, 80,  'sys sys-yt');
 // ERP → Hanasignmall.kr (self-mall) 우측에 산하로
 placeNode(DATA.erp, POS_X.chC + 180, CY - 50, 'erp');
 
@@ -1057,6 +1067,10 @@ function drawAllWires() {
   drawWire('dev', 'self-mall','#22d3ee', NORMAL);
   // 약한 연결 - 외부영업→웹팀(시공이미지), 부서.links 자동
   drawWire('sales', 'web',   '#ec4899', WEAK);
+  // 웹팀 → SNS 3종 (임정민 주임)
+  drawWire('web', 'ig',    '#E1306C', NORMAL);
+  drawWire('web', 'nblog', '#03C75A', NORMAL);
+  drawWire('web', 'yt',    '#FF0000', NORMAL);
   depts.forEach(d => d.links.forEach(t => drawWire(d.id, t, d.color, WEAK)));
   return;
   drawWire('ceo', 'personal', '#60a5fa', { width: 2.0, flow: true });
@@ -1308,14 +1322,4 @@ stageEl.addEventListener('touchmove', (e) => {
 }, { passive: false });
 stageEl.addEventListener('touchend', () => {
   if (isDragging) { recentlyDragged = true; setTimeout(() => recentlyDragged = false, 60); stageEl.classList.remove('dragging'); }
-  isDragging = false; dragStart = null;
-});
-stageEl.addEventListener('click', (e) => {
-  if (recentlyDragged) { e.stopPropagation(); return; }
-  if (e.target.closest('.node') || e.target.closest('.task-panel')) return;
-  closeAll();
-}, true);
-document.getElementById('today').textContent = new Date().toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' }).toUpperCase();
-function init() {
-  fitView(); drawAllWires();
-  setTimeout(() => { drawAllWires(); fitView
+  isDragging = false; dragStart = n
