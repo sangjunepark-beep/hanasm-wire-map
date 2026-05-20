@@ -818,6 +818,18 @@ const TASKS = {
     { name:"세무사 발송용 월결산 자료 취합", status:"정기", prio:"h" },
     { name:"간식 취합·주문", status:"정기", prio:"l" }
   ],
+  factory2: [
+    { name:"구글시트 주문/제작 진행 게시판 확인", status:"정기", prio:"h", detail:"2인 공동" },
+    { name:"발주서 출력", status:"정기", prio:"h" },
+    { name:"원판 재단", status:"정기", prio:"h" },
+    { name:"제작실에서 가져온 시트 부착", status:"정기", prio:"h" },
+    { name:"부자재 부착", status:"정기", prio:"h" },
+    { name:"제품 사진 촬영", status:"정기", prio:"m" },
+    { name:"포장 작업", status:"정기", prio:"h" },
+    { name:"택배 발송", status:"정기", prio:"h" },
+    { name:"큰 제품 화물 발송", status:"정기", prio:"h", detail:"일부 건" },
+    { name:"오뚜기 제작·포장 (동일 흐름)", status:"정기", prio:"h" }
+  ],
   junghj: [
     { name:"디자인팀 업무 분배", status:"정기", prio:"h", detail:"매일 아침/점심 일감 분배" },
     { name:"디자인팀 조율 + 타팀 간 조율", status:"상시", prio:"h" },
@@ -1020,11 +1032,11 @@ const DATA = {
       links:["corp","cs","design"],
       members:[ { name:"이영호", role:"과장", title:"외부영업 · 견적 협업", tasks: null } ]},
     { id:"factory2", name:"2공장", color:"#3b82f6", color2:"#22d3ee",
-      desc:"제작 · 시공 (2명) · CS·디자인·제작실·ERP 연결",
+      desc:"동일 업무 2인 1조 · 시트/원판 재단·부착·포장·발송 · 오뚜기 동일 · CS·디자인·제작실·ERP 연결",
       links:["cs","design","erp","product"],
       members:[
-        { name:"최두학", role:"공장장", title:"공장 총괄", tasks: null },
-        { name:"김현우", role:"주임", title:"제작", tasks: null }
+        { name:"최두학", role:"공장장", title:"제작 · 출력 (2인 1조)", tasks: TASKS.factory2 },
+        { name:"김현우", role:"주임", title:"제작 · 출력 (2인 1조)", tasks: TASKS.factory2 }
       ]},
     { id:"product", name:"제작실", color:"#c084fc", color2:"#60a5fa",
       desc:"제작실 · 출력 (4명) · CS·디자인·2공장·ERP 연결",
