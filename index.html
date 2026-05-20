@@ -309,6 +309,15 @@ svg.wires path.preview-wire {
 .ad-item::before { content:"●"; color:#fbbf24; font-size:8px; }
 .ad-item.future::before { color:#94a3b8; }
 .ad-item.future { border-left-color:#94a3b8; background:rgba(148,163,184,0.06); }
+.ad-item.naver   { border-left-color:#03C75A; background:rgba(3,199,90,0.10); }
+.ad-item.naver::before { color:#03C75A; }
+.ad-item.adboost { border-left-color:#FF6B00; background:rgba(255,107,0,0.10); }
+.ad-item.adboost::before { color:#FF6B00; }
+.ad-item.google  { border-left-color:#4285F4; background:rgba(66,133,244,0.08); }
+.ad-item.google::before {
+  content:""; width:8px; height:8px; border-radius:50%;
+  background: conic-gradient(#4285F4 0deg 90deg, #EA4335 90deg 180deg, #FBBC05 180deg 270deg, #34A853 270deg 360deg);
+}
 
 /* === Variants === */
 .node.ceo .frame { --c1: var(--cyan); --c2: var(--purple-1); }
@@ -836,7 +845,12 @@ function placeNode(node, x, y, cls) {
     exp.appendChild(lbl);
     node.ad.forEach(a => {
       const it = document.createElement('div');
-      it.className = 'ad-item' + (a.startsWith('예정') ? ' future' : '');
+      let cls = 'ad-item';
+      if (a.startsWith('예정')) cls += ' future';
+      else if (a.includes('구글')) cls += ' google';
+      else if (a.includes('네이버')) cls += ' naver';
+      else if (a.includes('ADBOOST')) cls += ' adboost';
+      it.className = cls;
       it.textContent = a;
       exp.appendChild(it);
     });
@@ -1303,4 +1317,4 @@ window.addEventListener('resize', () => { fitView(); drawAllWires(); });
 </script>
 </body>
 </html>
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                
+                                                                                                                                                                         
