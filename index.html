@@ -324,6 +324,15 @@ svg.wires path.preview-wire {
 .ad-item.esm::before { color:#00ACE6; }
 .ad-item.none    { border-left-color:#64748b; background:rgba(100,116,139,0.06); opacity:0.6; }
 .ad-item.none::before { color:#64748b; content:"○"; }
+.ch-item {
+  display: flex; align-items: center; gap: 7px;
+  padding: 5px 9px;
+  background: rgba(244,114,182,0.08);
+  border-left: 2px solid #f472b6;
+  font-size: 10.5px; color: var(--text-2);
+  margin: 3px 0; letter-spacing: 0.015em;
+}
+.ch-item::before { content:"●"; color:#f472b6; font-size:8px; }
 
 /* === Variants === */
 .node.ceo .frame { --c1: var(--cyan); --c2: var(--purple-1); }
@@ -771,7 +780,8 @@ const DATA = {
               desc:"견적서 발행 (CS) + 세금계산서 발행 (이하나 대리) · CS와 경영지원이 유기적으로 얽힘" },
   call:     { id:"call",  name:"전화상담", sub:"CS · 전화", brand:"#60a5fa", desc:"고객 전화 상담 (CS팀 본업)" },
   chat:     { id:"chat",  name:"채팅상담", sub:"CS · 해피톡 통합", brand:"#f472b6",
-              desc:"해피톡으로 통합 관리 — 네이버 톡톡 (스마트스토어 3개) · 카카오 비즈니스 · 고도몰 · 신규몰" },
+              desc:"해피톡으로 통합 관리",
+              channels:["네이버 톡톡 (스마트스토어 3개)","카카오 비즈니스","고도몰","신규몰"] },
   ig:       { id:"ig",    name:"인스타그램",   sub:"SNS · 임정민 주임", brand:"#E1306C", desc:"인스타 게시글 · 릴스 · AI 이미지/영상" },
   nblog:    { id:"nblog", name:"네이버 블로그", sub:"SNS · 임정민 주임", brand:"#03C75A", desc:"네이버 블로그 포스팅 · 검색 노출 확인" },
   yt:       { id:"yt",    name:"유튜브",       sub:"SNS · 임정민 주임", brand:"#FF0000", desc:"유튜브 쇼츠 (인스타 릴스 동일 영상)" },
@@ -905,6 +915,17 @@ function placeNode(node, x, y, cls) {
     const lbl = document.createElement('div'); lbl.className = 'label'; lbl.textContent = 'INFO';
     const dsc = document.createElement('div'); dsc.className = 'desc'; dsc.textContent = node.desc;
     exp.appendChild(lbl); exp.appendChild(dsc);
+  }
+  if (node.channels && node.channels.length) {
+    const lbl = document.createElement('div'); lbl.className = 'label'; lbl.style.marginTop = '8px';
+    lbl.textContent = '연결 채널 · ' + node.channels.length;
+    exp.appendChild(lbl);
+    node.channels.forEach(ch => {
+      const it = document.createElement('div');
+      it.className = 'ch-item';
+      it.textContent = ch;
+      exp.appendChild(it);
+    });
   }
   if (node.ad && node.ad.length) {
     const lbl = document.createElement('div'); lbl.className = 'label'; lbl.style.marginTop = '8px';
