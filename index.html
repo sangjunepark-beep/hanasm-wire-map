@@ -611,7 +611,12 @@ body.edit-mode .node .frame { outline: 2px dashed rgba(251,191,36,0.6); outline-
 .cat-h { display: flex; justify-content: space-between; align-items: center; font-size: 10px; font-weight: 800; letter-spacing: 0.16em; text-transform: uppercase; color: var(--cat-c, #c5c9e0); padding: 6px 4px; margin-bottom: 6px; border-bottom: 1px dashed rgba(167,139,250,0.22); }
 .cat-h .cnt { font-size: 9.5px; padding: 1px 7px; background: rgba(255,255,255,0.04); color: #c5c9e0; clip-path: polygon(3px 0, 100% 0, 100% calc(100% - 3px), calc(100% - 3px) 100%, 0 100%, 0 3px); }
 .proj-list { display: flex; flex-direction: column; gap: 5px; min-height: 8px; }
-.proj-item { display: flex; align-items: center; gap: 8px; padding: 8px 10px; background: rgba(167,139,250,0.06); border: 1px solid rgba(167,139,250,0.18); border-left: 2px solid var(--cat-c, #a855f7); font-size: 11.5px; color: #f3f4fb; font-weight: 600; cursor: grab; letter-spacing: 0.015em; clip-path: polygon(5px 0, 100% 0, 100% calc(100% - 5px), calc(100% - 5px) 100%, 0 100%, 0 5px); }
+.proj-item { display: flex; flex-direction: column; gap: 6px; padding: 8px 10px; background: rgba(167,139,250,0.06); border: 1px solid rgba(167,139,250,0.18); border-left: 2px solid var(--cat-c, #a855f7); font-size: 11.5px; color: #f3f4fb; font-weight: 600; cursor: pointer; letter-spacing: 0.015em; clip-path: polygon(5px 0, 100% 0, 100% calc(100% - 5px), calc(100% - 5px) 100%, 0 100%, 0 5px); }
+.proj-item .pi-row { display: flex; align-items: center; gap: 8px; }
+.proj-item .pi-handle { cursor: grab; }
+.proj-item .pi-desc { display: none; padding: 8px 6px 4px; font-size: 11px; color: #c5c9e0; font-weight: 500; line-height: 1.55; border-top: 1px dashed rgba(167,139,250,0.20); margin-top: 2px; white-space: normal; }
+.proj-item.open .pi-desc { display: block; }
+.proj-item .pi-owner { display: inline-block; font-size: 9.5px; font-weight: 800; letter-spacing: 0.10em; padding: 1px 6px; background: rgba(255,255,255,0.06); color: var(--cat-c, #c084fc); margin-right: 8px; vertical-align: 1px; clip-path: polygon(2px 0, 100% 0, 100% calc(100% - 2px), calc(100% - 2px) 100%, 0 100%, 0 2px); }
 .proj-item:hover { background: rgba(167,139,250,0.14); }
 .proj-item.sortable-ghost { opacity: 0.3; }
 .proj-item .pi-handle { color: #8a8fad; font-size: 10px; }
@@ -1680,20 +1685,27 @@ window.addEventListener('resize', () => { fitView(); drawAllWires(); });
 <script>
 const PROJECTS = {
   ad:      { name:'광고', items:[
-    { name:'네이버 검색광고 에이전트 빌드 (일일보고 가동 · AI 입찰 미완)', prio:'h' }
+    { name:'네이버 검색광고 에이전트 빌드 (일일보고 가동 · AI 입찰 미완)', prio:'h',
+      desc:'현재 대표 일일보고용 별도 운용 중. 주간 데이터까지 합쳐서 빼고 있음. AI 통계·판단·입찰조정까지는 미완성 → 그 단계가 되어야 완전한 에이전트 수준.', owner:'박상준' }
   ]},
   ai:      { name:'AI·자동화', items:[
-    { name:'AI 챗봇 / RAG 앵커DB (전상품 DB화 · 주차스티커 진행)', prio:'h' }
+    { name:'AI 챗봇 / RAG 앵커DB (전상품 DB화 · 주차스티커 진행)', prio:'h',
+      desc:'하나사인몰 전상품 DB화 작업. 모든 상품 데이터 엑셀 정리 중. 게시판·입간판 카테고리 완료 → 대표 보고. 현재 주차스티커 정리 중. 완료된 것부터 노드데이터로 만들어 외주 챗봇 DB로 투입.', owner:'박상준' }
   ]},
   seo:     { name:'SEO·노출', items:[] },
   product: { name:'신상품·등록', items:[
-    { name:'주력제품 가격인상 (홍재이 · 주차→A형 · 6월 중순까지)', prio:'h' },
-    { name:'어드민 카테고리·토글 정리 (LLM 70% · 스톱)', prio:'m' }
+    { name:'주력제품 가격인상 (홍재이 · 주차→A형 · 6월 중순까지)', prio:'h',
+      desc:'홍재이 주임 진행 중. 이번 주 주차스티커 완료 예상, 차주 A형입간판 진행 예정. 제품 수가 많아 6월 초·중순까지 이어질 수 있음.', owner:'홍재이' },
+    { name:'어드민 카테고리·토글 정리 (LLM 70% · 스톱)', prio:'m',
+      desc:'신규몰 어드민 상품별 공간별 토글 정리. 1차는 룰 적용, 2차는 LLM 적용 테스트 진행했으나 개인별 차로 완벽 분리 어려운 부분이 있어 스톱. 공정률 70%.', owner:'박상준' }
   ]},
   system:  { name:'시스템·자사몰', items:[
-    { name:'웹팀 KPI 업무표 시스템 (1차 완료 · 5월말 시작)', prio:'h' },
-    { name:'ERP/플레이오토 마스터 상품 (채널 옵션 별도 · 확대 검토)', prio:'h' },
-    { name:'가상계좌 콘솔 (토스 API · 80% 스톱 · 보존)', prio:'l' }
+    { name:'웹팀 KPI 업무표 시스템 (1차 완료 · 5월말 시작)', prio:'h',
+      desc:'웹팀 전용 KPI 적용 업무표. 1차 완료. 팀장이 대시보드로 팀원 업무 진척도·지연도에 따른 KPI 지수 정리 가능. 기존 노션보다 데이터 활용 폭이 높고 무한대라 변경용 제작. 5월 마지막 주부터 운영 시작 예정.', owner:'박상준' },
+    { name:'ERP/플레이오토 마스터 상품 (채널 옵션 별도 · 확대 검토)', prio:'h',
+      desc:'플레이오토 관련 마스터 상품 등록. 확인 결과 마스터 상품이라도 각 채널별 옵션은 별도로 조절해 업로드해야 함. 한 군데서 통합 작업한다는 장점은 있음. 이걸 기초로 개인사업자 판매채널 확대 여부 검토 필요.', owner:'박상준' },
+    { name:'가상계좌 콘솔 (토스 API · 80% 스톱 · 보존)', prio:'l',
+      desc:'토스페이먼츠 가상계좌 발행 API 활용 콘솔. 지정 이름으로 가상계좌 발행, 30일 내 날짜 지정 가능. 지정일에 콘솔에서 미입금 알림 표시. 개발 약 80% 진행, 다른 업무 우선으로 스톱.', owner:'박상준' }
   ]},
   offline: { name:'오프라인·영업', items:[] }
 };
@@ -1714,7 +1726,8 @@ function renderProjects() {
     html += '<div class="cat ' + key + '" data-cat="' + key + '"><div class="cat-h">' + cat.name + ' <span class="cnt">' + items.length + '</span></div><div class="proj-list" data-list="' + key + '">';
     items.forEach(it => {
       const label = it.prio === 'h' ? '상' : it.prio === 'm' ? '중' : '하';
-      html += '<div class="proj-item" data-name="' + it.name + '"><span class="pi-handle">⋮⋮</span><span class="pi-name">' + it.name + '</span><span class="pi-prio ' + it.prio + '">' + label + '</span></div>';
+      const descHtml = it.desc ? '<div class="pi-desc">' + (it.owner ? '<span class="pi-owner">' + it.owner + '</span>' : '') + it.desc + '</div>' : '';
+      html += '<div class="proj-item" data-name="' + it.name + '"><div class="pi-row"><span class="pi-handle">⋮⋮</span><span class="pi-name">' + it.name + '</span><span class="pi-prio ' + it.prio + '">' + label + '</span></div>' + descHtml + '</div>';
     });
     html += '</div></div>';
   });
@@ -1723,6 +1736,7 @@ function renderProjects() {
     document.querySelectorAll('.proj-list').forEach(list => {
       Sortable.create(list, {
         group: 'projects', animation: 180, ghostClass: 'sortable-ghost',
+        handle: '.pi-handle',
         onEnd: () => {
           const next = {};
           document.querySelectorAll('.proj-list').forEach(l => {
@@ -1733,6 +1747,13 @@ function renderProjects() {
       });
     });
   }
+  // 항목 클릭 시 상세 desc 펼침/접기 (드래그 핸들 제외)
+  document.querySelectorAll('.proj-item').forEach(el => {
+    el.addEventListener('click', (e) => {
+      if (e.target.closest('.pi-handle')) return;
+      el.classList.toggle('open');
+    });
+  });
 }
 // 페이지 로드 시 기본 펼침
 setTimeout(() => { document.getElementById('projPanel').classList.add('show'); renderProjects(); }, 500);
