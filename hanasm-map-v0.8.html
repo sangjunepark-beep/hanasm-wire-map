@@ -337,6 +337,11 @@ svg.wires path.preview-wire {
 
 .node.ch-personal .frame { --c1: var(--blue-1); --c2: var(--blue-3); }
 .node.ch-corp .frame     { --c1: var(--purple-1); --c2: var(--purple-3); }
+/* 채널 노드 폭 통일 (가장 긴 Hanasignmall.com 기준) */
+.node.ch-personal .core, .node.ch-corp .core {
+  min-width: 210px;
+  justify-content: flex-start;
+}
 
 .node.dept .frame { --c1: var(--dc, var(--blue-2)); --c2: var(--dc2, var(--purple-2)); }
 .node.dept .core  { font-size: 14px; padding: 13px 20px; }
@@ -1071,6 +1076,10 @@ function drawAllWires() {
   drawWire('web', 'ig',    '#E1306C', NORMAL);
   drawWire('web', 'nblog', '#03C75A', NORMAL);
   drawWire('web', 'yt',    '#FF0000', NORMAL);
+  // SNS 3종 → Hanasignmall.kr (KR몰이 SNS 연결점)
+  drawWire('ig',    'self-mall', '#E1306C', WEAK);
+  drawWire('nblog', 'self-mall', '#03C75A', WEAK);
+  drawWire('yt',    'self-mall', '#FF0000', WEAK);
   depts.forEach(d => d.links.forEach(t => drawWire(d.id, t, d.color, WEAK)));
   return;
   drawWire('ceo', 'personal', '#60a5fa', { width: 2.0, flow: true });
@@ -1340,4 +1349,4 @@ window.addEventListener('resize', () => { fitView(); drawAllWires(); });
 </script>
 </body>
 </html>
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                
+                                                                                    
