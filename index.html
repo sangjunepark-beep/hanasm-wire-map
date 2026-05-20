@@ -193,6 +193,25 @@ svg.wires path.flow {
   filter: drop-shadow(0 0 14px var(--c1, var(--blue-2))) drop-shadow(0 0 24px var(--c2, var(--purple-2)));
 }
 
+/* 호버 시 연결 노드 미리보기 (체험감) */
+.node.prelit .frame {
+  filter: drop-shadow(0 0 12px var(--c1, var(--blue-2))) drop-shadow(0 0 22px var(--c2, var(--purple-2)));
+}
+svg.wires path.preview-wire {
+  opacity: 0.75 !important;
+  stroke-width: 2.6 !important;
+}
+
+/* 페이지 로드 시 노드 stagger 등장 */
+.node {
+  animation: nodeIn 0.5s cubic-bezier(.2,.7,.2,1) backwards;
+}
+@keyframes nodeIn {
+  from { opacity: 0; transform: translate(-50%,-50%) scale(0.85); }
+  to   { opacity: 1; transform: translate(-50%,-50%) scale(1); }
+}
+.node.lit { animation: none; }
+
 .dot {
   width: 8px; height: 8px; flex-shrink: 0;
   background: var(--c, var(--text-3));
@@ -805,10 +824,32 @@ function placeNode(node, x, y, cls) {
 
   world.appendChild(div);
   POS[node.id] = { x, y, el: div, node };
+
+  // 등장 stagger
+  const idx = Object.keys(POS).length;
+  div.style.animationDelay = (idx * 0.035) + 's';
+
   div.addEventListener('click', (e) => {
     e.stopPropagation();
     if (recentlyDragged) return;
     nodeClick(node.id);
+  });
+
+  // 호버 시 연결 노드·와이어 미리보기
+  div.addEventListener('mouseenter', () => {
+    if (world.classList.contains('has-focus')) return;
+    const id = node.id;
+    wires.querySelectorAll('path').forEach(p => {
+      if (p.dataset.from === id || p.dataset.to === id) {
+        p.classList.add('preview-wire');
+        POS[p.dataset.from]?.el.classList.add('prelit');
+        POS[p.dataset.to]?.el.classList.add('prelit');
+      }
+    });
+  });
+  div.addEventListener('mouseleave', () => {
+    document.querySelectorAll('.node.prelit').forEach(x => x.classList.remove('prelit'));
+    document.querySelectorAll('svg.wires path.preview-wire').forEach(p => p.classList.remove('preview-wire'));
   });
 }
 
@@ -1190,4 +1231,9 @@ window.addEventListener('resize', () => { fitView(); drawAllWires(); });
 </script>
 </body>
 </html>
-                                                                                                                                                                                                                 
+}, { passive: false });
+stageEl.addEventListener('touchend', () => {
+  if (isDragging) { recentlyDragged = true; setTimeout(() => recentlyDragged = false, 60); stageEl.classList.remove('dragging'); }
+  isDragging = false; dragStart = null;
+});
+stageEl.addEventListener('click', (e) =
