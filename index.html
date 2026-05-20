@@ -116,6 +116,8 @@ body::before {
 .stage {
   position: fixed; inset: 0; z-index: 2; overflow: hidden;
   cursor: grab;
+  perspective: 1800px;
+  perspective-origin: 50% 50%;
 }
 .stage.dragging { cursor: grabbing; }
 .stage.dragging .world { transition: none !important; }
@@ -123,7 +125,8 @@ body::before {
   position: absolute; left: 0; top: 0;
   width: 2400px; height: 1400px;
   transform-origin: 0 0;
-  transition: transform 0.7s cubic-bezier(.4,.0,.15,1);
+  transform-style: preserve-3d;
+  transition: transform 0.85s cubic-bezier(.2,.7,.15,1);
 }
 
 /* WIRES */
@@ -181,11 +184,21 @@ svg.wires path.flow {
   filter: drop-shadow(0 0 14px currentColor) drop-shadow(0 0 28px currentColor) !important;
 }
 
-/* 2차 클릭 = 확대 */
+/* 2차 클릭 = 3D 정면 시점 (앞으로 튀어나옴) */
+.node.zoomed {
+  transform: translate(-50%,-50%) translateZ(80px) scale(1.18);
+  z-index: 60;
+}
 .node.zoomed .frame {
-  filter:
-    drop-shadow(0 0 24px var(--c1, var(--blue-2)))
-    drop-shadow(0 0 48px var(--c2, var(--purple-2)));
+  filter: drop-shadow(0 0 24px var(--c1, var(--blue-2))) drop-shadow(0 0 48px var(--c2, var(--purple-2)));
+}
+.world.has-focus .node:not(.lit):not(.zoomed) {
+  transform: translate(-50%,-50%) translateZ(-160px) scale(0.92);
+  filter: blur(1.5px) saturate(0.25) brightness(0.45) !important;
+  transition: transform 0.55s cubic-bezier(.2,.7,.15,1), filter 0.4s;
+}
+.world.has-focus .node.lit {
+  transform: translate(-50%,-50%) translateZ(20px) scale(1.05);
 }
 
 .node:hover { z-index: 50; }
@@ -225,21 +238,25 @@ svg.wires path.preview-wire {
   letter-spacing: 0.12em; text-transform: uppercase;
 }
 
-/* === Expanded === */
+/* === Expanded (줌인 시 옆에 떠오르는 패널) === */
 .expanded {
   display: none;
-  margin-top: 12px;
-  background: rgba(8,9,28,0.88);
-  border: 1px solid var(--line);
-  padding: 14px;
-  max-width: 320px;
-  backdrop-filter: blur(20px);
+  position: absolute;
+  left: calc(100% + 18px); top: 50%;
+  transform: translateY(-50%);
+  min-width: 240px; max-width: 320px;
+  background: rgba(8,9,28,0.92);
+  border: 1px solid var(--c1, var(--purple-2));
+  padding: 14px 16px;
+  backdrop-filter: blur(24px);
+  box-shadow: 0 18px 50px rgba(0,0,0,0.6), 0 0 24px color-mix(in srgb, var(--c1, #a855f7) 30%, transparent);
   clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px);
-  animation: expandIn 0.35s cubic-bezier(.2,.8,.2,1);
+  animation: expandFly 0.45s cubic-bezier(.2,.8,.2,1);
+  z-index: 5;
 }
-@keyframes expandIn {
-  from { opacity: 0; transform: translateY(-8px) scale(0.95); }
-  to   { opacity: 1; transform: translateY(0) scale(1); }
+@keyframes expandFly {
+  from { opacity: 0; transform: translateY(-50%) translateX(-30px) scale(0.9); }
+  to   { opacity: 1; transform: translateY(-50%) translateX(0) scale(1); }
 }
 .node.zoomed .expanded { display: block; }
 .expanded .label {
@@ -279,6 +296,26 @@ svg.wires path.preview-wire {
 }
 .member-chip .badge.has  { background: rgba(34,211,238,0.18); color: var(--cyan); }
 .member-chip .badge.none { background: rgba(138,143,173,0.16); color: var(--text-3); }
+
+/* 진행중 / 예정 mini 카드 (zoomed 노드 옆에 뜸) */
+.pl-item {
+  display: flex; align-items: center; gap: 7px;
+  padding: 5px 8px;
+  background: rgba(167,139,250,0.05);
+  border-left: 2px solid var(--pl-c, var(--text-3));
+  font-size: 10.5px; color: var(--text-2);
+  margin: 3px 0;
+  letter-spacing: 0.015em;
+}
+.pl-item .pl-dot {
+  width: 6px; height: 6px; flex-shrink: 0;
+  background: var(--pl-c, var(--text-3));
+  box-shadow: 0 0 5px var(--pl-c, var(--text-3));
+}
+.pl-item .pl-name { flex: 1; line-height: 1.3; }
+.pl-item .pl-by { font-size: 9px; color: var(--text-3); font-weight: 600; }
+.pl-item.active   { --pl-c: #34d399; }
+.pl-item.planned  { --pl-c: #93c5fd; }
 
 /* === Variants === */
 .node.ceo .frame { --c1: var(--cyan); --c2: var(--purple-1); }
@@ -819,6 +856,33 @@ function placeNode(node, x, y, cls) {
       grid.appendChild(chip);
     });
     exp.appendChild(grid);
+    // 진행중·예정 업무 자동 모음
+    const active = [], planned = [];
+    node.members.forEach(m => {
+      if (!m.tasks) return;
+      m.tasks.forEach(t => {
+        if (t.status === '진행중') active.push({ ...t, who: m.name });
+        else if (t.status === '예정') planned.push({ ...t, who: m.name });
+      });
+    });
+    if (active.length || planned.length) {
+      let html = '';
+      if (active.length) {
+        html += `<div class="label" style="margin-top:10px">진행중 · ${active.length}</div>`;
+        active.slice(0, 5).forEach(t => {
+          html += `<div class="pl-item active"><span class="pl-dot"></span><span class="pl-name">${t.name}</span><span class="pl-by">${t.who}</span></div>`;
+        });
+      }
+      if (planned.length) {
+        html += `<div class="label" style="margin-top:8px">예정 · ${planned.length}</div>`;
+        planned.slice(0, 3).forEach(t => {
+          html += `<div class="pl-item planned"><span class="pl-dot"></span><span class="pl-name">${t.name}</span><span class="pl-by">${t.who}</span></div>`;
+        });
+      }
+      const wrap = document.createElement('div');
+      wrap.innerHTML = html;
+      while (wrap.firstChild) exp.appendChild(wrap.firstChild);
+    }
   }
   div.appendChild(exp);
 
@@ -1209,31 +1273,4 @@ stageEl.addEventListener('click', (e) => {
   if (e.target.closest('.node') || e.target.closest('.task-panel')) return;
   closeAll();
 }, true);
-document.getElementById('btnFit').addEventListener('click', closeAll);
-stageEl.addEventListener('wheel', (e) => {
-  e.preventDefault();
-  const factor = e.deltaY > 0 ? 0.9 : 1.1;
-  const ns = Math.max(0.3, Math.min(3.5, camS * factor));
-  const mx = e.clientX, my = e.clientY;
-  const wx = (mx - camX) / camS, wy = (my - camY) / camS;
-  camS = ns; camX = mx - wx * camS; camY = my - wy * camS;
-  world.style.transition = 'none'; applyCam();
-  requestAnimationFrame(() => world.style.transition = '');
-}, { passive: false });
-document.getElementById('today').textContent = new Date().toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' }).toUpperCase();
-function init() {
-  fitView(); drawAllWires();
-  setTimeout(() => { drawAllWires(); fitView(); }, 200);
-  setTimeout(() => { drawAllWires(); fitView(); }, 600);
-}
-if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
-window.addEventListener('resize', () => { fitView(); drawAllWires(); });
-</script>
-</body>
-</html>
-}, { passive: false });
-stageEl.addEventListener('touchend', () => {
-  if (isDragging) { recentlyDragged = true; setTimeout(() => recentlyDragged = false, 60); stageEl.classList.remove('dragging'); }
-  isDragging = false; dragStart = null;
-});
-stageEl.addEventListener('click', (e) =
+document.getElementById
