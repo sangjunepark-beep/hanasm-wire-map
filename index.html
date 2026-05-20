@@ -377,9 +377,10 @@ svg.wires path.preview-wire {
 .node.sys-gpt      .frame { --c1: #10b981; --c2: #22d3ee; }
 
 /* === Dim non-focus === */
-.world.has-focus .node:not(.lit):not(.zoomed) { filter: saturate(0.3) brightness(0.5); }
-.world.has-focus svg.wires path:not(.focus-wire) { opacity: 0.04; }
-.world.has-focus svg.wires path.focus-wire { opacity: 0.95; stroke-width: 2.3 !important; }
+.world.has-focus .node:not(.lit):not(.zoomed) { filter: saturate(0.15) brightness(0.32); }
+.world.has-focus svg.wires path:not(.focus-wire) { opacity: 0.015; }
+.world.has-focus svg.wires path.focus-wire { opacity: 1.0; stroke-width: 2.8 !important; filter: drop-shadow(0 0 4px currentColor); }
+.world.has-focus svg.wires .dev-region { opacity: 0.15; }
 
 /* === Task Panel === */
 .task-panel {
@@ -563,6 +564,28 @@ svg.wires path.preview-wire {
   clip-path: polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px);
 }
 .proj-toggle:hover { background: rgba(167,139,250,0.18); color: #fff; }
+.chip-bar {
+  position: fixed; bottom: 18px; left: 16px; z-index: 105;
+  display: flex; gap: 6px; flex-wrap: wrap; max-width: 60vw;
+}
+.chip {
+  background: rgba(8,9,28,0.72); border: 1px solid var(--c, #a5b4fc); color: var(--c, #a5b4fc);
+  padding: 5px 11px; font-size: 10.5px; font-weight: 700; letter-spacing: 0.10em;
+  font-family: inherit; cursor: pointer; text-transform: uppercase;
+  clip-path: polygon(5px 0, 100% 0, 100% calc(100% - 5px), calc(100% - 5px) 100%, 0 100%, 0 5px);
+  transition: opacity 0.18s, background 0.18s;
+}
+.chip:hover { background: rgba(255,255,255,0.06); }
+.chip.off { opacity: 0.30; }
+.chip.off::before { content: '⊘ '; }
+svg.wires path.cat-off { display: none !important; }
+.dev-region {
+  fill: rgba(34,211,238,0.05);
+  stroke: rgba(34,211,238,0.30);
+  stroke-width: 1.5;
+  stroke-dasharray: 8 6;
+  pointer-events: none;
+}
 body.edit-mode .node { cursor: move; }
 body.edit-mode .node .frame { outline: 2px dashed rgba(251,191,36,0.6); outline-offset: 3px; }
 #editToggle.active { background: rgba(251,191,36,0.25) !important; }
@@ -634,6 +657,15 @@ body.edit-mode .node .frame { outline: 2px dashed rgba(251,191,36,0.6); outline-
 
 <div class="controls">
   <button id="btnFit">RESET</button>
+</div>
+
+<div class="chip-bar" id="chipBar">
+  <button class="chip" data-cat="core"    style="--c:#fbbf24">핵심</button>
+  <button class="chip" data-cat="channel" style="--c:#60a5fa">채널</button>
+  <button class="chip" data-cat="dept"    style="--c:#a5b4fc">부서</button>
+  <button class="chip" data-cat="system"  style="--c:#22d3ee">시스템</button>
+  <button class="chip" data-cat="talk"    style="--c:#f472b6">상담</button>
+  <button class="chip" data-cat="sns"     style="--c:#ec4899">SNS</button>
 </div>
 
 
@@ -1044,16 +1076,16 @@ function edge(id, side) {
   return { x: r.x, y: r.y };
 }
 function orthoPath(p1, p2, mode) {
-  // 부드러운 S 베지에 - 곡률 줄여 깔끔하게
+  // 비대칭 베지에 - 도착지 쪽으로 모여드는 묶음 효과 (출발 0.3, 도착 0.65)
   if (mode === 'H') {
     const dx = p2.x - p1.x;
-    return `M${p1.x},${p1.y} C${p1.x + dx*0.4},${p1.y} ${p2.x - dx*0.4},${p2.y} ${p2.x},${p2.y}`;
+    return `M${p1.x},${p1.y} C${p1.x + dx*0.30},${p1.y} ${p2.x - dx*0.65},${p2.y} ${p2.x},${p2.y}`;
   } else {
     const dy = p2.y - p1.y;
-    return `M${p1.x},${p1.y} C${p1.x},${p1.y + dy*0.4} ${p2.x},${p2.y - dy*0.4} ${p2.x},${p2.y}`;
+    return `M${p1.x},${p1.y} C${p1.x},${p1.y + dy*0.30} ${p2.x},${p2.y - dy*0.65} ${p2.x},${p2.y}`;
   }
 }
-function drawWire(fromId, toId, color, opts={}) {
+function drawWire(fromId, toId, color, opts={}, cat=null) {
   const a = POS[fromId], b = POS[toId];
   if (!a || !b) return;
   const dx = b.x - a.x, dy = b.y - a.y;
@@ -1070,6 +1102,7 @@ function drawWire(fromId, toId, color, opts={}) {
   if (opts.opacity != null) path.style.opacity = opts.opacity;
   path.dataset.from = fromId;
   path.dataset.to = toId;
+  if (cat) path.dataset.cat = cat;
   wires.appendChild(path);
 }
 function drawRegion(x, y, w, h, color, label) {
@@ -1097,6 +1130,42 @@ function drawRegion(x, y, w, h, color, label) {
   wires.appendChild(text);
 }
 
+// 개발 클러스터 배경 (자동 bbox)
+const DEV_CLUSTER = ['dev', 'erp', 'playauto', 'ecount', 'nas', 'self-mall'];
+function drawDevRegion() {
+  const pts = DEV_CLUSTER.map(id => POS[id]).filter(Boolean);
+  if (pts.length < 2) return;
+  let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+  pts.forEach(r => {
+    const { w, h } = nodeSize(r.node.id);
+    minX = Math.min(minX, r.x - w/2);
+    minY = Math.min(minY, r.y - h/2);
+    maxX = Math.max(maxX, r.x + w/2);
+    maxY = Math.max(maxY, r.y + h/2);
+  });
+  const pad = 40;
+  const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+  rect.setAttribute('x', minX - pad);
+  rect.setAttribute('y', minY - pad);
+  rect.setAttribute('width',  (maxX - minX) + pad*2);
+  rect.setAttribute('height', (maxY - minY) + pad*2);
+  rect.setAttribute('rx', 28);
+  rect.setAttribute('class', 'dev-region');
+  // wires SVG의 첫 자식으로 삽입 (배경 깊이)
+  wires.insertBefore(rect, wires.firstChild);
+
+  const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+  text.setAttribute('x', minX - pad + 18);
+  text.setAttribute('y', minY - pad + 28);
+  text.setAttribute('fill', 'rgba(34,211,238,0.55)');
+  text.setAttribute('font-size', '14');
+  text.setAttribute('font-weight', '800');
+  text.setAttribute('letter-spacing', '4');
+  text.style.pointerEvents = 'none';
+  text.textContent = 'DEV · SYSTEM';
+  wires.insertBefore(text, rect.nextSibling);
+}
+
 function drawAllWires() {
   wires.innerHTML = '';
   // DEV 영역 박스 제거 (정상 레이아웃 복원)
@@ -1104,67 +1173,71 @@ function drawAllWires() {
   const NORMAL = { width: 1.4, opacity: 0.28 };  // 보통
   const STRONG = { width: 2.4, opacity: 0.45 };  // 강한 핵심
   // 핵심(강한) - 대표·사업자·산하 ERP·CS-ERP·개발-ERP-CS
-  drawWire('ceo', 'hanasm',   '#fbbf24', STRONG);
-  drawWire('hanasm', 'personal', '#fbbf24', STRONG);
-  drawWire('hanasm', 'corp',     '#fbbf24', STRONG);
-  drawWire('self-mall', 'erp','#22d3ee', STRONG);
-  drawWire('cs', 'erp',       '#22d3ee', STRONG);  // CS-ERP 핵심
-  drawWire('dev', 'erp',      '#22d3ee', STRONG);  // 개발-ERP 핵심
-  drawWire('dev', 'cs',       '#22d3ee', STRONG);  // 개발-CS 강한 연결
-  drawWire('web', 'cs',       '#60a5fa', STRONG);  // 웹-CS 유기적
+  drawWire('ceo', 'hanasm',   '#fbbf24', STRONG, 'core');
+  drawWire('hanasm', 'personal', '#fbbf24', STRONG, 'core');
+  drawWire('hanasm', 'corp',     '#fbbf24', STRONG, 'core');
+  drawWire('self-mall', 'erp','#22d3ee', STRONG, 'system');
+  drawWire('cs', 'erp',       '#22d3ee', STRONG, 'system');  // CS-ERP 핵심
+  drawWire('dev', 'erp',      '#22d3ee', STRONG, 'system');  // 개발-ERP 핵심
+  drawWire('dev', 'cs',       '#22d3ee', STRONG, 'dept');  // 개발-CS 강한 연결
+  drawWire('web', 'cs',       '#60a5fa', STRONG, 'dept');  // 웹-CS 유기적
   // 보통 - 사업자→채널, 부서간 흐름
-  DATA.personalChannels.forEach(c => drawWire('personal', c.id, '#60a5fa', NORMAL));
-  DATA.corpChannels.forEach(c => drawWire('corp', c.id, '#a855f7', NORMAL));
-  drawWire('cs', 'call',     '#60a5fa', NORMAL);
-  drawWire('cs', 'chat',     '#f472b6', NORMAL);
-  drawWire('chat', 'ss-hana',  '#f472b6', WEAK);
-  drawWire('chat', 'ss-baron', '#f472b6', WEAK);
-  drawWire('chat', 'ss-rocket','#f472b6', WEAK);
-  drawWire('chat', 'godo',     '#f472b6', WEAK);
-  drawWire('chat', 'self-mall','#f472b6', WEAK);
-  drawWire('cs', 'playauto', '#fb923c', NORMAL);
-  DATA.personalChannels.forEach(ch => drawWire(ch.id, 'playauto', '#fb923c', WEAK));
-  DATA.corpChannels.forEach(ch => drawWire(ch.id, 'playauto', '#fb923c', WEAK));
-  drawWire('cs', 'ecount',   '#34d399', NORMAL);
-  drawWire('fin', 'ecount',  '#34d399', NORMAL);
-  drawWire('design', 'web',  '#f472b6', NORMAL);
-  drawWire('cs', 'design',   '#a855f7', NORMAL);
-  drawWire('design', 'product', '#f472b6', NORMAL);
-  drawWire('dev', 'web',     '#22d3ee', NORMAL);
-  drawWire('dev', 'self-mall','#22d3ee', NORMAL);
+  DATA.personalChannels.forEach(c => drawWire('personal', c.id, '#60a5fa', NORMAL, 'channel'));
+  DATA.corpChannels.forEach(c => drawWire('corp', c.id, '#a855f7', NORMAL, 'channel'));
+  drawWire('cs', 'call',     '#60a5fa', NORMAL, 'talk');
+  drawWire('cs', 'chat',     '#f472b6', NORMAL, 'talk');
+  drawWire('chat', 'ss-hana',  '#f472b6', WEAK, 'talk');
+  drawWire('chat', 'ss-baron', '#f472b6', WEAK, 'talk');
+  drawWire('chat', 'ss-rocket','#f472b6', WEAK, 'talk');
+  drawWire('chat', 'godo',     '#f472b6', WEAK, 'talk');
+  drawWire('chat', 'self-mall','#f472b6', WEAK, 'system');
+  drawWire('cs', 'playauto', '#fb923c', NORMAL, 'system');
+  DATA.personalChannels.forEach(ch => drawWire(ch.id, 'playauto', '#fb923c', WEAK, 'system'));
+  DATA.corpChannels.forEach(ch => drawWire(ch.id, 'playauto', '#fb923c', WEAK, 'system'));
+  drawWire('cs', 'ecount',   '#34d399', NORMAL, 'system');
+  drawWire('fin', 'ecount',  '#34d399', NORMAL, 'system');
+  drawWire('design', 'web',  '#f472b6', NORMAL, 'dept');
+  drawWire('cs', 'design',   '#a855f7', NORMAL, 'dept');
+  drawWire('design', 'product', '#f472b6', NORMAL, 'dept');
+  drawWire('dev', 'web',     '#22d3ee', NORMAL, 'dept');
+  drawWire('dev', 'self-mall','#22d3ee', NORMAL, 'system');
   // 약한 연결 - 외부영업→웹팀(시공이미지), 부서.links 자동
-  drawWire('sales', 'web',   '#ec4899', WEAK);
+  drawWire('sales', 'web',   '#ec4899', WEAK, 'dept');
   // 웹팀 → SNS 3종 (임정민 주임)
-  drawWire('web', 'ig',    '#E1306C', NORMAL);
-  drawWire('web', 'nblog', '#03C75A', NORMAL);
-  drawWire('web', 'yt',    '#FF0000', NORMAL);
-  depts.forEach(d => d.links.forEach(t => drawWire(d.id, t, '#a5b4fc', WEAK)));
+  drawWire('web', 'ig',    '#E1306C', NORMAL, 'sns');
+  drawWire('web', 'nblog', '#03C75A', NORMAL, 'sns');
+  drawWire('web', 'yt',    '#FF0000', NORMAL, 'sns');
+  depts.forEach(d => d.links.forEach(t => drawWire(d.id, t, '#a5b4fc', WEAK, 'dept')));
   // 채널 → 웹팀 숨김 와이어 (채널 클릭 시에만 강조)
   [...DATA.personalChannels, ...DATA.corpChannels].forEach(ch => {
-    drawWire(ch.id, 'web', '#60a5fa', { width: 1.4, opacity: 0 });
+    drawWire(ch.id, 'web', '#60a5fa', { width: 1.4, opacity: 0 }, 'ch-web');
     const p = wires.lastChild;
     if (p && p.classList) p.classList.add('ch-web');
   });
+  // 개발 클러스터 배경 (자동 bbox)
+  if (typeof drawDevRegion === 'function') drawDevRegion();
+  // 카테고리 필터 재적용 (와이어 새로 그렸으므로)
+  if (typeof window.__applyCatFilter === 'function') window.__applyCatFilter();
   return;
-  drawWire('ceo', 'personal', '#60a5fa', { width: 2.0, flow: true });
-  drawWire('ceo', 'corp',     '#a855f7', { width: 2.0, flow: true });
-  DATA.personalChannels.forEach(c => drawWire('personal', c.id, '#60a5fa', { width: 1.5, flow: true }));
-  DATA.corpChannels.forEach(c => drawWire('corp', c.id, '#a855f7', { width: 1.5, flow: true }));
-  drawWire('self-mall', 'erp', '#22d3ee', { width: 1.4, opacity: 0.4 });
+  drawWire('ceo', 'personal', '#60a5fa', { width: 2.0, flow: true }, 'dept');
+  drawWire('ceo', 'corp',     '#a855f7', { width: 2.0, flow: true }, 'dept');
+  DATA.personalChannels.forEach(c => drawWire('personal', c.id, '#60a5fa', { width: 1.5, flow: true }, 'channel'));
+  DATA.corpChannels.forEach(c => drawWire('corp', c.id, '#a855f7', { width: 1.5, flow: true }, 'channel'));
+  drawWire('self-mall', 'erp', '#22d3ee', { width: 1.4, opacity: 0.4 }, 'system');
   // 시스템 (옅게)
-  drawWire('cs', 'playauto', '#fb923c', { width: 1.0, opacity: 0.25 });
-  drawWire('cs', 'ecount',   '#34d399', { width: 1.0, opacity: 0.25 });
-  drawWire('fin', 'ecount',  '#34d399', { width: 1.0, opacity: 0.25 });
+  drawWire('cs', 'playauto', '#fb923c', { width: 1.0, opacity: 0.25 }, 'system');
+  drawWire('cs', 'ecount',   '#34d399', { width: 1.0, opacity: 0.25 }, 'system');
+  drawWire('fin', 'ecount',  '#34d399', { width: 1.0, opacity: 0.25 }, 'system');
   // 부서 간 인과 (옅게)
-  drawWire('design', 'web',     '#f472b6', { width: 1.0, opacity: 0.18 });
-  drawWire('web', 'cs',         '#60a5fa', { width: 1.0, opacity: 0.18 });
-  drawWire('cs', 'design',      '#a855f7', { width: 1.0, opacity: 0.18 });
-  drawWire('design', 'product', '#f472b6', { width: 1.0, opacity: 0.18 });
-  drawWire('product', 'factory2','#2dd4bf', { width: 1.0, opacity: 0.18 });
-  drawWire('cs', 'erp',         '#22d3ee', { width: 1.0, opacity: 0.18 });
-  drawWire('sales', 'web',      '#ec4899', { width: 0.8, opacity: 0.12 }); // 외부영업→웹팀 약한 연결 (임정민 시공 이미지 공유)
+  drawWire('design', 'web',     '#f472b6', { width: 1.0, opacity: 0.18 }, 'dept');
+  drawWire('web', 'cs',         '#60a5fa', { width: 1.0, opacity: 0.18 }, 'dept');
+  drawWire('cs', 'design',      '#a855f7', { width: 1.0, opacity: 0.18 }, 'dept');
+  drawWire('design', 'product', '#f472b6', { width: 1.0, opacity: 0.18 }, 'dept');
+  drawWire('product', 'factory2','#2dd4bf', { width: 1.0, opacity: 0.18 }, 'dept');
+  drawWire('cs', 'erp',         '#22d3ee', { width: 1.0, opacity: 0.18 }, 'system');
+  drawWire('sales', 'web',      '#ec4899', { width: 0.8, opacity: 0.12 }, 'dept'); // 외부영업→웹팀 약한 연결 (임정민 시공 이미지 공유)
   // 부서 → 사업자 (매우 옅게)
-  depts.forEach(d => d.links.forEach(t => drawWire(d.id, t, d.color, { width: 0.8, opacity: 0.10 })));
+  depts.forEach(d => d.links.forEach(t => drawWire(d.id, t, d.color, { width: 0.8, opacity: 0.10 }, 'dept')));
 }
 
 // ============ CAMERA ============
@@ -1545,6 +1618,41 @@ document.getElementById('ppClose').addEventListener('click', () => {
   document.getElementById('projPanel').classList.remove('show');
 });
 
+// ===== 카테고리 필터 칩 =====
+(function(){
+  const chipBar = document.getElementById('chipBar');
+  if (!chipBar) return;
+  const STATE_KEY = 'hanasm.catFilter';
+  function getOff() {
+    try { return new Set(JSON.parse(localStorage.getItem(STATE_KEY) || '[]')); }
+    catch(e) { return new Set(); }
+  }
+  function saveOff(set) { localStorage.setItem(STATE_KEY, JSON.stringify([...set])); }
+  function applyFilter() {
+    const off = getOff();
+    document.querySelectorAll('#chipBar .chip').forEach(c => {
+      c.classList.toggle('off', off.has(c.dataset.cat));
+    });
+    document.querySelectorAll('svg.wires path[data-cat]').forEach(p => {
+      const c = p.dataset.cat;
+      const hidden = off.has(c) || (c === 'ch-web' && off.has('channel'));
+      p.classList.toggle('cat-off', hidden);
+    });
+  }
+  chipBar.querySelectorAll('.chip').forEach(c => {
+    c.addEventListener('click', () => {
+      const set = getOff();
+      const cat = c.dataset.cat;
+      if (set.has(cat)) set.delete(cat); else set.add(cat);
+      saveOff(set);
+      applyFilter();
+    });
+  });
+  window.__applyCatFilter = applyFilter;
+  setTimeout(applyFilter, 250);
+  setTimeout(applyFilter, 800);
+})();
+
 // ===== 편집 모드: 노드 드래그 + 위치 저장 + Undo (최대 10) =====
 (function(){
   const editBtn = document.getElementById('editToggle');
@@ -1555,7 +1663,7 @@ document.getElementById('ppClose').addEventListener('click', () => {
   let editMode = false;
   let nodeDrag = null;
   const UNDO_MAX = 10;
-  const undoStack = []; // [{id, x, y}]
+  const undoStack = [];
 
   function refreshUndoUi() {
     if (undoCnt) undoCnt.textContent = undoStack.length;
@@ -1653,4 +1761,3 @@ document.getElementById('ppClose').addEventListener('click', () => {
 
 </body>
 </html>
-                                                                                                                                                           
