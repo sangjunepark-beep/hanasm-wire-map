@@ -1131,7 +1131,7 @@ function drawRegion(x, y, w, h, color, label) {
 }
 
 // 개발 클러스터 배경 (자동 bbox)
-const DEV_CLUSTER = ['dev', 'erp', 'playauto', 'ecount', 'nas', 'self-mall'];
+const DEV_CLUSTER = ['dev', 'erp', 'nas', 'self-mall'];
 function drawDevRegion() {
   const pts = DEV_CLUSTER.map(id => POS[id]).filter(Boolean);
   if (pts.length < 2) return;
@@ -1761,3 +1761,4 @@ document.getElementById('ppClose').addEventListener('click', () => {
 
 </body>
 </html>
+                      
