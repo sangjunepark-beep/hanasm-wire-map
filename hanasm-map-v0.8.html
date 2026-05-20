@@ -580,6 +580,17 @@ svg.wires path.preview-wire {
 .chip.off { opacity: 0.30; }
 .chip.off::before { content: '⊘ '; }
 svg.wires path.cat-off { display: none !important; }
+.node.cat-off { opacity: 0.08; pointer-events: none; filter: saturate(0.2) brightness(0.55); transition: opacity 0.2s, filter 0.2s; }
+@keyframes nasBounceGlow {
+  0%   { transform: translate(-50%, -50%) scale(1); }
+  25%  { transform: translate(-50%, -56%) scale(1.05); }
+  50%  { transform: translate(-50%, -50%) scale(1.02); }
+  75%  { transform: translate(-50%, -53%) scale(1.04); }
+  100% { transform: translate(-50%, -50%) scale(1); }
+}
+.node.bounce { animation: nasBounceGlow 0.7s cubic-bezier(.5,.2,.3,1.4); }
+.node.bounce .frame { box-shadow: 0 0 18px var(--c1, var(--blue-2)) !important; transition: box-shadow 0.3s; }
+.node.cat-off .frame { box-shadow: none !important; }
 .dev-region {
   fill: rgba(34,211,238,0.05);
   stroke: rgba(34,211,238,0.30);
@@ -1435,7 +1446,7 @@ function nodeClick(id) {
 }
 
 function setStage(id, stage) {
-  document.querySelectorAll('.node.lit, .node.zoomed').forEach(n => n.classList.remove('lit', 'zoomed'));
+  document.querySelectorAll('.node.lit, .node.zoomed, .node.bounce').forEach(n => n.classList.remove('lit', 'zoomed', 'bounce'));
   document.querySelectorAll('svg.wires path.focus-wire, svg.wires path.flow').forEach(p => p.classList.remove('focus-wire','flow'));
   taskPanel.classList.remove('show');
 
@@ -1492,6 +1503,21 @@ function setStage(id, stage) {
         connected.add(p.dataset.from); connected.add(p.dataset.to);
       }
     });
+    // NAS 클릭: 시안/문서 사용 부서 5곳 바운스 (와이어 없이 강조)
+    if (id === 'nas') {
+      const nasUsers = ['web', 'fin', 'cs', 'design', 'product'];
+      nasUsers.forEach(deptId => {
+        connected.add(deptId);
+        const el = POS[deptId]?.el;
+        if (el) {
+          // 재트리거를 위해 잠깐 클래스 제거 후 부착
+          el.classList.remove('bounce');
+          void el.offsetWidth; // reflow
+          el.classList.add('bounce');
+          setTimeout(() => el.classList.remove('bounce'), 750);
+        }
+      });
+    }
   }
 
   // 와이어 강조: 클릭 노드 직접 연결만 (ch-web은 채널 클릭 시만)
@@ -1780,15 +1806,33 @@ document.getElementById('ppClose').addEventListener('click', () => {
     catch(e) { return new Set(); }
   }
   function saveOff(set) { localStorage.setItem(STATE_KEY, JSON.stringify([...set])); }
+  // 노드 → 카테고리 매핑 (한 노드는 한 카테고리)
+  const NODE_CAT = {
+    ceo: 'core', hanasm: 'core', personal: 'core', corp: 'core',
+    web: 'dept', cs: 'dept', design: 'dept', dev: 'dept', fin: 'dept', sales: 'dept', factory2: 'dept', product: 'dept',
+    erp: 'system', playauto: 'system', ecount: 'system', nas: 'system',
+    call: 'talk', chat: 'talk',
+    ig: 'sns', nblog: 'sns', yt: 'sns',
+    'ss-hana': 'channel', 'ss-baron': 'channel', 'ss-rocket': 'channel',
+    godo: 'channel', 'self-mall': 'channel', coupang: 'channel', '11st': 'channel', auction: 'channel', gmarket: 'channel'
+  };
+
   function applyFilter() {
     const off = getOff();
     document.querySelectorAll('#chipBar .chip').forEach(c => {
       c.classList.toggle('off', off.has(c.dataset.cat));
     });
+    // 와이어
     document.querySelectorAll('svg.wires path[data-cat]').forEach(p => {
       const c = p.dataset.cat;
       const hidden = off.has(c) || (c === 'ch-web' && off.has('channel'));
       p.classList.toggle('cat-off', hidden);
+    });
+    // 노드
+    document.querySelectorAll('.node').forEach(n => {
+      const cat = NODE_CAT[n.dataset.id];
+      const hidden = cat && off.has(cat);
+      n.classList.toggle('cat-off', !!hidden);
     });
   }
   chipBar.querySelectorAll('.chip').forEach(c => {
