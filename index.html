@@ -114,7 +114,7 @@ body {
 .stage.dragging .world { transition: none !important; }
 .world {
   position: absolute; left: 0; top: 0;
-  width: 2400px; height: 1400px;
+  width: 2500px; height: 1400px;
   transform-origin: 0 0;
   transition: transform 0.5s cubic-bezier(.2,.7,.15,1);
 }
@@ -122,7 +122,7 @@ body {
 /* WIRES */
 svg.wires {
   position: absolute; left: 0; top: 0;
-  width: 2400px; height: 1400px;
+  width: 2500px; height: 1400px;
   pointer-events: none; overflow: visible;
 }
 svg.wires path {
@@ -618,7 +618,7 @@ svg.wires path.preview-wire {
 
 <div class="stage" id="stage">
   <div class="world" id="world">
-    <svg class="wires" id="wires" viewBox="0 0 2400 1400"></svg>
+    <svg class="wires" id="wires" viewBox="0 0 2500 1400"></svg>
   </div>
 </div>
 
@@ -646,7 +646,7 @@ svg.wires path.preview-wire {
 </aside>
 
 <script>
-const STAGE_W = 2400, STAGE_H = 1400;
+const STAGE_W = 2500, STAGE_H = 1400;
 const CX = STAGE_W / 2, CY = STAGE_H / 2;
 
 // ============ TASKS ============
@@ -1003,14 +1003,16 @@ function spreadY(items, gap) {
 spreadY(DATA.personalChannels, 165).forEach(({it, y}) => placeNode(it, POS_X.chP, y, 'ch-personal'));
 spreadY(DATA.corpChannels.filter(c=>c.id!=='self-mall'), 150).forEach(({it, y}) => placeNode(it, POS_X.chC, y, 'ch-corp'));
 const selfMall = DATA.corpChannels.find(c => c.id === 'self-mall');
-placeNode(selfMall, 1965, 540, 'ch-corp');
+placeNode(selfMall, 2300, 460, 'ch-corp');
 
 const depts = DATA.departments;
 function spreadX(items, gap) {
   const n = items.length, total = (n - 1) * gap;
   return items.map((it, i) => ({ it, x: CX - total/2 + i*gap }));
 }
-spreadX(depts.slice(0, 4), 510).forEach(({it, x}) => placeNode(it, x, DEPT_TOP_Y, 'dept'));
+spreadX(depts.slice(0, 3), 600).forEach(({it, x}) => placeNode(it, x, DEPT_TOP_Y, 'dept'));
+// dev는 우측 독립 컬럼
+placeNode(depts.find(d=>d.id==='dev'), 2300, 130, 'dept');
 spreadX(depts.slice(4),    510).forEach(({it, x}) => placeNode(it, x, DEPT_BOT_Y, 'dept'));
 
 // 플레이오토 + 이카운트 → CS팀 위쪽 영역 (CS팀 X=945 근처)
@@ -1023,8 +1025,8 @@ placeNode(DATA.ig,    180, 80,  'sys sys-ig');
 placeNode(DATA.nblog, 350, 80,  'sys sys-nblog');
 placeNode(DATA.yt,    520, 80,  'sys sys-yt');
 // ERP → Hanasignmall.kr (self-mall) 우측에 산하로
-placeNode(DATA.erp, 1965, 380, 'erp');
-placeNode(DATA.nas, 1965, 700, 'sys sys-nas');
+placeNode(DATA.erp, 2300, 290, 'erp');
+placeNode(DATA.nas, 2300, 620, 'sys sys-nas');
 
 // ============ WIRES ============
 function nodeSize(id) {
@@ -1100,8 +1102,8 @@ function drawAllWires() {
   wires.innerHTML = '';
   // 개발팀 영역 박스 (베이스)
   const region = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
-  region.setAttribute('x', 1855); region.setAttribute('y', 170);
-  region.setAttribute('width', 220); region.setAttribute('height', 620);
+  region.setAttribute('x', 2190); region.setAttribute('y', 90);
+  region.setAttribute('width', 220); region.setAttribute('height', 600);
   region.setAttribute('fill', 'rgba(34,211,238,0.05)');
   region.setAttribute('stroke', 'rgba(34,211,238,0.32)');
   region.setAttribute('stroke-width', '1.5');
@@ -1111,7 +1113,7 @@ function drawAllWires() {
   wires.appendChild(region);
   // 영역 라벨
   const label = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-  label.setAttribute('x', 1965); label.setAttribute('y', 158);
+  label.setAttribute('x', 2300); label.setAttribute('y', 78);
   label.setAttribute('fill', '#22d3ee');
   label.setAttribute('text-anchor', 'middle');
   label.setAttribute('font-size', '14');
