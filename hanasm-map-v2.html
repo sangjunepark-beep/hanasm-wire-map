@@ -1910,6 +1910,8 @@ stageEl.addEventListener('touchend', () => {
 });
 // 휠 확대/축소 (마우스 포인터 기준)
 stageEl.addEventListener('wheel', (e) => {
+  // 패널 안에서는 스테이지 줌 막고 패널 스크롤 유지
+  if (e.target.closest('.expanded') || e.target.closest('.task-panel') || e.target.closest('.proj-panel')) return;
   e.preventDefault();
   const factor = e.deltaY > 0 ? 0.9 : 1.1;
   const ns = Math.max(0.3, Math.min(3.5, camS * factor));
