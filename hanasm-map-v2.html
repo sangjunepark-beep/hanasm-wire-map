@@ -1340,6 +1340,8 @@ function placeNode(node, x, y, cls) {
   div.addEventListener('click', (e) => {
     e.stopPropagation();
     if (recentlyDragged) return;
+    // 확장 박스 안(.expanded) 클릭은 zoom 토글 비활성 - 빈 영역 눌러도 닫히지 않음
+    if (e.target.closest('.expanded')) return;
     nodeClick(node.id);
   });
 
