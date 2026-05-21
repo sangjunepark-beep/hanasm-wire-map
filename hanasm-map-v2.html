@@ -759,6 +759,19 @@ body.edit-mode .node .frame { outline: 2px dashed rgba(251,191,36,0.6); outline-
 .dpc-dec { font-weight: 700; }
 .dpc-when { color: #c5c9e0; }
 .dpc-prog { margin-left: auto; font-weight: 800; color: var(--dc); }
+.dept-proj-card { cursor: pointer; transition: background 0.18s; }
+.dept-proj-card:hover { background: rgba(8,9,28,0.78); }
+.dpc-desc {
+  display: none;
+  margin-top: 8px; padding-top: 8px;
+  border-top: 1px dashed rgba(167,139,250,0.22);
+  font-size: 10.5px; color: #c5c9e0;
+  line-height: 1.55; letter-spacing: 0.02em;
+  white-space: pre-line;
+}
+.dept-proj-card.open .dpc-desc { display: block; }
+.dpc-name::after { content: ' ▾'; color: rgba(167,139,250,0.45); font-size: 9px; }
+.dept-proj-card.open .dpc-name::after { content: ' ▴'; }
 .proj-item { display: flex; flex-direction: column; gap: 6px; padding: 8px 10px; background: rgba(167,139,250,0.06); border: 1px solid rgba(167,139,250,0.18); border-left: 2px solid var(--cat-c, #a855f7); font-size: 11.5px; color: #f3f4fb; font-weight: 600; cursor: pointer; letter-spacing: 0.015em; clip-path: polygon(5px 0, 100% 0, 100% calc(100% - 5px), calc(100% - 5px) 100%, 0 100%, 0 5px); }
 .proj-item .pi-row { display: flex; align-items: center; gap: 8px; }
 .proj-item .pi-handle { cursor: grab; }
@@ -1832,7 +1845,9 @@ function showTasks(deptId, memberName) {
     order.forEach(({key, cls, label}) => {
       if (groups[key] && groups[key].length) {
         html += `<div class="task-group ${cls}"><h4>${label} <span class="cnt">${groups[key].length}</span></h4>`;
-        groups[key].forEach(t => {
+        const prioRank = { h: 0, m: 1, l: 2 };
+        const sorted = [...groups[key]].sort((a, b) => (prioRank[a.prio || 'l'] - prioRank[b.prio || 'l']));
+        sorted.forEach(t => {
           const prio = t.prio || 'l';
           const prioLabel = prio === 'h' ? '상' : prio === 'm' ? '중' : '하';
           html += `<div class="task-item">
@@ -2170,6 +2185,7 @@ function renderDeptProjects(deptId) {
     const isOwner = item.ownerDept === deptId;
     const card = document.createElement('div');
     card.className = 'dept-proj-card dec-' + dec + (isOwner ? ' is-owner' : ' is-related');
+    const descBlock = item.desc ? '<div class="dpc-desc">' + item.desc + '</div>' : '';
     card.innerHTML =
       '<div class="dpc-h"><span class="dpc-role">' + (isOwner ? '주관' : '유관') + '</span>'
       + '<span class="dpc-cat ' + cat + '">' + PROJECTS[cat].name + '</span></div>'
@@ -2178,7 +2194,13 @@ function renderDeptProjects(deptId) {
       +   '<span class="dpc-dec">' + (DEC_LABEL[dec] || '') + '</span>'
       +   (item.startWhen ? '<span class="dpc-when">📅 ' + item.startWhen + '</span>' : '')
       +   '<span class="dpc-prog">' + (item.progress || 0) + '%</span>'
-      + '</div>';
+      + '</div>'
+      + descBlock;
+    // 카드 클릭 시 desc 펼침/접기
+    card.addEventListener('click', (e) => {
+      e.stopPropagation();
+      card.classList.toggle('open');
+    });
     sec.appendChild(card);
   });
   exp.appendChild(sec);
