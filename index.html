@@ -251,7 +251,17 @@ svg.wires path.preview-wire {
   font-size: 11.5px; color: var(--text-2);
   line-height: 1.55; letter-spacing: 0.02em;
   margin-bottom: 10px;
-  white-space: pre-line;
+}
+.desc-section {
+  font-size: 10px; font-weight: 800; letter-spacing: 0.14em; text-transform: uppercase;
+  color: #93c5fd;
+  margin-top: 10px; padding: 6px 0 4px;
+  border-top: 1px dashed rgba(167,139,250,0.30);
+}
+.desc-section:first-child { border-top: none; margin-top: 0; padding-top: 0; }
+.desc-line { padding: 2px 0 2px 8px; position: relative; }
+.desc-line::before {
+  content: '·'; position: absolute; left: 0; top: 2px; color: rgba(167,139,250,0.5); font-weight: 700;
 }
 .member-grid { display: flex; flex-direction: column; gap: 5px; }
 .member-chip {
@@ -971,27 +981,27 @@ const DATA = {
   corp: { id:"corp", name:"법인사업자", sub:"CORP · MAIN", desc:"자사몰 + 오픈마켓 다채널 운영. 회사 메인 사업자" },
   erp: { id:"erp", name:"ERP", sub:"erp.hanasm.kr · CORE",
          brand:"#22d3ee",
-         desc:"자체 개발 ERP (개발팀 산하)\n핵심 백본 · erp.hanasm.kr\n112.172.7.61 · 내부 211 / 212\n센터 서버 백업\nIDC hanasignmall.kr (49.247.31.206)\n+ Elastic (49.247.40.116) 상품정보 비교\n206 장애 시 116 작동" },
+         desc:"■ 시스템\n자체 개발 ERP (개발팀 산하)\n핵심 백본\n■ 도메인\nerp.hanasm.kr\n■ IP\n112.172.7.61\n내부 211 / 212\n■ 백업\n센터 서버 백업\n■ 외부 연동\nIDC hanasignmall.kr (49.247.31.206)\nElastic (49.247.40.116)\n상품정보 비교\n■ 장애 처리\n206 장애 시 116 자동 작동" },
   playauto: { id:"playauto", name:"플레이오토", sub:"주문수집 SYS · API → ERP",
               brand:"#fb923c",
-              desc:"오픈마켓·스마트스토어·자사몰 주문 통합 수집\nAPI → ERP 공정 매칭\n1.품목 → 2.디자인 → 3.제작 → 4.출고\n→ 상품제작 진행상황 URL" },
+              desc:"■ 역할\n주문 통합 수집\n오픈마켓 · 스마트스토어 · 자사몰\n■ 연동\nAPI → ERP 공정 매칭\n■ 공정 4단계\n1. 품목 매칭\n2. 디자인\n3. 제작\n4. 출고\n■ 결과\n상품제작 진행상황 URL" },
   ecount:   { id:"ecount", name:"이카운트", sub:"견적·세금계산서 SYS",
               brand:"#34d399",
-              desc:"견적서 발행 (CS)\n세금계산서 발행 (이하나 대리)\nCS · 경영지원 유기적 연결" },
+              desc:"■ 견적서 발행\nCS팀\n■ 세금계산서 발행\n이하나 대리\n■ 부서 연결\nCS · 경영지원 유기적 연결" },
   call:     { id:"call",  name:"전화상담", sub:"CS · 1644-7523", brand:"#60a5fa", desc:"고객 전화 상담 1644-7523 (CS팀 본업)" },
   chat:     { id:"chat",  name:"채팅상담", sub:"CS · 해피톡 통합", brand:"#f472b6",
               desc:"해피톡으로 통합 관리",
               channels:["네이버 톡톡 (스마트스토어 3개)","카카오 비즈니스","고도몰","신규몰"] },
   prtEpson: { id:"prtEpson", name:"EPSON SC-S80610L", sub:"에코솔벤 · 1500폭", brand:"#fbbf24",
-              desc:"제작실 출력장비 ①\nEpson SureColor SC-S80610L\n잉크: 에코솔벤 · 1500폭\n가능 소재:\n· 투명PVC-IT-30000\n· 화이트 캘-IT-2000 (자전거스티커 외)\n· 반사지 · 야광지 · 홀로그램 (단/출력용)\n· 플렉스 (조명 · 비조명)" },
+              desc:"■ 모델\nEpson SureColor SC-S80610L\n제작실 출력장비 ①\n■ 스펙\n잉크: 에코솔벤\n폭: 1500\n■ 가능 소재\n투명PVC-IT-30000\n화이트 캘-IT-2000 (자전거스티커 외)\n반사지 · 야광지 · 홀로그램 (단/출력용)\n플렉스 (조명 · 비조명)" },
   prtHp:    { id:"prtHp", name:"HP 라텍스 800W", sub:"친환경 무취 · 1500폭", brand:"#34d399",
-              desc:"제작실 출력장비 ②\nHP 라텍스 800W\n친환경 무취 인쇄 · 1500폭\n가능 소재:\n· 배너 · 직물 · 포스터 · 캔버스\n· 벽지 · 비닐 · 투명PET\n· 투명리무버 · 투명무점착 (주차스티커)\n· 라텍스 전용 화이트캘 (IT-100/100G/200/2000G)\n· UV PET 원단\n· 골드 · 실버 헤어라인 · 거울 PET\n· 빽릿 · 라텍스 전용 벽지\n· 반사지 · 야광지 홀로그램" },
+              desc:"■ 모델\nHP 라텍스 800W\n제작실 출력장비 ②\n■ 스펙\n잉크: 친환경 무취\n폭: 1500\n■ 가능 소재\n배너 · 직물 · 포스터 · 캔버스\n벽지 · 비닐 · 투명PET\n투명리무버 · 투명무점착 (주차스티커)\n라텍스 전용 화이트캘 (IT-100/100G/200/2000G)\nUV PET 원단\n골드 · 실버 헤어라인 · 거울 PET\n빽릿 · 라텍스 전용 벽지\n반사지 · 야광지 홀로그램" },
   prtExt:   { id:"prtExt", name:"EXTREME 1800 R1", sub:"수성잉크 · 1800폭", brand:"#60a5fa",
-              desc:"제작실 출력장비 ③\nEXTREME 1800 R1\n수성잉크 · 1800폭\n가능 소재:\n· 합성지 · 캘 · 캘리무버\n· PET · 현수막\n· 부직포 · 텐트천 · 캔버스천" },
+              desc:"■ 모델\nEXTREME 1800 R1\n제작실 출력장비 ③\n■ 스펙\n잉크: 수성\n폭: 1800\n■ 가능 소재\n합성지 · 캘 · 캘리무버\nPET · 현수막\n부직포 · 텐트천 · 캔버스천" },
   prtUv:    { id:"prtUv", name:"평판 UV 프린터", sub:"UV · 1200×2400mm", brand:"#a855f7",
-              desc:"제작실 출력장비 ④\n평판 UV 프린터\n1200 × 2400mm\n가능 소재:\n· 포맥스 · 아크릴 투명리무버 · 투명무점착 (주차스티커)\n· PVC (캘)\n· UV PET · 가죽 · 천 · 타일 · 철판\n· 골드 · 실버 헤어라인 · 거울 PET\n· 반사지 · 야광지 홀로그램" },
+              desc:"■ 모델\n평판 UV 프린터\n제작실 출력장비 ④\n■ 스펙\n잉크: UV\n크기: 1200 × 2400mm\n■ 가능 소재\n포맥스 · 아크릴 투명리무버 · 투명무점착 (주차스티커)\nPVC (캘)\nUV PET · 가죽 · 천 · 타일 · 철판\n골드 · 실버 헤어라인 · 거울 PET\n반사지 · 야광지 홀로그램" },
     nas:      { id:"nas",   name:"NAS", sub:"중요 데이터 저장소", brand:"#22d3ee",
-              desc:"사내 NAS · 192.168.0.200 / 201\nERP 서버 백업\n디자인팀 시안 DB\n웹팀 DB · 문서 일체\n출력기 핫폴더 (4종)\nEPSON · HP라텍스 · EXTREME · 평판UV\nDocker 운영 (개발팀)" },
+              desc:"■ 서버\n사내 NAS\n192.168.0.200 / 201\n■ 역할\nERP 서버 백업\n디자인팀 시안 DB\n웹팀 DB · 문서 일체\n■ 출력기 핫폴더 (4종)\nEPSON\nHP 라텍스\nEXTREME\n평판 UV\n■ 운영\nDocker (개발팀)" },
   ig:       { id:"ig",    name:"인스타그램",   sub:"SNS · 임정민 주임", brand:"#E1306C", desc:"인스타 게시글 · 릴스 · AI 이미지/영상" },
   nblog:    { id:"nblog", name:"네이버 블로그", sub:"SNS · 임정민 주임", brand:"#03C75A", desc:"네이버 블로그 포스팅 · 검색 노출 확인" },
   yt:       { id:"yt",    name:"유튜브",       sub:"SNS · 임정민 주임", brand:"#FF0000", desc:"유튜브 쇼츠 (인스타 릴스 동일 영상)" },
@@ -1123,8 +1133,22 @@ function placeNode(node, x, y, cls) {
   const exp = document.createElement('div'); exp.className = 'expanded';
   if (node.desc) {
     const lbl = document.createElement('div'); lbl.className = 'label'; lbl.textContent = 'INFO';
-    const dsc = document.createElement('div'); dsc.className = 'desc'; dsc.textContent = node.desc;
-    exp.appendChild(lbl); exp.appendChild(dsc);
+    exp.appendChild(lbl);
+    const dscWrap = document.createElement('div'); dscWrap.className = 'desc';
+    node.desc.split('\n').forEach(line => {
+      const t = line.trim();
+      if (!t) return;
+      const row = document.createElement('div');
+      if (t.startsWith('■')) {
+        row.className = 'desc-section';
+        row.textContent = t.replace(/^■\s*/, '');
+      } else {
+        row.className = 'desc-line';
+        row.textContent = t;
+      }
+      dscWrap.appendChild(row);
+    });
+    exp.appendChild(dscWrap);
   }
   if (node.channels && node.channels.length) {
     const lbl = document.createElement('div'); lbl.className = 'label'; lbl.style.marginTop = '8px';
