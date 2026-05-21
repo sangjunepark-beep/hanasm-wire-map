@@ -2206,6 +2206,15 @@ function renderDeptProjects(deptId) {
     sec.appendChild(card);
   });
   exp.appendChild(sec);
+
+  // 초기 콘텐츠 높이를 측정해서 영역 고정 → 카드 펼침은 영역 안 스크롤로만
+  requestAnimationFrame(() => {
+    const h = sec.offsetHeight;
+    if (h > 0) {
+      sec.style.height = h + 'px';
+      sec.style.maxHeight = h + 'px';
+    }
+  });
 }
 
 // 페이지 로드 시 초기 렌더만 (자동 펼침 X)
