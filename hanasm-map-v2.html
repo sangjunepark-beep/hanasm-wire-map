@@ -1098,6 +1098,15 @@ const TASKS = {
     { name:"ERP 상담 내역 작성", status:"정기", prio:"m" },
     { name:"화/목 CS 회의", status:"정기", prio:"l" },
     { name:"쓰레기 / 중간일", status:"상시", prio:"l" }
+  ],
+  namji: [
+    { name:"배송중 7일 경과 → 배송완료 자동 배치", status:"진행중", prio:"h", detail:"작업 완료 · 전달 예정 (90%)" },
+    { name:"관리자 시공사례 에디터 사진 첨부 오류", status:"진행중", prio:"m", detail:"간헐 발생 시 확인 (30%)" },
+    { name:"상품 옵션 0개 상세페이지 동작 구조 확인", status:"진행중", prio:"m", detail:"영향 범위·구조 검토 중 (20%)" },
+    { name:"업종별 카테고리 추가 (전시/관람)", status:"예정", prio:"m" },
+    { name:"네이버페이 결제형 구매 시 판매수 +1 (웹·모바일)", status:"예정", prio:"m" },
+    { name:"디자인 관리 옵션 일괄 설정 기능", status:"예정", prio:"m" },
+    { name:"상품 정가·할인가 데이터 공동 관리", status:"예정", prio:"m" }
   ]
 };
 
@@ -1192,7 +1201,7 @@ const DATA = {
       links:["self-mall","erp","web","cs","product"],
       members:[
         { name:"강두원", role:"팀장", title:"개발 총괄", tasks: null },
-        { name:"나민지", role:"주임", title:"개발", tasks: null }
+        { name:"나민지", role:"주임", title:"개발", tasks: TASKS.namji }
       ]},
     { id:"fin", name:"경영지원팀", color:"#7c3aed", color2:"#3b82f6",
       desc:"회계 · 경리 · 인사 · 총무 (2명) · 전 부서·이카운트 연결",
