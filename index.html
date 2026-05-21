@@ -1533,6 +1533,9 @@ function setStage(id, stage) {
   const isDept = !!depts.find(x => x.id === id);
   const isDeptNode = (nid) => !!depts.find(x => x.id === nid);
 
+  // call(전화상담) / sales(외부영업) 클릭 시 cs 통해서 사업자 + 산하 채널 점선 표시
+  const isCallOrSales = (id === 'call' || id === 'sales');
+
   if (isDept) {
     // 부서 클릭 → 직접 연결된 노드만 + 사업자 산하 채널/CEO
     wires.querySelectorAll('path').forEach(p => {
@@ -1564,6 +1567,23 @@ function setStage(id, stage) {
     }
     if (connected.has('self-mall')) connected.add('erp');
     connected.add('ceo');
+
+    // sales(외부영업) 클릭 시: cs→personal/corp + 모든 채널 점선 강조
+    if (isCallOrSales) {
+      connected.add('cs');
+      connected.add('personal'); connected.add('corp');
+      ['personal','corp'].forEach(t => {
+        wires.querySelectorAll(`path[data-from="cs"][data-to="${t}"], path[data-from="${t}"][data-to="cs"]`).forEach(p => p.classList.add('focus-wire','flow'));
+      });
+      DATA.personalChannels.forEach(c => {
+        connected.add(c.id);
+        wires.querySelectorAll(`path[data-from="personal"][data-to="${c.id}"], path[data-from="${c.id}"][data-to="personal"]`).forEach(p => p.classList.add('focus-wire','flow'));
+      });
+      DATA.corpChannels.forEach(c => {
+        connected.add(c.id);
+        wires.querySelectorAll(`path[data-from="corp"][data-to="${c.id}"], path[data-from="${c.id}"][data-to="corp"]`).forEach(p => p.classList.add('focus-wire','flow'));
+      });
+    }
   } else {
     // 비부서 노드 클릭 → 직접 연결만
     wires.querySelectorAll('path').forEach(p => {
@@ -1590,6 +1610,22 @@ function setStage(id, stage) {
       // 제작실 → 출력기 점선 와이어도 함께 강조 (NAS 핫폴더 흐름)
       nasPrinters.forEach(pid => {
         wires.querySelectorAll(`path[data-from="product"][data-to="${pid}"], path[data-from="${pid}"][data-to="product"]`).forEach(p => p.classList.add('focus-wire','flow'));
+      });
+    }
+    // call(전화상담) 클릭 시: cs 통해서 사업자 + 산하 채널 점선 강조
+    if (id === 'call') {
+      connected.add('cs');
+      connected.add('personal'); connected.add('corp');
+      ['personal','corp'].forEach(t => {
+        wires.querySelectorAll(`path[data-from="cs"][data-to="${t}"], path[data-from="${t}"][data-to="cs"]`).forEach(p => p.classList.add('focus-wire','flow'));
+      });
+      DATA.personalChannels.forEach(c => {
+        connected.add(c.id);
+        wires.querySelectorAll(`path[data-from="personal"][data-to="${c.id}"], path[data-from="${c.id}"][data-to="personal"]`).forEach(p => p.classList.add('focus-wire','flow'));
+      });
+      DATA.corpChannels.forEach(c => {
+        connected.add(c.id);
+        wires.querySelectorAll(`path[data-from="corp"][data-to="${c.id}"], path[data-from="${c.id}"][data-to="corp"]`).forEach(p => p.classList.add('focus-wire','flow'));
       });
     }
   }
