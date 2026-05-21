@@ -1289,17 +1289,9 @@ function placeNode(node, x, y, cls) {
     const b = document.createElement('div'); b.className = 'ad-badge';
     let svg = '';
     if (node.adBadge.logo === 'naver') {
-      svg = '<svg width="22" height="22" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">'
-          + '<rect width="16" height="16" rx="3" fill="#03C75A"/>'
-          + '<path d="M5 4 L5 12 L6.6 12 L6.6 7.4 L9.4 12 L11 12 L11 4 L9.4 4 L9.4 8.6 L6.6 4 Z" fill="#fff"/>'
-          + '</svg>';
+      svg = '<img src="naver.png" width="24" height="24" alt="네이버" style="display:block;border-radius:5px;">';
     } else if (node.adBadge.logo === 'npay') {
-      svg = '<svg width="48" height="21" viewBox="0 0 36 16" xmlns="http://www.w3.org/2000/svg">'
-          + '<rect width="36" height="16" rx="3" fill="#03C75A"/>'
-          + '<circle cx="7" cy="8" r="4.2" fill="#000"/>'
-          + '<path d="M5.2 5.6 L5.2 10.4 L6.1 10.4 L6.1 7.6 L7.9 10.4 L8.8 10.4 L8.8 5.6 L7.9 5.6 L7.9 8.4 L6.1 5.6 Z" fill="#fff"/>'
-          + '<text x="14" y="11.5" font-size="7.5" font-weight="900" font-family="Arial Black, Arial, sans-serif" fill="#000" letter-spacing="-0.3">pay</text>'
-          + '</svg>';
+      svg = '<img src="npay.png" width="50" height="22" alt="네이버페이" style="display:block;border-radius:4px;">';
     }
     b.innerHTML = svg + '<span class="ab-lbl">' + node.adBadge.label + '</span>';
     div.appendChild(b);
