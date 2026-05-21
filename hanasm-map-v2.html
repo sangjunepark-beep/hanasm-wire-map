@@ -1815,7 +1815,7 @@ function showTasks(deptId, memberName) {
   document.getElementById('tpName').textContent = `${m.name} ${m.role}`;
   document.getElementById('tpRole').textContent = `${d.name} · ${m.title || ''}`;
 
-  const stats = { routine: 0, aux: 0 };
+  const stats = { routine: 0, aux: 0, active: 0, hold: 0, planned: 0 };
   const groups = { '정기': [], '상시': [] };
   if (m.tasks) {
     m.tasks.forEach(t => {
@@ -1832,8 +1832,11 @@ function showTasks(deptId, memberName) {
   const statsEl = document.getElementById('tpStats');
   if (m.tasks) {
     statsEl.innerHTML = `
-      ${stats.routine ? `<span class="st routine">정기 ${stats.routine}</span>` : ''}
-      ${stats.aux     ? `<span class="st active">상시 ${stats.aux}</span>` : ''}
+      ${stats.active   ? `<span class="st active">진행중 ${stats.active}</span>` : ''}
+      ${stats.planned  ? `<span class="st planned">예정 ${stats.planned}</span>` : ''}
+      ${stats.hold     ? `<span class="st hold">보류 ${stats.hold}</span>` : ''}
+      ${stats.routine  ? `<span class="st routine">정기 ${stats.routine}</span>` : ''}
+      ${stats.aux      ? `<span class="st active">상시 ${stats.aux}</span>` : ''}
     `;
   } else {
     statsEl.innerHTML = '';
@@ -1850,8 +1853,11 @@ function showTasks(deptId, memberName) {
   } else {
     let html = '';
     const order = [
-      { key:'정기', cls:'s-routine', label:'정기' },
-      { key:'상시', cls:'s-active',  label:'상시' }
+      { key:'진행중', cls:'s-active',  label:'진행중' },
+      { key:'예정',   cls:'s-routine', label:'예정' },
+      { key:'보류',   cls:'s-hold',    label:'보류' },
+      { key:'정기',   cls:'s-routine', label:'정기' },
+      { key:'상시',   cls:'s-active',  label:'상시' }
     ];
     order.forEach(({key, cls, label}) => {
       if (groups[key] && groups[key].length) {
