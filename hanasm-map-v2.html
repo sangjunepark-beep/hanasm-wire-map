@@ -2022,19 +2022,7 @@ const PROJECTS = {
       desc:'홍재이 주임 진행 중. 이번 주 주차스티커 완료 예상, 차주 A형입간판 진행 예정. 제품 수가 많아 6월 초·중순까지 이어질 수 있음.', owner:'홍재이' },
     { name:'어드민 카테고리·토글 정리 (LLM)', prio:'m', progress:70, status:'stop',
       ownerDept:'web', related:[], decision:'hold', startWhen:'미정',
-      desc:'신규몰 어드민 상품별 공간별 토글 정리. 1차는 룰 적용, 2차는 LLM 적용 테스트 진행했으나 개인별 차로 완벽 분리 어려운 부분이 있어 스톱. 공정률 70%.', owner:'박상준' },
-    { name:'상품 옵션 0개 상세페이지 구조 확인', prio:'m', progress:20, status:'active',
-      ownerDept:'dev', related:['web'], decision:'hold', startWhen:'구조 검토 중',
-      desc:'현재 판매상품에는 옵션 0개 케이스 없음. 상세페이지가 옵션 존재를 기준으로 구성되어 있어 옵션 0개 적용 시 영향 범위 확인·구조 검토가 필요한 상태로 확인 중.', owner:'나민지' },
-    { name:'업종별 카테고리 추가 (전시/관람)', prio:'m', progress:0, status:'active',
-      ownerDept:'dev', related:['web'], decision:'go', startWhen:'진행 예정',
-      desc:'업종별 카테고리에 \'전시/관람\' 신규 추가. 홍재이 상품등록 흐름과 연결.', owner:'나민지' },
-    { name:'디자인 관리 옵션 일괄 설정 기능', prio:'m', progress:0, status:'active',
-      ownerDept:'dev', related:['design'], decision:'go', startWhen:'진행 예정',
-      desc:'디자인 관리 화면에서 옵션을 일괄 설정할 수 있는 기능 추가.', owner:'나민지' },
-    { name:'상품 정가·할인가 데이터 공동 관리', prio:'m', progress:0, status:'active',
-      ownerDept:'dev', related:['web'], decision:'go', startWhen:'진행 예정',
-      desc:'상품 정가·할인가 데이터를 공동 관리하도록 데이터 구조 통합. 가격 일괄 변경 시 영향 범위 축소 목적.', owner:'나민지' }
+      desc:'신규몰 어드민 상품별 공간별 토글 정리. 1차는 룰 적용, 2차는 LLM 적용 테스트 진행했으나 개인별 차로 완벽 분리 어려운 부분이 있어 스톱. 공정률 70%.', owner:'박상준' }
   ]},
   system:  { name:'시스템·자사몰', items:[
     { name:'ERP 공정 매칭 자동화 (4단계)', prio:'h', progress:40, status:'active',
@@ -2051,16 +2039,7 @@ const PROJECTS = {
       desc:'플레이오토 관련 마스터 상품 등록. 확인 결과 마스터 상품이라도 각 채널별 옵션은 별도로 조절해 업로드해야 함. 한 군데서 통합 작업한다는 장점은 있음. 이걸 기초로 개인사업자 판매채널 확대 여부 검토 필요.', owner:'박상준' },
     { name:'가상계좌 콘솔 (토스 API · 보존)', prio:'l', progress:80, status:'stop',
       ownerDept:'web', related:['dev','fin'], decision:'hold', startWhen:'미정',
-      desc:'박상준 차장이 직접 개발한 콘솔. 토스페이먼츠 가상계좌 발행 API 활용. 지정 이름으로 가상계좌 발행, 30일 내 날짜 지정 가능. 지정일에 콘솔에서 미입금 알림 표시. 개발 약 80% 진행, 다른 업무 우선으로 스톱. 필요 시 마무리 후 개발팀에 이관 예정.', owner:'박상준' },
-    { name:'배송중 7일 경과 배송완료 자동 배치', prio:'h', progress:90, status:'active',
-      ownerDept:'dev', related:['cs','fin'], decision:'go', startWhen:'전달 예정',
-      desc:'관리자 주문관리에서 배송중 상태 후 7일 경과 시 배송완료로 자동 전환하는 배치. 작업 완료하여 전달 예정.', owner:'나민지' },
-    { name:'관리자 시공사례 에디터 사진 첨부 오류', prio:'m', progress:30, status:'active',
-      ownerDept:'dev', related:['design'], decision:'hold', startWhen:'간헐 발생 시 확인',
-      desc:'시공사례 에디터에서 사진 첨부 오류가 간헐적으로 발생. 별도 요청 들어올 때마다 확인 중.', owner:'나민지' },
-    { name:'네이버페이 결제형 구매 시 판매수 +1 (웹·모바일)', prio:'m', progress:0, status:'active',
-      ownerDept:'dev', related:[], decision:'go', startWhen:'진행 예정',
-      desc:'결제수단이 네이버페이 결제형일 때 상품 테이블 판매수 +1 로직 추가. 웹·모바일 양쪽 모두 적용.', owner:'나민지' }
+      desc:'박상준 차장이 직접 개발한 콘솔. 토스페이먼츠 가상계좌 발행 API 활용. 지정 이름으로 가상계좌 발행, 30일 내 날짜 지정 가능. 지정일에 콘솔에서 미입금 알림 표시. 개발 약 80% 진행, 다른 업무 우선으로 스톱. 필요 시 마무리 후 개발팀에 이관 예정.', owner:'박상준' }
   ]},
   offline: { name:'오프라인·영업', items:[] }
 };
