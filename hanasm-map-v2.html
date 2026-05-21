@@ -242,6 +242,49 @@ svg.wires path.preview-wire {
   to   { opacity: 1; transform: translateY(-50%) translateX(0) scale(1); }
 }
 .node.zoomed .expanded { display: block; }
+/* 부서 zoomed 시 2컬럼 분할 (좌: 멤버/기본, 우: 신규 프로젝트) */
+.node.zoomed.dept .expanded {
+  max-width: 620px !important;
+  width: 620px !important;
+  display: grid;
+  grid-template-columns: 270px 1fr;
+  gap: 14px;
+  max-height: 80vh;
+  overflow: hidden;
+  padding: 14px;
+}
+.node.zoomed.dept .expanded > * { grid-column: 1; }
+.node.zoomed.dept .expanded > .dept-projects-section {
+  grid-column: 2;
+  grid-row: 1 / span 99;
+  margin-top: 0;
+  padding-top: 0;
+  border-top: none;
+  border-left: 1px dashed rgba(167,139,250,0.30);
+  padding-left: 14px;
+  max-height: calc(80vh - 28px);
+  overflow-y: auto;
+}
+.node.zoomed.dept .expanded > .dept-projects-section::-webkit-scrollbar { width: 6px; }
+.node.zoomed.dept .expanded > .dept-projects-section::-webkit-scrollbar-thumb { background: rgba(167,139,250,0.30); border-radius: 3px; }
+.node.zoomed.dept .expanded .member-grid { max-height: 36vh; overflow-y: auto; padding-right: 4px; }
+.node.zoomed.dept .expanded .member-grid::-webkit-scrollbar { width: 6px; }
+.node.zoomed.dept .expanded .member-grid::-webkit-scrollbar-thumb { background: rgba(167,139,250,0.30); border-radius: 3px; }
+/* 모바일 - 1열로 (스크롤만) */
+@media (max-width: 768px) {
+  .node.zoomed.dept .expanded {
+    width: 92vw !important; max-width: 92vw !important;
+    grid-template-columns: 1fr;
+    max-height: 80vh;
+  }
+  .node.zoomed.dept .expanded > .dept-projects-section {
+    grid-column: 1;
+    border-left: none;
+    border-top: 1px dashed rgba(167,139,250,0.30);
+    padding-left: 0; padding-top: 12px;
+    margin-top: 8px;
+  }
+}
 .expanded .label {
   font-size: 9.5px; color: var(--text-3);
   letter-spacing: 0.18em; text-transform: uppercase;
