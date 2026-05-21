@@ -249,9 +249,15 @@ svg.wires path.preview-wire {
   display: grid;
   grid-template-columns: 270px 1fr;
   gap: 14px;
-  max-height: 80vh;
-  overflow: hidden;
+  max-height: 78vh;
+  overflow: visible;
   padding: 14px;
+  top: max(70px, 50%) !important;
+  transform: translateY(-50%) !important;
+}
+/* 노드가 화면 상단에 가까우면 transform 끄고 절대 위치 */
+.node.zoomed.dept .expanded {
+  --safe-top: 70px;
 }
 .node.zoomed.dept .expanded > * { grid-column: 1; }
 .node.zoomed.dept .expanded > .dept-projects-section {
@@ -439,25 +445,24 @@ svg.wires path.preview-wire {
 
 /* === Task Panel === */
 .task-panel {
-  position: fixed; top: 70px; right: 18px; bottom: 80px;
+  position: fixed; top: 70px; left: 18px; bottom: 80px;
   width: 380px;
   background: rgba(8,9,28,0.94);
-  border: 1px solid var(--purple-2);
+  border: 1px solid #3b82f6;
   padding: 0;
   z-index: 220;
-  /* perf */
-  box-shadow: -10px 0 40px rgba(0,0,0,0.55), 0 0 30px rgba(168,85,247,0.2);
+  box-shadow: 10px 0 40px rgba(0,0,0,0.55), 0 0 30px rgba(59,130,246,0.22);
   display: flex; flex-direction: column;
-  transform: translateX(420px); opacity: 0;
+  transform: translateX(-420px); opacity: 0;
   transition: all 0.4s cubic-bezier(.2,.7,.2,1);
   pointer-events: none;
-  clip-path: polygon(16px 0, 100% 0, 100% calc(100% - 16px), calc(100% - 16px) 100%, 0 100%, 0 16px);
+  clip-path: polygon(0 16px, 16px 0, 100% 0, 100% 100%, 16px 100%, 0 calc(100% - 16px));
 }
 .task-panel.show { transform: translateX(0); opacity: 1; pointer-events: auto; }
 .task-panel .tp-head { padding: 18px 20px 14px; border-bottom: 1px solid var(--line); }
 .task-panel .tp-head .tp-name {
   font-size: 15px; font-weight: 800; letter-spacing: 0.04em;
-  background: linear-gradient(90deg, var(--blue-1), var(--purple-1));
+  background: linear-gradient(90deg, #60a5fa, #22d3ee);
   -webkit-background-clip: text; background-clip: text; color: transparent;
   margin-bottom: 3px;
 }
@@ -1760,6 +1765,18 @@ function setStage(id, stage) {
     cameraTo(id);
     if (isDept && typeof renderDeptProjects === 'function') {
       renderDeptProjects(id);
+      // 패널 위치 보정 - 위쪽 잘림 방지
+      requestAnimationFrame(() => {
+        const expEl = rec.el.querySelector('.expanded');
+        if (!expEl) return;
+        const r = expEl.getBoundingClientRect();
+        const safeTop = 60;
+        if (r.top < safeTop) {
+          // 노드 좌표에서 transform 보정
+          const delta = safeTop - r.top;
+          expEl.style.transform = `translateY(calc(-50% + ${delta}px))`;
+        }
+      });
     }
   }
 }
