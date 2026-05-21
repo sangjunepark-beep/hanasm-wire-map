@@ -1924,7 +1924,8 @@ stageEl.addEventListener('wheel', (e) => {
 
 stageEl.addEventListener('click', (e) => {
   if (recentlyDragged) { e.stopPropagation(); return; }
-  if (e.target.closest('.node') || e.target.closest('.task-panel')) return;
+  // 패널·툴바·칩바·확장 영역 안 클릭이면 닫지 않음
+  if (e.target.closest('.node') || e.target.closest('.expanded') || e.target.closest('.task-panel') || e.target.closest('.proj-panel') || e.target.closest('.proj-toggle') || e.target.closest('.chip-bar') || e.target.closest('.controls') || e.target.closest('.topbar')) return;
   closeAll();
 }, true);
 document.getElementById('today').textContent = new Date().toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' }).toUpperCase();
