@@ -369,6 +369,28 @@ svg.wires path.preview-wire {
 .ad-item.future::before { color:#94a3b8; }
 .ad-item.future { border-left-color:#94a3b8; background:rgba(148,163,184,0.06); }
 .ad-item.naver   { border-left-color:#03C75A; background:rgba(3,199,90,0.10); }
+.ad-badge {
+  position: absolute;
+  top: -22px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 7px;
+  background: rgba(15,23,42,0.85);
+  border: 1px solid rgba(3,199,90,0.45);
+  border-radius: 10px;
+  font-size: 9px;
+  color: #e2e8f0;
+  white-space: nowrap;
+  letter-spacing: 0.04em;
+  pointer-events: none;
+  z-index: 3;
+}
+.ad-badge svg { display: block; flex-shrink: 0; }
+.ad-badge .ab-lbl { font-weight: 700; color: #f1f5f9; }
+.node.zoomed .ad-badge { display: none; }
 .ad-item.naver::before { color:#03C75A; }
 .ad-item.adboost { border-left-color:#FF6B00; background:rgba(255,107,0,0.10); }
 .ad-item.adboost::before { color:#FF6B00; }
@@ -1153,13 +1175,13 @@ const DATA = {
               desc:"GPT Plus 1개 계정 · 전사 공용" },
 
   personalChannels: [
-    { id:"ss-hana",   name:"하나몰",       sub:"SMARTSTORE", brand:"#60a5fa", desc:"네이버 스마트스토어 · 하나몰 (메인) · ADBOOST 단독 진행", ad:["네이버 검색광고","ADBOOST"] },
-    { id:"ss-baron",  name:"더바른사인",   sub:"SMARTSTORE", brand:"#60a5fa", desc:"네이버 스마트스토어 · 더바른사인", ad:["네이버 검색광고"] },
-    { id:"ss-rocket", name:"로켓출력공장", sub:"SMARTSTORE", brand:"#60a5fa", desc:"네이버 스마트스토어 · 신규 · 시트/페트/포맥스/폼보드/DTF", ad:["네이버 검색광고"] }
+    { id:"ss-hana",   name:"하나몰",       sub:"SMARTSTORE", brand:"#60a5fa", desc:"네이버 스마트스토어 · 하나몰 (메인) · ADBOOST 단독 진행", adBadge:{logo:"naver",label:"검색광고"}, ad:["네이버 검색광고","ADBOOST"] },
+    { id:"ss-baron",  name:"더바른사인",   sub:"SMARTSTORE", brand:"#60a5fa", desc:"네이버 스마트스토어 · 더바른사인", adBadge:{logo:"naver",label:"검색광고"}, ad:["네이버 검색광고"] },
+    { id:"ss-rocket", name:"로켓출력공장", sub:"SMARTSTORE", brand:"#60a5fa", desc:"네이버 스마트스토어 · 신규 · 시트/페트/포맥스/폼보드/DTF", adBadge:{logo:"naver",label:"검색광고"}, ad:["네이버 검색광고"] }
   ],
   corpChannels: [
-    { id:"godo",      name:"Hanasignmall.com", sub:"자사몰 · 고도몰",     brand:"#a855f7", desc:"자사몰 1 · 고도몰 (외부 솔루션) · 파워링크 점진 이전 예정", ad:["네이버 파워링크"] },
-    { id:"self-mall", name:"Hanasignmall.kr",  sub:"자사몰 · 신규몰 (개발팀)", brand:"#c084fc", desc:"자사몰 2 · 자체개발몰 (신규몰) · 고도몰 파워링크 순차 연결 예정", ad:["구글애즈","네이버 검색광고 일부","예정: 고도몰 파워링크 이전"] },
+    { id:"godo",      name:"Hanasignmall.com", sub:"자사몰 · 고도몰",     brand:"#a855f7", desc:"자사몰 1 · 고도몰 (외부 솔루션) · 파워링크 점진 이전 예정", adBadge:{logo:"naver",label:"파워링크광고"}, ad:["네이버 파워링크"] },
+    { id:"self-mall", name:"Hanasignmall.kr",  sub:"자사몰 · 신규몰 (개발팀)", brand:"#c084fc", desc:"자사몰 2 · 자체개발몰 (신규몰) · 고도몰 파워링크 순차 연결 예정", adBadge:{logo:"npay",label:"주문형/결제형"}, ad:["구글애즈","네이버 검색광고 일부","예정: 고도몰 파워링크 이전"] },
     { id:"coupang",   name:"쿠팡",         sub:"오픈마켓", brand:"#f472b6", desc:"쿠팡 · 자체 AI 광고 진행 · 보류 업무 다수 누적 (7건)", ad:["쿠팡 자체 AI 광고"] },
     { id:"11st",      name:"11번가",       sub:"오픈마켓", brand:"#ec4899", desc:"11번가 · 광고 X · 판매기간 연장 관리", ad:["광고 미집행"] },
     { id:"auction",   name:"옥션",         sub:"ESM",      brand:"#fbbf24", desc:"옥션 (ESM) · ESM 자체 AI 광고 + 주력제품 별도", ad:["ESM 자체 AI 광고","지정 주력제품 별도 광고"] },
@@ -1261,6 +1283,26 @@ function placeNode(node, x, y, cls) {
   core.appendChild(txt);
   frame.appendChild(core);
   div.appendChild(frame);
+
+  if (node.adBadge) {
+    const b = document.createElement('div'); b.className = 'ad-badge';
+    let svg = '';
+    if (node.adBadge.logo === 'naver') {
+      svg = '<svg width="13" height="13" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">'
+          + '<rect width="16" height="16" rx="3" fill="#03C75A"/>'
+          + '<path d="M5 4 L5 12 L6.6 12 L6.6 7.4 L9.4 12 L11 12 L11 4 L9.4 4 L9.4 8.6 L6.6 4 Z" fill="#fff"/>'
+          + '</svg>';
+    } else if (node.adBadge.logo === 'npay') {
+      svg = '<svg width="28" height="13" viewBox="0 0 36 16" xmlns="http://www.w3.org/2000/svg">'
+          + '<rect width="36" height="16" rx="3" fill="#03C75A"/>'
+          + '<circle cx="7" cy="8" r="4.2" fill="#000"/>'
+          + '<path d="M5.2 5.6 L5.2 10.4 L6.1 10.4 L6.1 7.6 L7.9 10.4 L8.8 10.4 L8.8 5.6 L7.9 5.6 L7.9 8.4 L6.1 5.6 Z" fill="#fff"/>'
+          + '<text x="14" y="11.5" font-size="7.5" font-weight="900" font-family="Arial Black, Arial, sans-serif" fill="#000" letter-spacing="-0.3">pay</text>'
+          + '</svg>';
+    }
+    b.innerHTML = svg + '<span class="ab-lbl">' + node.adBadge.label + '</span>';
+    div.appendChild(b);
+  }
 
   if (node.sub) {
     const sub = document.createElement('div'); sub.className = 'sub'; sub.textContent = node.sub;
