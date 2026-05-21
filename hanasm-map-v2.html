@@ -1596,8 +1596,7 @@ function drawAllWires() {
   drawWire('design', 'product', '#f472b6', NORMAL, 'dept');
   drawWire('dev', 'web',     '#22d3ee', NORMAL, 'dept');
   drawWire('dev', 'self-mall','#22d3ee', NORMAL, 'system');
-  // 약한 연결 - 외부영업→웹팀(시공이미지), 부서.links 자동
-  drawWire('sales', 'web',   '#ec4899', WEAK, 'dept');
+  // 약한 연결 - 부서.links 자동 (외부영업→웹팀 제거: 2026-05-22)
   // 웹팀 → SNS 3종 (임정민 주임)
   drawWire('web', 'ig',    '#E1306C', NORMAL, 'sns');
   drawWire('web', 'nblog', '#03C75A', NORMAL, 'sns');
@@ -2452,3 +2451,4 @@ document.getElementById('ppClose').addEventListener('click', () => {
 
 </body>
 </html>
+                                                    
