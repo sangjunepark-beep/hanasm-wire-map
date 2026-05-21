@@ -246,29 +246,27 @@ svg.wires path.preview-wire {
 .node.zoomed.dept .expanded {
   max-width: 620px !important;
   width: 620px !important;
-  display: grid;
-  grid-template-columns: 270px 1fr;
+  display: flex;
+  align-items: flex-start;
   gap: 14px;
   max-height: 78vh;
+  height: auto;
   overflow: visible;
   padding: 14px;
-  top: max(70px, 50%) !important;
-  transform: translateY(-50%) !important;
 }
-/* 노드가 화면 상단에 가까우면 transform 끄고 절대 위치 */
-.node.zoomed.dept .expanded {
-  --safe-top: 70px;
+.node.zoomed.dept .expanded > .left-col-wrap {
+  width: 270px; flex-shrink: 0;
+  max-height: calc(78vh - 28px);
+  overflow-y: auto;
 }
-.node.zoomed.dept .expanded > * { grid-column: 1; }
 .node.zoomed.dept .expanded > .dept-projects-section {
-  grid-column: 2;
-  grid-row: 1 / span 99;
+  flex: 1; min-width: 0;
   margin-top: 0;
   padding-top: 0;
   border-top: none;
   border-left: 1px dashed rgba(167,139,250,0.30);
   padding-left: 14px;
-  max-height: calc(80vh - 28px);
+  max-height: calc(78vh - 28px);
   overflow-y: auto;
 }
 .node.zoomed.dept .expanded > .dept-projects-section::-webkit-scrollbar { width: 6px; }
@@ -280,11 +278,11 @@ svg.wires path.preview-wire {
 @media (max-width: 768px) {
   .node.zoomed.dept .expanded {
     width: 92vw !important; max-width: 92vw !important;
-    grid-template-columns: 1fr;
+    flex-direction: column;
     max-height: 80vh;
   }
+  .node.zoomed.dept .expanded > .left-col-wrap { width: 100%; }
   .node.zoomed.dept .expanded > .dept-projects-section {
-    grid-column: 1;
     border-left: none;
     border-top: 1px dashed rgba(167,139,250,0.30);
     padding-left: 0; padding-top: 12px;
@@ -2133,8 +2131,22 @@ function renderProjects() {
 function renderDeptProjects(deptId) {
   const r = POS[deptId]; if (!r) return;
   const exp = r.el.querySelector('.expanded'); if (!exp) return;
-  const old = exp.querySelector('.dept-projects-section');
-  if (old) old.remove();
+
+  // 좌측 컬럼 한번만 wrap (이미 있으면 재사용)
+  let leftCol = exp.querySelector('.left-col-wrap');
+  if (!leftCol) {
+    leftCol = document.createElement('div');
+    leftCol.className = 'left-col-wrap';
+    // expanded의 모든 직계 자식 (dept-projects-section 제외) 이동
+    const movables = [...exp.children].filter(c => !c.classList.contains('dept-projects-section'));
+    movables.forEach(c => leftCol.appendChild(c));
+    exp.insertBefore(leftCol, exp.firstChild);
+  }
+
+  // 기존 dept-projects-section 제거
+  const oldSec = exp.querySelector('.dept-projects-section');
+  if (oldSec) oldSec.remove();
+
   const items = [];
   PCATS.forEach(cat => {
     (PROJECTS[cat].items || []).forEach(it => {
