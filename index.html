@@ -1401,13 +1401,9 @@ function drawAllWires() {
   ['web','cs','design','dev','fin','sales','product'].forEach(deptId => {
     drawWire('nas', deptId, '#22d3ee', WEAK, 'system');
   });
-  // 제작실 → 출력장비 4종
+  // 제작실 → 출력장비 4종 (점선 · 핫폴더는 NAS에 있음)
   ['prtEpson','prtHp','prtExt','prtUv'].forEach(pid => {
-    drawWire('product', pid, '#c084fc', NORMAL, 'system');
-  });
-  // NAS → 출력장비 4종 (핫폴더가 NAS에 있음)
-  ['prtEpson','prtHp','prtExt','prtUv'].forEach(pid => {
-    drawWire('nas', pid, '#22d3ee', WEAK, 'system');
+    drawWire('product', pid, '#c084fc', { width: 1.4, opacity: 0.35, dashed: true }, 'system');
   });
   // 채널 → 웹팀 숨김 와이어 (채널 클릭 시에만 강조)
   [...DATA.personalChannels, ...DATA.corpChannels].forEach(ch => {
@@ -1552,7 +1548,7 @@ function setStage(id, stage) {
     });
     // NAS 클릭: 부서 7곳 (factory2 제외) 바운스 + flow 와이어 강조
     if (id === 'nas') {
-      const nasUsers = ['web', 'cs', 'design', 'dev', 'fin', 'sales', 'product', 'prtEpson', 'prtHp', 'prtExt', 'prtUv'];
+      const nasUsers = ['web', 'cs', 'design', 'dev', 'fin', 'sales', 'product'];
       nasUsers.forEach(targetId => {
         connected.add(targetId);
         // NAS↔타깃 와이어 강조
