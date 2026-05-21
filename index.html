@@ -1548,10 +1548,11 @@ function setStage(id, stage) {
     });
     // NAS 클릭: 부서 7곳 (factory2 제외) 바운스 + flow 와이어 강조
     if (id === 'nas') {
-      const nasUsers = ['web', 'cs', 'design', 'dev', 'fin', 'sales', 'product'];
-      nasUsers.forEach(targetId => {
+      const nasDepts = ['web', 'cs', 'design', 'dev', 'fin', 'sales', 'product'];
+      const nasPrinters = ['prtEpson', 'prtHp', 'prtExt', 'prtUv'];
+      [...nasDepts, ...nasPrinters].forEach(targetId => {
         connected.add(targetId);
-        // NAS↔타깃 와이어 강조
+        // NAS↔타깃 직접 와이어 강조 (출력기는 직접 와이어 없음)
         wires.querySelectorAll(`path[data-from="nas"][data-to="${targetId}"], path[data-from="${targetId}"][data-to="nas"]`).forEach(p => p.classList.add('focus-wire','flow'));
         const el = POS[targetId]?.el;
         if (el) {
@@ -1560,6 +1561,10 @@ function setStage(id, stage) {
           el.classList.add('bounce');
           setTimeout(() => el.classList.remove('bounce'), 750);
         }
+      });
+      // 제작실 → 출력기 점선 와이어도 함께 강조 (NAS 핫폴더 흐름)
+      nasPrinters.forEach(pid => {
+        wires.querySelectorAll(`path[data-from="product"][data-to="${pid}"], path[data-from="${pid}"][data-to="product"]`).forEach(p => p.classList.add('focus-wire','flow'));
       });
     }
   }
