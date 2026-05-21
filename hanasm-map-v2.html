@@ -1182,7 +1182,7 @@ const DATA = {
   ],
   corpChannels: [
     { id:"godo",      name:"Hanasignmall.com", sub:"자사몰 · 고도몰",     brand:"#a855f7", desc:"자사몰 1 · 고도몰 (외부 솔루션) · 파워링크 점진 이전 예정", adBadge:{logo:"naver",label:"파워링크광고"}, ad:["네이버 파워링크"] },
-    { id:"self-mall", name:"Hanasignmall.kr",  sub:"자사몰 · 신규몰 (개발팀)", brand:"#c084fc", desc:"자사몰 2 · 자체개발몰 (신규몰) · 고도몰 파워링크 순차 연결 예정", adBadge:{logo:"npay",label:"주문형/결제형"}, ad:["구글애즈","네이버 검색광고 일부","예정: 고도몰 파워링크 이전"] },
+    { id:"self-mall", name:"Hanasignmall.kr",  sub:"자사몰 · 신규몰 (개발팀)", brand:"#c084fc", desc:"자사몰 2 · 자체개발몰 (신규몰) · 고도몰 파워링크 순차 연결 예정", adBadge:[{logo:"npay",label:"주문형/결제형"},{logo:"gads",label:"구글애즈"}], ad:["구글애즈","네이버 검색광고 일부","예정: 고도몰 파워링크 이전"] },
     { id:"coupang",   name:"쿠팡",         sub:"오픈마켓", brand:"#f472b6", desc:"쿠팡 · 자체 AI 광고 진행 · 보류 업무 다수 누적 (7건)", ad:["쿠팡 자체 AI 광고"] },
     { id:"11st",      name:"11번가",       sub:"오픈마켓", brand:"#ec4899", desc:"11번가 · 광고 X · 판매기간 연장 관리", ad:["광고 미집행"] },
     { id:"auction",   name:"옥션",         sub:"ESM",      brand:"#fbbf24", desc:"옥션 (ESM) · ESM 자체 AI 광고 + 주력제품 별도", ad:["ESM 자체 AI 광고","지정 주력제품 별도 광고"] },
@@ -1286,15 +1286,22 @@ function placeNode(node, x, y, cls) {
   div.appendChild(frame);
 
   if (node.adBadge) {
-    const b = document.createElement('div'); b.className = 'ad-badge';
-    let svg = '';
-    if (node.adBadge.logo === 'naver') {
-      svg = '<img src="naver.png" width="24" height="24" alt="네이버" style="display:block;border-radius:5px;">';
-    } else if (node.adBadge.logo === 'npay') {
-      svg = '<img src="npay.png" width="50" height="22" alt="네이버페이" style="display:block;border-radius:4px;">';
-    }
-    b.innerHTML = svg + '<span class="ab-lbl">' + node.adBadge.label + '</span>';
-    div.appendChild(b);
+    const badges = Array.isArray(node.adBadge) ? node.adBadge : [node.adBadge];
+    badges.forEach((ab, idx) => {
+      const b = document.createElement('div'); b.className = 'ad-badge';
+      // 여러 개일 때 위로 쌓기 (배지 높이 약 32px 간격)
+      b.style.top = (-34 - idx * 36) + 'px';
+      let logoHtml = '';
+      if (ab.logo === 'naver') {
+        logoHtml = '<img src="naver.png" width="24" height="24" alt="네이버" style="display:block;border-radius:5px;">';
+      } else if (ab.logo === 'npay') {
+        logoHtml = '<img src="npay.png" width="50" height="22" alt="네이버페이" style="display:block;border-radius:4px;">';
+      } else if (ab.logo === 'gads') {
+        logoHtml = '<img src="gads.png" width="60" height="11" alt="Google Ads" style="display:block;">';
+      }
+      b.innerHTML = logoHtml + '<span class="ab-lbl">' + ab.label + '</span>';
+      div.appendChild(b);
+    });
   }
 
   if (node.sub) {
