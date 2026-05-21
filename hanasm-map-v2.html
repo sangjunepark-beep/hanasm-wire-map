@@ -371,24 +371,24 @@ svg.wires path.preview-wire {
 .ad-item.naver   { border-left-color:#03C75A; background:rgba(3,199,90,0.10); }
 .ad-badge {
   position: absolute;
-  top: -34px;
+  top: -28px;
   left: 50%;
   transform: translateX(-50%);
   display: inline-flex;
   align-items: center;
-  gap: 7px;
-  padding: 5px 11px;
-  background: rgba(15,23,42,0.92);
-  border: 1.5px solid rgba(3,199,90,0.55);
-  border-radius: 13px;
-  font-size: 13px;
-  color: #f1f5f9;
+  gap: 6px;
+  padding: 2px 8px;
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  font-size: 11px;
+  color: #cbd5e1;
   white-space: nowrap;
-  letter-spacing: 0.03em;
+  letter-spacing: 0.02em;
   pointer-events: none;
   z-index: 3;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.4);
 }
+.ad-badge .ab-lbl { font-weight: 600; color: #e2e8f0; }
 .ad-badge svg { display: block; flex-shrink: 0; }
 .ad-badge .ab-lbl { font-weight: 700; color: #f1f5f9; }
 .node.zoomed .ad-badge { display: none; }
@@ -1290,14 +1290,14 @@ function placeNode(node, x, y, cls) {
     badges.forEach((ab, idx) => {
       const b = document.createElement('div'); b.className = 'ad-badge';
       // 여러 개일 때 위로 쌓기 (배지 높이 약 32px 간격)
-      b.style.top = (-34 - idx * 36) + 'px';
+      b.style.top = (-28 - idx * 22) + 'px';
       let logoHtml = '';
       if (ab.logo === 'naver') {
-        logoHtml = '<img src="naver.png" width="24" height="24" alt="네이버" style="display:block;border-radius:5px;">';
+        logoHtml = '<img src="naver.png" width="16" height="16" alt="네이버" style="display:block;">';
       } else if (ab.logo === 'npay') {
-        logoHtml = '<img src="npay.png" width="50" height="22" alt="네이버페이" style="display:block;border-radius:4px;">';
+        logoHtml = '<img src="npay.png" width="36" height="16" alt="네이버페이" style="display:block;">';
       } else if (ab.logo === 'gads') {
-        logoHtml = '<img src="gads.png" width="60" height="11" alt="Google Ads" style="display:block;">';
+        logoHtml = '<img src="gads.png" width="48" height="9" alt="Google Ads" style="display:block;">';
       }
       b.innerHTML = logoHtml + '<span class="ab-lbl">' + ab.label + '</span>';
       div.appendChild(b);
