@@ -727,25 +727,33 @@ body.edit-mode .node .frame { outline: 2px dashed rgba(251,191,36,0.6); outline-
 .proj-item.flat-item.st-stop .pi-prog-num { color: #f87171; }
 
 .pi-meta { display: flex; align-items: center; gap: 8px; margin: 8px 0 4px; flex-wrap: wrap; }
-.pi-dec {
+.pi-dec,
+.pi-dec-select {
   font-family: inherit; cursor: pointer; padding: 4px 10px;
   font-size: 10px; font-weight: 800; letter-spacing: 0.08em;
   border: 1px solid var(--dec-c, #a5b4fc);
   background: rgba(8,9,28,0.6); color: var(--dec-c, #a5b4fc);
   clip-path: polygon(3px 0, 100% 0, 100% calc(100% - 3px), calc(100% - 3px) 100%, 0 100%, 0 3px);
 }
-.pi-dec:hover { background: rgba(255,255,255,0.06); }
+.pi-dec-select { min-width: 112px; border-radius: 0; outline: none; }
+.pi-dec:hover,
+.pi-dec-select:hover { background: rgba(255,255,255,0.06); }
 .pi-dec.dec-go    { --dec-c: #22d3ee; }
 .pi-dec.dec-hold  { --dec-c: #fbbf24; }
 .pi-dec.dec-later { --dec-c: #94a3b8; }
-.pi-action {
+.pi-action,
+.pi-action-select {
   font-family: inherit; cursor: pointer; padding: 4px 10px;
   font-size: 10px; font-weight: 900; letter-spacing: 0.08em;
   border: 1px solid var(--act-c, #a5b4fc);
   background: rgba(8,9,28,0.62); color: var(--act-c, #a5b4fc);
   clip-path: polygon(3px 0, 100% 0, 100% calc(100% - 3px), calc(100% - 3px) 100%, 0 100%, 0 3px);
 }
-.pi-action:hover { background: rgba(255,255,255,0.08); }
+.pi-action-select { min-width: 116px; border-radius: 0; outline: none; }
+.pi-action:hover,
+.pi-action-select:hover { background: rgba(255,255,255,0.08); }
+.pi-action-select option,
+.pi-dec-select option { background: #101426; color: #f3f4fb; }
 .action-first, .proj-item.flat-item.action-first { --act-c: #f87171; }
 .action-run, .proj-item.flat-item.action-run { --act-c: #34d399; }
 .action-after, .proj-item.flat-item.action-after { --act-c: #60a5fa; }
@@ -1231,7 +1239,7 @@ const DATA = {
   corpChannels: [
     { id:"godo",      name:"Hanasignmall.com", sub:"자사몰 · 고도몰",     brand:"#a855f7", desc:"자사몰 1 · 고도몰 (외부 솔루션) · 파워링크 점진 이전 예정", adBadge:{logo:"naver",label:"파워링크광고"}, ad:["네이버 파워링크"] },
     { id:"self-mall", name:"Hanasignmall.kr",  sub:"자사몰 · 신규몰 (개발팀)", brand:"#c084fc", desc:"자사몰 2 · 자체개발몰 (신규몰) · 고도몰 파워링크 순차 연결 예정", adBadge:[{logo:"npay",label:"주문형/결제형"},{logo:"gads",label:"구글애즈"}], ad:["구글애즈","네이버 검색광고 일부","예정: 고도몰 파워링크 이전"] },
-    { id:"coupang",   name:"쿠팡",         sub:"오픈마켓", brand:"#f472b6", desc:"쿠팡 · 자체 인공지능 광고 진행 · 보류 업무 다수 누적 (7건)", ad:["쿠팡 자체 인공지능 광고"] },
+    { id:"coupang",   name:"쿠팡",         sub:"오픈마켓", brand:"#f472b6", desc:"쿠팡 · 자체 인공지능 광고 진행 · 잠정중단 업무 다수 누적 (7건)", ad:["쿠팡 자체 인공지능 광고"] },
     { id:"11st",      name:"11번가",       sub:"오픈마켓", brand:"#ec4899", desc:"11번가 · 광고 X · 판매기간 연장 관리", ad:["광고 미집행"] },
     { id:"auction",   name:"옥션",         sub:"ESM",      brand:"#fbbf24", desc:"옥션 (ESM) · ESM 자체 인공지능 광고 + 주력제품 별도", ad:["ESM 자체 인공지능 광고","지정 주력제품 별도 광고"] },
     { id:"gmarket",   name:"G마켓",        sub:"ESM",      brand:"#22d3ee", desc:"G마켓 (ESM) · ESM 자체 인공지능 광고 + 주력제품 별도", ad:["ESM 자체 인공지능 광고","지정 주력제품 별도 광고"] }
@@ -1923,7 +1931,7 @@ function showTasks(deptId, memberName) {
     statsEl.innerHTML = `
       ${stats.active   ? `<span class="st active">진행중 ${stats.active}</span>` : ''}
       ${stats.planned  ? `<span class="st planned">예정 ${stats.planned}</span>` : ''}
-      ${stats.hold     ? `<span class="st hold">보류 ${stats.hold}</span>` : ''}
+      ${stats.hold     ? `<span class="st hold">잠정중단 ${stats.hold}</span>` : ''}
       ${stats.routine  ? `<span class="st routine">정기 ${stats.routine}</span>` : ''}
       ${stats.aux      ? `<span class="st active">상시 ${stats.aux}</span>` : ''}
     `;
@@ -1944,7 +1952,7 @@ function showTasks(deptId, memberName) {
     const order = [
       { key:'진행중', cls:'s-active',  label:'진행중' },
       { key:'예정',   cls:'s-routine', label:'예정' },
-      { key:'보류',   cls:'s-hold',    label:'보류' },
+      { key:'보류',   cls:'s-hold',    label:'잠정중단' },
       { key:'정기',   cls:'s-routine', label:'정기' },
       { key:'상시',   cls:'s-active',  label:'상시' }
     ];
@@ -2151,14 +2159,18 @@ const PCATS = ['ad','ai','product','system','offline'];
 const DEPT_NAME = { web:'웹팀', cs:'CS팀', design:'디자인팀', dev:'개발팀', fin:'경영지원', sales:'외부영업', product:'제작실', factory2:'2공장' };
 let DECISIONS = {};
 try { DECISIONS = JSON.parse(localStorage.getItem('hanasm.decisions') || '{}'); } catch(e) {}
-function cycleDecision(d) { return d === 'go' ? 'hold' : d === 'hold' ? 'later' : 'go'; }
 const PROJECT_ACTIONS = [
   { key:'first', label:'우선', cls:'action-first' },
   { key:'run',   label:'진행', cls:'action-run' },
   { key:'after', label:'이후', cls:'action-after' },
-  { key:'hold',  label:'보류', cls:'action-hold' },
+  { key:'hold',  label:'잠정중단', cls:'action-hold' },
   { key:'stop',  label:'중단', cls:'action-stop' },
   { key:'merge', label:'통합', cls:'action-merge' }
+];
+const PROJECT_DECISIONS = [
+  { key:'go',    label:'진행', cls:'dec-go' },
+  { key:'hold',  label:'잠정중단', cls:'dec-hold' },
+  { key:'later', label:'이후', cls:'dec-later' }
 ];
 let PROJECT_STATE = {};
 let PROJECT_ACTION_FILTER = 'all';
@@ -2177,13 +2189,15 @@ function getAction(cat, item) {
 function saveProjectState() {
   localStorage.setItem('hanasm.projectState.v3', JSON.stringify(PROJECT_STATE));
 }
-function cycleAction(cur) {
-  const idx = PROJECT_ACTIONS.findIndex(a => a.key === cur);
-  return PROJECT_ACTIONS[(idx + 1 + PROJECT_ACTIONS.length) % PROJECT_ACTIONS.length].key;
-}
 function setProjectAction(key, action) {
   PROJECT_STATE[key] = Object.assign({}, PROJECT_STATE[key] || {}, { action });
   saveProjectState();
+}
+function optionHtml(list, selected) {
+  return list.map(x => '<option value="' + x.key + '"' + (x.key === selected ? ' selected' : '') + '>' + x.label + '</option>').join('');
+}
+function decisionMeta(decision) {
+  return PROJECT_DECISIONS.find(x => x.key === decision) || PROJECT_DECISIONS[0];
 }
 function summarizeProjects(all) {
   const counts = { total: all.length, first: 0, hold: 0, stop: 0 };
@@ -2234,7 +2248,7 @@ function renderProjects() {
   let html = '<div class="project-summary">'
            + '<div class="sum">전체 ' + summary.total + '</div>'
            + '<div class="sum">우선 ' + summary.first + '</div>'
-           + '<div class="sum">보류/중단 ' + (summary.hold + summary.stop) + '</div>'
+           + '<div class="sum">잠정중단/중단 ' + (summary.hold + summary.stop) + '</div>'
            + '</div>';
   html += '<div class="project-filter">';
   filters.forEach(f => {
@@ -2262,14 +2276,17 @@ function renderProjects() {
     const ovr = (DECISIONS[k] || {});
     const dec = ovr.decision || it.decision || 'go';
     const when = ovr.startWhen || it.startWhen || '';
-    const DEC_LABEL = { go: '진행', hold: '보류', later: '이후' };
-    const decLabel = DEC_LABEL[dec] || '진행';
+    const decMeta = decisionMeta(dec);
     const action = getAction(e.cat, it);
     const ownerDeptName = (DEPT_NAME[it.ownerDept] || '');
     const relatedHtml = (it.related && it.related.length) ? it.related.map(d => '<span class="pi-rel">' + (DEPT_NAME[d] || d) + '</span>').join('') : '';
     const meta = '<div class="pi-meta">'
-               + '<button class="pi-action ' + action.cls + '" data-action-key="' + k + '" title="클릭해서 우선/진행/이후/보류/중단/통합 순환">' + action.label + '</button>'
-               + '<button class="pi-dec dec-' + dec + '" data-key="' + k + '" title="클릭해서 다음 결정으로 변경">' + decLabel + '</button>'
+               + '<select class="pi-action pi-action-select ' + action.cls + '" data-action-key="' + k + '" aria-label="프로젝트 처리 선택">'
+               + optionHtml(PROJECT_ACTIONS, action.key)
+               + '</select>'
+               + '<select class="pi-dec pi-dec-select ' + decMeta.cls + '" data-key="' + k + '" aria-label="프로젝트 결정 선택">'
+               + optionHtml(PROJECT_DECISIONS, decMeta.key)
+               + '</select>'
                + (when ? '<span class="pi-when">📅 ' + when + '</span>' : '')
                + '</div>';
     const relRow = (ownerDeptName || relatedHtml)
@@ -2318,30 +2335,20 @@ function renderProjects() {
       renderProjects();
     });
   });
-  document.querySelectorAll('.pi-action').forEach(btn => {
-    btn.addEventListener('click', (e) => {
+  document.querySelectorAll('.pi-action-select').forEach(sel => {
+    sel.addEventListener('click', (e) => e.stopPropagation());
+    sel.addEventListener('change', (e) => {
       e.stopPropagation();
-      const key = btn.dataset.actionKey;
-      const cur = (PROJECT_STATE[key] && PROJECT_STATE[key].action) || 'run';
-      setProjectAction(key, cycleAction(cur));
+      setProjectAction(sel.dataset.actionKey, sel.value);
       renderProjects();
     });
   });
-  // 결정 버튼 클릭 → 다음 상태로 순환
-  document.querySelectorAll('.pi-dec').forEach(btn => {
-    btn.addEventListener('click', (e) => {
+  document.querySelectorAll('.pi-dec-select').forEach(sel => {
+    sel.addEventListener('click', (e) => e.stopPropagation());
+    sel.addEventListener('change', (e) => {
       e.stopPropagation();
-      const key = btn.dataset.key;
-      const cur = (DECISIONS[key] && DECISIONS[key].decision) || (function(){
-        // PROJECTS에서 원본 찾아 디폴트
-        for (const cat of PCATS) {
-          const it = (PROJECTS[cat].items || []).find(x => (cat + '::' + x.name) === key);
-          if (it) return it.decision || 'go';
-        }
-        return 'go';
-      })();
-      const next = cycleDecision(cur);
-      DECISIONS[key] = Object.assign({}, DECISIONS[key] || {}, { decision: next });
+      const key = sel.dataset.key;
+      DECISIONS[key] = Object.assign({}, DECISIONS[key] || {}, { decision: sel.value });
       localStorage.setItem('hanasm.decisions', JSON.stringify(DECISIONS));
       renderProjects();
     });
@@ -2382,7 +2389,6 @@ function renderDeptProjects(deptId) {
   lbl.className = 'label';
   lbl.textContent = '신규 프로젝트 · ' + items.length;
   sec.appendChild(lbl);
-  const DEC_LABEL = { go: '진행', hold: '보류', later: '이후' };
   items.forEach(({ cat, item }) => {
     const k = cat + '::' + item.name;
     const ovr = (DECISIONS[k] || {});
@@ -2398,7 +2404,7 @@ function renderDeptProjects(deptId) {
       + '<div class="dpc-name">' + item.name + '</div>'
       + '<div class="dpc-foot">'
       +   '<span class="pi-action ' + action.cls + '" data-action-key="' + k + '">' + action.label + '</span>'
-      +   '<span class="dpc-dec">' + (DEC_LABEL[dec] || '') + '</span>'
+      +   '<span class="dpc-dec">' + decisionMeta(dec).label + '</span>'
       +   (item.startWhen ? '<span class="dpc-when">📅 ' + item.startWhen + '</span>' : '')
       +   '<span class="dpc-prog">' + (item.progress || 0) + '%</span>'
       + '</div>'
