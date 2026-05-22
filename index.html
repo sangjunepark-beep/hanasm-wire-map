@@ -43,7 +43,7 @@ body::before {
     linear-gradient(rgba(147,197,253,0.08) 1px, transparent 1px),
     linear-gradient(90deg, rgba(192,132,252,0.065) 1px, transparent 1px);
   background-size: 72px 72px;
-  transform: perspective(900px) rotateX(58deg) translate3d(calc(var(--mx, 0) * -18px), calc(var(--my, 0) * -18px), 0);
+  transform: perspective(900px) rotateX(58deg);
   transform-origin: 50% 58%;
   transition: transform 0.16s ease-out;
   mask-image: linear-gradient(to bottom, transparent 0%, #000 22%, #000 78%, transparent 100%);
@@ -180,8 +180,6 @@ svg.wires path.flow {
   position: absolute; cursor: pointer;
   transform: translate(-50%,-50%);
   z-index: 10; user-select: none;
-  --tilt-x: 0deg;
-  --tilt-y: 0deg;
   --lift: 0px;
   transform-style: preserve-3d;
   perspective: 760px;
@@ -208,7 +206,7 @@ svg.wires path.flow {
   box-shadow:
     0 0 14px color-mix(in srgb, var(--c1, var(--blue-2)) 70%, transparent),
     0 16px 24px rgba(0,0,0,0.42);
-  transform: perspective(760px) rotateX(var(--tilt-x)) rotateY(var(--tilt-y)) translateZ(var(--lift)) translateY(-2px);
+  transform: perspective(760px) translateZ(var(--lift)) translateY(-2px);
   transition: transform 0.18s ease, box-shadow 0.2s ease, filter 0.2s ease;
   will-change: transform;
 }
@@ -1550,19 +1548,6 @@ function placeNode(node, x, y, cls) {
     nodeClick(node.id);
   });
 
-  div.addEventListener('pointermove', (e) => {
-    if (document.body.classList.contains('edit-mode') || div.classList.contains('zoomed')) return;
-    const rect = div.getBoundingClientRect();
-    const rx = (e.clientX - rect.left) / rect.width - 0.5;
-    const ry = (e.clientY - rect.top) / rect.height - 0.5;
-    div.style.setProperty('--tilt-y', (rx * 10).toFixed(2) + 'deg');
-    div.style.setProperty('--tilt-x', (ry * -8).toFixed(2) + 'deg');
-  });
-  div.addEventListener('pointerleave', () => {
-    div.style.setProperty('--tilt-x', '0deg');
-    div.style.setProperty('--tilt-y', '0deg');
-  });
-
   // 호버 미리보기 제거 (사용자 요청)
 }
 
@@ -2099,14 +2084,6 @@ document.getElementById('taskClose').addEventListener('click', () => taskPanel.c
 
 const stageEl = document.getElementById('stage');
 let isDragging = false, dragStart = null;
-
-stageEl.addEventListener('pointermove', (e) => {
-  if (isDragging) return;
-  const mx = (e.clientX / window.innerWidth - 0.5).toFixed(3);
-  const my = (e.clientY / window.innerHeight - 0.5).toFixed(3);
-  document.body.style.setProperty('--mx', mx);
-  document.body.style.setProperty('--my', my);
-});
 
 stageEl.addEventListener('mousedown', (e) => {
   if (e.button !== 0) return;
