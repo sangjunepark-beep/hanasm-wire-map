@@ -296,43 +296,6 @@ svg.wires path.preview-wire {
   clip-path: polygon(2px 0, 100% 0, 100% calc(100% - 2px), calc(100% - 2px) 100%, 0 100%, 0 2px);
 }
 
-.load-badge {
-  position: absolute;
-  right: -12px;
-  top: -18px;
-  min-width: 38px;
-  padding: 4px 8px;
-  border: 1px solid rgba(251,191,36,0.45);
-  background: rgba(8,9,28,0.86);
-  color: #fbbf24;
-  font-size: 10px;
-  font-weight: 800;
-  letter-spacing: 0.08em;
-  text-align: center;
-  pointer-events: none;
-  box-shadow: 0 0 12px rgba(251,191,36,0.22);
-  clip-path: polygon(4px 0, 100% 0, 100% calc(100% - 4px), calc(100% - 4px) 100%, 0 100%, 0 4px);
-}
-.load-badge::before {
-  content: "LOAD";
-  display: block;
-  margin-bottom: 1px;
-  color: rgba(255,255,255,0.62);
-  font-size: 7px;
-  letter-spacing: 0.14em;
-}
-.node.load-high .frame {
-  box-shadow: 0 0 18px var(--c1, var(--blue-2)), 0 0 24px rgba(251,191,36,0.32);
-}
-.node.load-hot .frame {
-  box-shadow: 0 0 20px var(--c1, var(--blue-2)), 0 0 34px rgba(248,113,113,0.48);
-}
-.node.load-hot .load-badge {
-  color: #f87171;
-  border-color: rgba(248,113,113,0.55);
-  box-shadow: 0 0 14px rgba(248,113,113,0.32);
-}
-
 .node .sub {
   font-size: 11px; color: var(--text-3); font-weight: 600;
   margin-top: 7px; text-align: center;
@@ -2273,31 +2236,6 @@ function projectDensity(item) {
   }
   return { key: 'keep', label: '유지' };
 }
-function updateProjectLoad() {
-  if (!window.PROJECTS && typeof PROJECTS === 'undefined') return;
-  const load = {};
-  PCATS.forEach(cat => {
-    (PROJECTS[cat].items || []).forEach(item => {
-      const den = projectDensity(item);
-      const weight = den.key === 'focus' ? 3 : den.key === 'run' ? 2 : den.key === 'keep' ? 1 : 0;
-      if (!weight) return;
-      const add = (dept, mul=1) => { load[dept] = (load[dept] || 0) + weight * mul; };
-      if (item.ownerDept) add(item.ownerDept, 1);
-      (item.related || []).forEach(d => add(d, 0.55));
-    });
-  });
-  document.querySelectorAll('.node .load-badge').forEach(el => el.remove());
-  document.querySelectorAll('.node.load-high, .node.load-hot').forEach(el => el.classList.remove('load-high', 'load-hot'));
-  Object.entries(load).forEach(([dept, score]) => {
-    const rec = POS[dept];
-    if (!rec) return;
-    const badge = document.createElement('div');
-    badge.className = 'load-badge';
-    badge.textContent = Math.round(score);
-    rec.el.appendChild(badge);
-    rec.el.classList.add(score >= 6 ? 'load-hot' : score >= 3 ? 'load-high' : 'load-normal');
-  });
-}
 function renderProjects() {
   const body = document.getElementById('ppBody');
   if (!body) return;
@@ -2399,7 +2337,6 @@ function renderProjects() {
       renderProjects();
     });
   });
-  updateProjectLoad();
 }
 // 부서 노드 확대 시 그 부서가 주관·유관인 PROJECTS 항목 표시
 function renderDeptProjects(deptId) {
