@@ -344,13 +344,17 @@ body.proj-focus svg.wires path:not(.preview-wire):not(.preview-wire-rel) { opaci
   margin-top: 0;
   padding-top: 0;
   border-top: none;
-  border-left: 1px dashed rgba(167,139,250,0.30);
-  padding-left: 14px;
-  max-height: calc(78vh - 28px);
+  border-left: 1px dashed rgba(96,165,250,0.32);
+  padding-left: 14px; padding-right: 6px;
+  max-height: calc(68vh - 28px);
   overflow-y: auto;
+  scrollbar-color: #60a5fa rgba(96,165,250,0.10);
+  scrollbar-width: thin;
 }
-.node.zoomed.dept .expanded > .dept-projects-section::-webkit-scrollbar { width: 6px; }
-.node.zoomed.dept .expanded > .dept-projects-section::-webkit-scrollbar-thumb { background: rgba(167,139,250,0.30); border-radius: 3px; }
+.node.zoomed.dept .expanded > .dept-projects-section::-webkit-scrollbar { width: 10px; }
+.node.zoomed.dept .expanded > .dept-projects-section::-webkit-scrollbar-track { background: rgba(96,165,250,0.08); border-radius: 0; }
+.node.zoomed.dept .expanded > .dept-projects-section::-webkit-scrollbar-thumb { background: #60a5fa; border-radius: 0; border: 1px solid rgba(255,255,255,0.10); }
+.node.zoomed.dept .expanded > .dept-projects-section::-webkit-scrollbar-thumb:hover { background: #93c5fd; }
 .node.zoomed.dept .expanded .member-grid { max-height: 36vh; overflow-y: auto; padding-right: 4px; }
 .node.zoomed.dept .expanded .member-grid::-webkit-scrollbar { width: 6px; }
 .node.zoomed.dept .expanded .member-grid::-webkit-scrollbar-thumb { background: rgba(167,139,250,0.30); border-radius: 3px; }
@@ -981,10 +985,10 @@ body.edit-mode .node .frame { outline: 2px dashed rgba(251,191,36,0.6); outline-
   color: #fff; border-color: #60a5fa; background: rgba(96,165,250,0.18);
 }
 
-.dept-projects-section { margin-top: 14px; padding-top: 12px; border-top: 1px dashed rgba(167,139,250,0.30); }
-.dept-projects-section .label { font-size: 10.5px; font-weight: 800; letter-spacing: 0.16em; color: #c084fc; margin-bottom: 8px; }
+.dept-projects-section { margin-top: 10px; padding-top: 8px; border-top: 1px dashed rgba(96,165,250,0.30); }
+.dept-projects-section .label { font-size: 10px; font-weight: 800; letter-spacing: 0.14em; color: #60a5fa; margin-bottom: 6px; position: sticky; top: 0; background: rgba(8,9,28,0.95); padding: 4px 0; z-index: 5; }
 .dept-proj-card {
-  margin-bottom: 8px; padding: 8px 10px;
+  margin-bottom: 6px; padding: 6px 9px;
   background: rgba(8,9,28,0.55); border: 1px solid rgba(167,139,250,0.22);
   border-left: 3px solid var(--dc, #a855f7);
   clip-path: polygon(5px 0, 100% 0, 100% calc(100% - 5px), calc(100% - 5px) 100%, 0 100%, 0 5px);
@@ -1000,7 +1004,7 @@ body.edit-mode .node .frame { outline: 2px dashed rgba(251,191,36,0.6); outline-
 }
 .dept-proj-card.is-related .dpc-role { background: rgba(148,163,184,0.30); color: #c5c9e0; }
 .dpc-cat { font-size: 9px; font-weight: 700; color: #8a8fad; letter-spacing: 0.10em; text-transform: uppercase; }
-.dpc-name { font-size: 11.5px; font-weight: 700; color: #f3f4fb; line-height: 1.35; margin-bottom: 6px; }
+.dpc-name { font-size: 11px; font-weight: 700; color: #f3f4fb; line-height: 1.25; margin-bottom: 3px; }
 .dpc-foot { display: flex; gap: 8px; align-items: center; font-size: 9.5px; color: #c5c9e0; flex-wrap: wrap; }
 .dpc-dec { font-weight: 700; }
 .dpc-when { color: #c5c9e0; }
@@ -2080,18 +2084,22 @@ function setStage(id, stage) {
       const pp = document.getElementById('projPanel');
       if (pp) pp.classList.remove('show');
       renderDeptProjects(id);
-      // 패널 위치 보정 - 위쪽 잘림 방지
-      requestAnimationFrame(() => {
+      // 패널 위치 보정 - 위쪽 잘림 방지 (2회 측정: 콘텐츠 높이 확정 후 재보정)
+      const adjustExpanded = () => {
         const expEl = rec.el.querySelector('.expanded');
         if (!expEl) return;
         const r = expEl.getBoundingClientRect();
         const safeTop = 60;
-        if (r.top < safeTop) {
-          // 노드 좌표에서 transform 보정
-          const delta = safeTop - r.top;
+        const safeBottom = window.innerHeight - 30;
+        let delta = 0;
+        if (r.top < safeTop) delta = safeTop - r.top;
+        else if (r.bottom > safeBottom) delta = safeBottom - r.bottom;
+        if (delta !== 0) {
           expEl.style.transform = `translateY(calc(-50% + ${delta}px))`;
         }
-      });
+      };
+      requestAnimationFrame(adjustExpanded);
+      setTimeout(adjustExpanded, 80);  // 콘텐츠 height inline 박힌 다음 재측정
     }
   }
 }
@@ -2750,20 +2758,22 @@ function renderDeptProjects(deptId) {
     // 카드 클릭 시 desc 펼침/접기
     card.addEventListener('click', (e) => {
       e.stopPropagation();
-      const ef = getEffective(cat, item);
-      focusProjectRelation(ef.ownerDept, ef.related || []);
+      // 부서 확대 상태에서는 카드 클릭 시 카메라/와이어 강조 안 함 (사용자 요청)
+      // 단순 펼침/접기만
       card.classList.toggle('open');
     });
     sec.appendChild(card);
   });
   exp.appendChild(sec);
 
-  // 초기 콘텐츠 높이를 측정해서 영역 고정 → 카드 펼침은 영역 안 스크롤로만
+  // 초기 콘텐츠 높이 측정 - viewport 기준 cap 적용 (위 잘림 방지)
   requestAnimationFrame(() => {
     const h = sec.offsetHeight;
     if (h > 0) {
-      sec.style.height = h + 'px';
-      sec.style.maxHeight = h + 'px';
+      const vh = window.innerHeight;
+      const capped = Math.min(h, vh * 0.68);  // 화면 68% 넘으면 cap → 스크롤
+      sec.style.height = capped + 'px';
+      sec.style.maxHeight = capped + 'px';
     }
   });
 }
