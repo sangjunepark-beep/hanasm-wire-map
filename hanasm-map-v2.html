@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>HANASM · 와이어 맵 v0.8</title>
+<title>HANASM · 와이어 맵 v3</title>
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
 :root {
@@ -727,17 +727,51 @@ body.edit-mode .node .frame { outline: 2px dashed rgba(251,191,36,0.6); outline-
 .proj-item.flat-item.st-stop .pi-prog-num { color: #f87171; }
 
 .pi-meta { display: flex; align-items: center; gap: 8px; margin: 8px 0 4px; flex-wrap: wrap; }
-.pi-dec {
+.pi-dec,
+.pi-dec-select {
   font-family: inherit; cursor: pointer; padding: 4px 10px;
   font-size: 10px; font-weight: 800; letter-spacing: 0.08em;
   border: 1px solid var(--dec-c, #a5b4fc);
   background: rgba(8,9,28,0.6); color: var(--dec-c, #a5b4fc);
   clip-path: polygon(3px 0, 100% 0, 100% calc(100% - 3px), calc(100% - 3px) 100%, 0 100%, 0 3px);
 }
-.pi-dec:hover { background: rgba(255,255,255,0.06); }
+.pi-dec-select { min-width: 112px; border-radius: 0; outline: none; }
+.pi-dec:hover,
+.pi-dec-select:hover { background: rgba(255,255,255,0.06); }
 .pi-dec.dec-go    { --dec-c: #22d3ee; }
 .pi-dec.dec-hold  { --dec-c: #fbbf24; }
 .pi-dec.dec-later { --dec-c: #94a3b8; }
+.pi-action,
+.pi-action-select {
+  font-family: inherit; cursor: pointer; padding: 4px 10px;
+  font-size: 10px; font-weight: 900; letter-spacing: 0.08em;
+  border: 1px solid var(--act-c, #a5b4fc);
+  background: rgba(8,9,28,0.62); color: var(--act-c, #a5b4fc);
+  clip-path: polygon(3px 0, 100% 0, 100% calc(100% - 3px), calc(100% - 3px) 100%, 0 100%, 0 3px);
+}
+.pi-action-select { min-width: 116px; border-radius: 0; outline: none; }
+.pi-action:hover,
+.pi-action-select:hover { background: rgba(255,255,255,0.08); }
+.pi-action-select option,
+.pi-dec-select option { background: #101426; color: #f3f4fb; }
+.action-first, .proj-item.flat-item.action-first { --act-c: #f87171; }
+.action-run, .proj-item.flat-item.action-run { --act-c: #34d399; }
+.action-after, .proj-item.flat-item.action-after { --act-c: #60a5fa; }
+.action-hold, .proj-item.flat-item.action-hold { --act-c: #fbbf24; }
+.action-stop, .proj-item.flat-item.action-stop { --act-c: #94a3b8; }
+.action-merge, .proj-item.flat-item.action-merge { --act-c: #c084fc; }
+.proj-item.flat-item.action-first .pi-row,
+.dept-proj-card.action-first { border-left-color: #f87171 !important; }
+.proj-item.flat-item.action-run .pi-row,
+.dept-proj-card.action-run { border-left-color: #34d399 !important; }
+.proj-item.flat-item.action-after .pi-row,
+.dept-proj-card.action-after { border-left-color: #60a5fa !important; }
+.proj-item.flat-item.action-hold .pi-row,
+.dept-proj-card.action-hold { border-left-color: #fbbf24 !important; }
+.proj-item.flat-item.action-stop .pi-row,
+.dept-proj-card.action-stop { border-left-color: #94a3b8 !important; opacity: 0.78; }
+.proj-item.flat-item.action-merge .pi-row,
+.dept-proj-card.action-merge { border-left-color: #c084fc !important; }
 .pi-when {
   font-size: 10px; color: #c5c9e0; font-weight: 600; letter-spacing: 0.03em;
 }
@@ -757,6 +791,28 @@ body.edit-mode .node .frame { outline: 2px dashed rgba(251,191,36,0.6); outline-
 }
 .proj-item.flat-item.dec-hold .pi-row { border-left-color: #fbbf24 !important; }
 .proj-item.flat-item.dec-later .pi-row { border-left-color: #94a3b8 !important; opacity: 0.92; }
+.project-summary {
+  display: grid; grid-template-columns: repeat(3, 1fr);
+  gap: 6px; margin-bottom: 10px;
+}
+.project-summary .sum {
+  padding: 7px 8px; background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(167,139,250,0.18);
+  font-size: 10px; color: #c5c9e0; font-weight: 800;
+  letter-spacing: 0.08em; text-align: center;
+}
+.project-filter {
+  display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 12px;
+}
+.project-filter button {
+  font-family: inherit; cursor: pointer; padding: 5px 8px;
+  background: rgba(8,9,28,0.62); border: 1px solid rgba(167,139,250,0.24);
+  color: #c5c9e0; font-size: 9.5px; font-weight: 800; letter-spacing: 0.08em;
+  clip-path: polygon(3px 0, 100% 0, 100% calc(100% - 3px), calc(100% - 3px) 100%, 0 100%, 0 3px);
+}
+.project-filter button.active {
+  color: #fff; border-color: #60a5fa; background: rgba(96,165,250,0.18);
+}
 
 .dept-projects-section { margin-top: 14px; padding-top: 12px; border-top: 1px dashed rgba(167,139,250,0.30); }
 .dept-projects-section .label { font-size: 10.5px; font-weight: 800; letter-spacing: 0.16em; color: #c084fc; margin-bottom: 8px; }
@@ -838,14 +894,14 @@ body.edit-mode .node .frame { outline: 2px dashed rgba(251,191,36,0.6); outline-
 </div>
 
 <div class="legend">
-  <div class="row"><span class="sw" style="--c:#22d3ee"></span> CEO</div>
+  <div class="row"><span class="sw" style="--c:#22d3ee"></span> 대표</div>
   <div class="row"><span class="sw" style="--c:#60a5fa"></span> 개인사업자 · 스마트스토어</div>
   <div class="row"><span class="sw" style="--c:#a855f7"></span> 법인사업자 · 자사몰·오픈마켓</div>
   <div class="row"><span class="sw" style="--c:#c4b5fd"></span> 부서</div>
 </div>
 
 <div class="controls">
-  <button id="btnFit">RESET</button>
+  <button id="btnFit">초기화</button>
 </div>
 
 <div class="chip-bar" id="chipBar">
@@ -854,7 +910,7 @@ body.edit-mode .node .frame { outline: 2px dashed rgba(251,191,36,0.6); outline-
   <button class="chip" data-cat="dept"    style="--c:#a5b4fc">부서</button>
   <button class="chip" data-cat="system"  style="--c:#22d3ee">시스템</button>
   <button class="chip" data-cat="talk"    style="--c:#f472b6">상담</button>
-  <button class="chip" data-cat="sns"     style="--c:#ec4899">SNS</button>
+  <button class="chip" data-cat="sns"     style="--c:#ec4899">소셜</button>
 </div>
 
 
@@ -879,7 +935,7 @@ const TASKS = {
     { name:"네이버 광고 운영·입찰 조정", status:"정기", prio:"h" },
     { name:"SEO 개선 / 검색 노출 최적화", status:"정기", prio:"h" },
     { name:"데이터 분석 · 매출 전략", status:"정기", prio:"h" },
-    { name:"AI · 자동화 도입 검토", status:"정기", prio:"m" },
+    { name:"인공지능 자동화 도입 검토", status:"정기", prio:"m" },
     { name:"상품 · 상세페이지 기획", status:"정기", prio:"h" },
     { name:"개발팀 커뮤니케이션", status:"상시", prio:"m" },
     { name:"팀 업무 분장 · 관리", status:"상시", prio:"m" },
@@ -939,7 +995,7 @@ const TASKS = {
     { name:"네이버 블로그 포스팅", status:"정기", prio:"h" },
     { name:"인스타그램 게시글", status:"정기", prio:"h" },
     { name:"인스타그램 인사이트 확인", status:"정기", prio:"m" },
-    { name:"AI 이미지·영상 제작", status:"정기", prio:"h" },
+    { name:"인공지능 이미지·영상 제작", status:"정기", prio:"h" },
     { name:"인스타그램 릴스 제작·업로드", status:"정기", prio:"h" },
     { name:"유튜브 쇼츠 업로드 (릴스 동일)", status:"정기", prio:"m" },
     { name:"시공사례 블로그/인스타 포스팅", status:"정기", prio:"m" },
@@ -1135,17 +1191,17 @@ const TASKS = {
 
 // ============ DATA ============
 const DATA = {
-  ceo: { id:"ceo", name:"김한열", sub:"CEO · 보고체계 최상위", desc:"하나사인몰 대표 · 전사 의사결정" },
-  hanasm: { id:"hanasm", name:"하나사인몰", sub:"COMPANY · 본체", desc:"회사 본체 · 개인/법인 사업자 통합 운영" },
-  personal: { id:"personal", name:"개인사업자", sub:"PERSONAL", desc:"네이버 스마트스토어 채널 3개를 운영하는 개인사업자 단위" },
-  corp: { id:"corp", name:"법인사업자", sub:"CORP · MAIN", desc:"자사몰 + 오픈마켓 다채널 운영. 회사 메인 사업자" },
-  erp: { id:"erp", name:"ERP", sub:"erp.hanasm.kr · CORE",
+  ceo: { id:"ceo", name:"김한열", sub:"대표 · 보고체계 최상위", desc:"하나사인몰 대표 · 전사 의사결정" },
+  hanasm: { id:"hanasm", name:"하나사인몰", sub:"회사 본체", desc:"회사 본체 · 개인/법인 사업자 통합 운영" },
+  personal: { id:"personal", name:"개인사업자", sub:"개인사업자", desc:"네이버 스마트스토어 채널 3개를 운영하는 개인사업자 단위" },
+  corp: { id:"corp", name:"법인사업자", sub:"법인사업자 · 메인", desc:"자사몰 + 오픈마켓 다채널 운영. 회사 메인 사업자" },
+  erp: { id:"erp", name:"ERP", sub:"erp.hanasm.kr · 핵심 시스템",
          brand:"#22d3ee",
          desc:"■ 시스템\n자체 개발 ERP (개발팀 산하)\n핵심 백본\n■ 도메인\nerp.hanasm.kr\n■ IP\n112.172.7.61\n내부 211 / 212\n■ 백업\n센터 서버 백업\n■ 외부 연동\nIDC hanasignmall.kr (49.247.31.206)\nElastic (49.247.40.116)\n상품정보 비교\n■ 장애 처리\n206 장애 시 116 자동 작동" },
-  playauto: { id:"playauto", name:"플레이오토", sub:"주문수집 SYS · API → ERP",
+  playauto: { id:"playauto", name:"플레이오토", sub:"주문수집 시스템 · API → ERP",
               brand:"#fb923c",
               desc:"■ 역할\n주문 통합 수집\n오픈마켓 · 스마트스토어 · 자사몰\n■ 연동\nAPI → ERP 공정 매칭\n■ 공정 4단계\n1. 품목 매칭\n2. 디자인\n3. 제작\n4. 출고\n■ 결과\n상품제작 진행상황 URL" },
-  ecount:   { id:"ecount", name:"이카운트", sub:"견적·세금계산서 SYS",
+  ecount:   { id:"ecount", name:"이카운트", sub:"견적·세금계산서 시스템",
               brand:"#34d399",
               desc:"■ 견적서 발행\nCS팀\n■ 세금계산서 발행\n이하나 대리\n■ 부서 연결\nCS · 경영지원 유기적 연결" },
   call:     { id:"call",  name:"전화상담", sub:"CS · 1644-7523", brand:"#60a5fa", desc:"고객 전화 상담 1644-7523 (CS팀 본업)" },
@@ -1162,42 +1218,42 @@ const DATA = {
               desc:"■ 모델\n평판 UV 프린터\n제작실 출력장비 ④\n■ 스펙\n잉크: UV\n크기: 1200 × 2400mm\n■ 가능 소재\n포맥스 · 아크릴 투명리무버 · 투명무점착 (주차스티커)\nPVC (캘)\nUV PET · 가죽 · 천 · 타일 · 철판\n골드 · 실버 헤어라인 · 거울 PET\n반사지 · 야광지 홀로그램" },
     nas:      { id:"nas",   name:"NAS", sub:"중요 데이터 저장소", brand:"#22d3ee",
               desc:"■ 서버\n사내 NAS\n192.168.0.200 / 201\n■ 역할\nERP 서버 백업\n디자인팀 시안 DB\n웹팀 DB · 문서 일체\n■ 출력기 핫폴더 (4종)\nEPSON\nHP 라텍스\nEXTREME\n평판 UV\n■ 운영\nDocker (개발팀)" },
-  ig:       { id:"ig",    name:"인스타그램",   sub:"SNS · 임정민 주임", brand:"#E1306C", desc:"인스타 게시글 · 릴스 · AI 이미지/영상" },
-  nblog:    { id:"nblog", name:"네이버 블로그", sub:"SNS · 임정민 주임", brand:"#03C75A", desc:"네이버 블로그 포스팅 · 검색 노출 확인" },
-  yt:       { id:"yt",    name:"유튜브",       sub:"SNS · 임정민 주임", brand:"#FF0000", desc:"유튜브 쇼츠 (인스타 릴스 동일 영상)" },
-  claude20: { id:"claude20", name:"Claude Max 20×", sub:"AI · 팀 공용",
+  ig:       { id:"ig",    name:"인스타그램",   sub:"소셜 · 임정민 주임", brand:"#E1306C", desc:"인스타 게시글 · 릴스 · 인공지능 이미지/영상" },
+  nblog:    { id:"nblog", name:"네이버 블로그", sub:"소셜 · 임정민 주임", brand:"#03C75A", desc:"네이버 블로그 포스팅 · 검색 노출 확인" },
+  yt:       { id:"yt",    name:"유튜브",       sub:"소셜 · 임정민 주임", brand:"#FF0000", desc:"유튜브 쇼츠 (인스타 릴스 동일 영상)" },
+  claude20: { id:"claude20", name:"Claude Max 20×", sub:"인공지능 · 팀 공용",
               brand:"#d97706",
               desc:"클로드 맥스 20X · 팀별 공용 (개발팀 제외 전사)" },
-  claude5:  { id:"claude5", name:"Claude Max 5×", sub:"AI · 개발 전용",
+  claude5:  { id:"claude5", name:"Claude Max 5×", sub:"인공지능 · 개발 전용",
               brand:"#a855f7",
               desc:"클로드 맥스 5X · 개발팀 별도 사용" },
-  gpt:      { id:"gpt", name:"GPT Plus", sub:"AI · 전사 1계정",
+  gpt:      { id:"gpt", name:"GPT Plus", sub:"인공지능 · 전사 1계정",
               brand:"#10b981",
               desc:"GPT Plus 1개 계정 · 전사 공용" },
 
   personalChannels: [
-    { id:"ss-hana",   name:"하나몰",       sub:"SMARTSTORE", brand:"#60a5fa", desc:"네이버 스마트스토어 · 하나몰 (메인) · ADBOOST 단독 진행", adBadge:{logo:"naver",label:"검색광고"}, ad:["네이버 검색광고","ADBOOST"] },
-    { id:"ss-baron",  name:"더바른사인",   sub:"SMARTSTORE", brand:"#60a5fa", desc:"네이버 스마트스토어 · 더바른사인", adBadge:{logo:"naver",label:"검색광고"}, ad:["네이버 검색광고"] },
-    { id:"ss-rocket", name:"로켓출력공장", sub:"SMARTSTORE", brand:"#60a5fa", desc:"네이버 스마트스토어 · 신규 · 시트/페트/포맥스/폼보드/DTF", adBadge:{logo:"naver",label:"검색광고"}, ad:["네이버 검색광고"] }
+    { id:"ss-hana",   name:"하나몰",       sub:"스마트스토어", brand:"#60a5fa", desc:"네이버 스마트스토어 · 하나몰 (메인) · ADBOOST 단독 진행", adBadge:{logo:"naver",label:"검색광고"}, ad:["네이버 검색광고","ADBOOST"] },
+    { id:"ss-baron",  name:"더바른사인",   sub:"스마트스토어", brand:"#60a5fa", desc:"네이버 스마트스토어 · 더바른사인", adBadge:{logo:"naver",label:"검색광고"}, ad:["네이버 검색광고"] },
+    { id:"ss-rocket", name:"로켓출력공장", sub:"스마트스토어", brand:"#60a5fa", desc:"네이버 스마트스토어 · 신규 · 시트/페트/포맥스/폼보드/DTF", adBadge:{logo:"naver",label:"검색광고"}, ad:["네이버 검색광고"] }
   ],
   corpChannels: [
     { id:"godo",      name:"Hanasignmall.com", sub:"자사몰 · 고도몰",     brand:"#a855f7", desc:"자사몰 1 · 고도몰 (외부 솔루션) · 파워링크 점진 이전 예정", adBadge:{logo:"naver",label:"파워링크광고"}, ad:["네이버 파워링크"] },
     { id:"self-mall", name:"Hanasignmall.kr",  sub:"자사몰 · 신규몰 (개발팀)", brand:"#c084fc", desc:"자사몰 2 · 자체개발몰 (신규몰) · 고도몰 파워링크 순차 연결 예정", adBadge:[{logo:"npay",label:"주문형/결제형"},{logo:"gads",label:"구글애즈"}], ad:["구글애즈","네이버 검색광고 일부","예정: 고도몰 파워링크 이전"] },
-    { id:"coupang",   name:"쿠팡",         sub:"오픈마켓", brand:"#f472b6", desc:"쿠팡 · 자체 AI 광고 진행 · 보류 업무 다수 누적 (7건)", ad:["쿠팡 자체 AI 광고"] },
+    { id:"coupang",   name:"쿠팡",         sub:"오픈마켓", brand:"#f472b6", desc:"쿠팡 · 자체 인공지능 광고 진행 · 잠정중단 업무 다수 누적 (7건)", ad:["쿠팡 자체 인공지능 광고"] },
     { id:"11st",      name:"11번가",       sub:"오픈마켓", brand:"#ec4899", desc:"11번가 · 광고 X · 판매기간 연장 관리", ad:["광고 미집행"] },
-    { id:"auction",   name:"옥션",         sub:"ESM",      brand:"#fbbf24", desc:"옥션 (ESM) · ESM 자체 AI 광고 + 주력제품 별도", ad:["ESM 자체 AI 광고","지정 주력제품 별도 광고"] },
-    { id:"gmarket",   name:"G마켓",        sub:"ESM",      brand:"#22d3ee", desc:"G마켓 (ESM) · ESM 자체 AI 광고 + 주력제품 별도", ad:["ESM 자체 AI 광고","지정 주력제품 별도 광고"] }
+    { id:"auction",   name:"옥션",         sub:"ESM",      brand:"#fbbf24", desc:"옥션 (ESM) · ESM 자체 인공지능 광고 + 주력제품 별도", ad:["ESM 자체 인공지능 광고","지정 주력제품 별도 광고"] },
+    { id:"gmarket",   name:"G마켓",        sub:"ESM",      brand:"#22d3ee", desc:"G마켓 (ESM) · ESM 자체 인공지능 광고 + 주력제품 별도", ad:["ESM 자체 인공지능 광고","지정 주력제품 별도 광고"] }
   ],
   departments: [
     { id:"web", name:"웹팀", color:"#60a5fa", color2:"#a855f7",
-      desc:"개인·법인 전 사업자 운영 (5명) · 상품/디자인/SNS",
+      desc:"개인·법인 전 사업자 운영 (5명) · 상품/디자인/소셜",
       links:["personal","corp"],
       members:[
         { name:"박상준", role:"차장", title:"웹팀 총괄", tasks: TASKS.parksj },
         { name:"황국인", role:"과장", title:"디자인 (상세·랜딩·배너)", tasks: TASKS.hwangki },
         { name:"김은혜", role:"주임", title:"디자인 (상세·랜딩·배너)", tasks: TASKS.kimeh },
         { name:"홍재이", role:"주임", title:"상품관리 (개인·법인)", tasks: TASKS.hongjy },
-        { name:"임정민", role:"주임", title:"SNS (인스타·블로그·유튜브)", tasks: TASKS.limjm }
+        { name:"임정민", role:"주임", title:"소셜 (인스타·블로그·유튜브)", tasks: TASKS.limjm }
       ]},
     { id:"cs", name:"CS팀", color:"#a855f7", color2:"#22d3ee",
       desc:"모든 몰(개인·법인)과 통화 · 전 채널 주문 수집 (9시·13시) → 업체현황시트 · ERP",
@@ -1297,7 +1353,7 @@ function placeNode(node, x, y, cls) {
       } else if (ab.logo === 'npay') {
         logoHtml = '<img src="npay.png" width="36" height="16" alt="네이버페이" style="display:block;">';
       } else if (ab.logo === 'gads') {
-        logoHtml = '<img src="gads.png" width="48" height="9" alt="Google Ads" style="display:block;">';
+        logoHtml = '<img src="gads.png" width="48" height="9" alt="구글 광고" style="display:block;">';
       }
       b.innerHTML = logoHtml + '<span class="ab-lbl">' + ab.label + '</span>';
       div.appendChild(b);
@@ -1311,7 +1367,7 @@ function placeNode(node, x, y, cls) {
 
   const exp = document.createElement('div'); exp.className = 'expanded';
   if (node.desc) {
-    const lbl = document.createElement('div'); lbl.className = 'label'; lbl.textContent = 'INFO';
+    const lbl = document.createElement('div'); lbl.className = 'label'; lbl.textContent = '정보';
     exp.appendChild(lbl);
     const dscWrap = document.createElement('div'); dscWrap.className = 'desc';
     node.desc.split('\n').forEach(line => {
@@ -1361,7 +1417,7 @@ function placeNode(node, x, y, cls) {
   }
   if (node.members) {
     const lbl = document.createElement('div'); lbl.className = 'label';
-    lbl.textContent = `MEMBERS · ${node.members.length}`;
+    lbl.textContent = `구성원 · ${node.members.length}`;
     exp.appendChild(lbl);
     const grid = document.createElement('div'); grid.className = 'member-grid';
     node.members.forEach(m => {
@@ -1428,7 +1484,7 @@ placeNode(DATA.call, CX - 160, 80, 'sys sys-call');
   placeNode(DATA.chat, CX + 160, 80, 'sys sys-chat');
   placeNode(DATA.playauto, CX - 160, 380, 'sys sys-playauto');
 placeNode(DATA.ecount,   CX + 160, 380, 'sys sys-ecount');
-// SNS 3종 → 웹팀 위쪽 (X=435 근처)
+// 소셜 3종 → 웹팀 위쪽 (X=435 근처)
 placeNode(DATA.ig,    180, 80,  'sys sys-ig');
 placeNode(DATA.nblog, 350, 80,  'sys sys-nblog');
 placeNode(DATA.yt,    520, 80,  'sys sys-yt');
@@ -1597,7 +1653,7 @@ function drawAllWires() {
   drawWire('dev', 'web',     '#22d3ee', NORMAL, 'dept');
   drawWire('dev', 'self-mall','#22d3ee', NORMAL, 'system');
   // 약한 연결 - 부서.links 자동 (외부영업→웹팀 제거: 2026-05-22)
-  // 웹팀 → SNS 3종 (임정민 주임)
+  // 웹팀 → 소셜 3종 (임정민 주임)
   drawWire('web', 'ig',    '#E1306C', NORMAL, 'sns');
   drawWire('web', 'nblog', '#03C75A', NORMAL, 'sns');
   drawWire('web', 'yt',    '#FF0000', NORMAL, 'sns');
@@ -1717,7 +1773,7 @@ function setStage(id, stage) {
   const isCallOrSales = (id === 'call' || id === 'sales');
 
   if (isDept) {
-    // 부서 클릭 → 직접 연결된 노드만 + 사업자 산하 채널/CEO
+    // 부서 클릭 → 직접 연결된 노드만 + 사업자 산하 채널/대표
     wires.querySelectorAll('path').forEach(p => {
       if (p.dataset.from === id || p.dataset.to === id) {
         connected.add(p.dataset.from); connected.add(p.dataset.to);
@@ -1875,7 +1931,7 @@ function showTasks(deptId, memberName) {
     statsEl.innerHTML = `
       ${stats.active   ? `<span class="st active">진행중 ${stats.active}</span>` : ''}
       ${stats.planned  ? `<span class="st planned">예정 ${stats.planned}</span>` : ''}
-      ${stats.hold     ? `<span class="st hold">보류 ${stats.hold}</span>` : ''}
+      ${stats.hold     ? `<span class="st hold">잠정중단 ${stats.hold}</span>` : ''}
       ${stats.routine  ? `<span class="st routine">정기 ${stats.routine}</span>` : ''}
       ${stats.aux      ? `<span class="st active">상시 ${stats.aux}</span>` : ''}
     `;
@@ -1896,7 +1952,7 @@ function showTasks(deptId, memberName) {
     const order = [
       { key:'진행중', cls:'s-active',  label:'진행중' },
       { key:'예정',   cls:'s-routine', label:'예정' },
-      { key:'보류',   cls:'s-hold',    label:'보류' },
+      { key:'보류',   cls:'s-hold',    label:'잠정중단' },
       { key:'정기',   cls:'s-routine', label:'정기' },
       { key:'상시',   cls:'s-active',  label:'상시' }
     ];
@@ -2054,7 +2110,7 @@ window.addEventListener('resize', () => { fitView(); drawAllWires(); });
 <button class="proj-toggle" id="projToggle">≡ 신규 프로젝트</button>
 <aside class="proj-panel" id="projPanel">
   <div class="pp-head">
-    <div class="pp-title">신규 프로젝트 보드</div>
+    <div class="pp-title">신규 프로젝트 판단 보드</div>
     <span class="pp-x" id="ppClose">✕</span>
   </div>
   <div class="pp-body" id="ppBody"></div>
@@ -2065,10 +2121,10 @@ const PROJECTS = {
   ad:      { name:'광고', items:[
     { name:'네이버 검색광고 에이전트 빌드', prio:'h', progress:50, status:'active',
       ownerDept:'web', related:[], decision:'go', startWhen:'진행 중',
-      desc:'현재 대표 일일보고용 별도 운용 중. 주간 데이터까지 합쳐서 빼고 있음. AI 통계·판단·입찰조정까지는 미완성 → 그 단계가 되어야 완전한 에이전트 수준.', owner:'박상준' }
+      desc:'현재 대표 일일보고용 별도 운용 중. 주간 데이터까지 합쳐서 빼고 있음. 인공지능 통계·판단·입찰조정까지는 미완성 → 그 단계가 되어야 완전한 에이전트 수준.', owner:'박상준' }
   ]},
-  ai:      { name:'AI·자동화', items:[
-    { name:'AI 챗봇 / RAG 앵커DB (전상품 DB화)', prio:'h', progress:30, status:'active',
+  ai:      { name:'인공지능·자동화', items:[
+    { name:'인공지능 챗봇 / RAG 앵커DB (전상품 DB화)', prio:'h', progress:30, status:'active',
       ownerDept:'web', related:['design','cs'], decision:'go', startWhen:'진행 중',
       desc:'하나사인몰 전상품 DB화 작업. 모든 상품 데이터 엑셀 정리 중. 게시판·입간판 카테고리 완료 → 대표 보고. 현재 주차스티커 정리 중. 완료된 것부터 노드데이터로 만들어 외주 챗봇 DB로 투입.', owner:'박상준' }
   ]},
@@ -2078,7 +2134,7 @@ const PROJECTS = {
       desc:'홍재이 주임 진행 중. 이번 주 주차스티커 완료 예상, 차주 A형입간판 진행 예정. 제품 수가 많아 6월 초·중순까지 이어질 수 있음.', owner:'홍재이' },
     { name:'어드민 카테고리·토글 정리 (LLM)', prio:'m', progress:70, status:'stop',
       ownerDept:'web', related:[], decision:'hold', startWhen:'미정',
-      desc:'신규몰 어드민 상품별 공간별 토글 정리. 1차는 룰 적용, 2차는 LLM 적용 테스트 진행했으나 개인별 차로 완벽 분리 어려운 부분이 있어 스톱. 공정률 70%.', owner:'박상준' },
+      desc:'신규몰 어드민 상품별 공간별 토글 정리. 1차는 룰 적용, 2차는 LLM 적용 테스트 진행했으나 개인별 차로 완벽 분리 어려운 부분이 있어 중단. 공정률 70%.', owner:'박상준' },
     { name:'MDF게시판 제품 상세페이지', prio:'m', progress:80, status:'active',
       ownerDept:'web', related:['design','fin'], decision:'hold', startWhen:'사이즈 확인 후',
       desc:'황국인 과장이 MDF + 집게 옵션 상세페이지 완료. 포켓 관련 도면은 송기용 팀장이 새로 잡음. 포켓 사이즈가 달라져서 진행 여부 확인 필요. 진행 확정 시 이미지·사이즈 수정만 추가하면 마무리.', owner:'황국인' }
@@ -2103,7 +2159,71 @@ const PCATS = ['ad','ai','product','system','offline'];
 const DEPT_NAME = { web:'웹팀', cs:'CS팀', design:'디자인팀', dev:'개발팀', fin:'경영지원', sales:'외부영업', product:'제작실', factory2:'2공장' };
 let DECISIONS = {};
 try { DECISIONS = JSON.parse(localStorage.getItem('hanasm.decisions') || '{}'); } catch(e) {}
-function cycleDecision(d) { return d === 'go' ? 'hold' : d === 'hold' ? 'later' : 'go'; }
+const PROJECT_ACTIONS = [
+  { key:'first', label:'우선', cls:'action-first' },
+  { key:'run',   label:'진행', cls:'action-run' },
+  { key:'after', label:'이후', cls:'action-after' },
+  { key:'hold',  label:'잠정중단', cls:'action-hold' },
+  { key:'stop',  label:'중단', cls:'action-stop' },
+  { key:'merge', label:'통합', cls:'action-merge' }
+];
+const PROJECT_DECISIONS = [
+  { key:'go',    label:'진행', cls:'dec-go' },
+  { key:'hold',  label:'잠정중단', cls:'dec-hold' },
+  { key:'later', label:'이후', cls:'dec-later' }
+];
+let PROJECT_STATE = {};
+let PROJECT_ACTION_FILTER = 'all';
+try { PROJECT_STATE = JSON.parse(localStorage.getItem('hanasm.projectState.v3') || '{}'); } catch(e) {}
+try { PROJECT_ACTION_FILTER = localStorage.getItem('hanasm.projectActionFilter.v3') || 'all'; } catch(e) {}
+function projectKey(cat, name) { return cat + '::' + name; }
+function getProjectState(cat, item) {
+  const key = projectKey(cat, item.name);
+  return PROJECT_STATE[key] || {};
+}
+function getAction(cat, item) {
+  const st = getProjectState(cat, item);
+  const fallback = item.status === 'stop' ? 'stop' : (item.decision === 'hold' ? 'hold' : item.decision === 'later' ? 'after' : 'run');
+  return PROJECT_ACTIONS.find(a => a.key === (st.action || fallback)) || PROJECT_ACTIONS[1];
+}
+function saveProjectState() {
+  localStorage.setItem('hanasm.projectState.v3', JSON.stringify(PROJECT_STATE));
+}
+function setProjectAction(key, action) {
+  PROJECT_STATE[key] = Object.assign({}, PROJECT_STATE[key] || {}, { action });
+  saveProjectState();
+}
+function optionHtml(list, selected) {
+  return list.map(x => '<option value="' + x.key + '"' + (x.key === selected ? ' selected' : '') + '>' + x.label + '</option>').join('');
+}
+function decisionMeta(decision) {
+  return PROJECT_DECISIONS.find(x => x.key === decision) || PROJECT_DECISIONS[0];
+}
+function summarizeProjects(all) {
+  const counts = { total: all.length, first: 0, hold: 0, stop: 0 };
+  all.forEach(e => {
+    const action = getAction(e.cat, e.item).key;
+    if (action === 'first') counts.first++;
+    if (action === 'hold') counts.hold++;
+    if (action === 'stop') counts.stop++;
+  });
+  return counts;
+}
+function focusProjectRelation(ownerDept, related=[]) {
+  document.querySelectorAll('.node.prelit').forEach(n => n.classList.remove('prelit'));
+  document.querySelectorAll('svg.wires path.preview-wire').forEach(p => p.classList.remove('preview-wire'));
+  const ids = [ownerDept, ...(related || [])].filter(Boolean);
+  ids.forEach(id => {
+    if (POS[id]) POS[id].el.classList.add('prelit');
+  });
+  ids.forEach(a => {
+    ids.forEach(b => {
+      if (a === b) return;
+      document.querySelectorAll(`svg.wires path[data-from="${a}"][data-to="${b}"], svg.wires path[data-from="${b}"][data-to="${a}"]`)
+        .forEach(p => p.classList.add('preview-wire'));
+    });
+  });
+}
 function renderProjects() {
   const body = document.getElementById('ppBody');
   if (!body) return;
@@ -2123,8 +2243,25 @@ function renderProjects() {
   // 저장에 없는 새 항목은 뒤로
   map.forEach(v => ordered.push(v));
 
-  let html = '<div class="proj-list flat" data-list="flat">';
-  ordered.forEach(e => {
+  const summary = summarizeProjects(all);
+  const filters = [{ key:'all', label:'전체' }, ...PROJECT_ACTIONS];
+  let html = '<div class="project-summary">'
+           + '<div class="sum">전체 ' + summary.total + '</div>'
+           + '<div class="sum">우선 ' + summary.first + '</div>'
+           + '<div class="sum">잠정중단/중단 ' + (summary.hold + summary.stop) + '</div>'
+           + '</div>';
+  html += '<div class="project-filter">';
+  filters.forEach(f => {
+    html += '<button type="button" class="' + (PROJECT_ACTION_FILTER === f.key ? 'active' : '') + '" data-action-filter="' + f.key + '">' + f.label + '</button>';
+  });
+  html += '</div>';
+
+  const visible = PROJECT_ACTION_FILTER === 'all'
+    ? ordered
+    : ordered.filter(e => getAction(e.cat, e.item).key === PROJECT_ACTION_FILTER);
+
+  let htmlList = '<div class="proj-list flat" data-list="flat">';
+  visible.forEach(e => {
     const it = e.item;
     const label = it.prio === 'h' ? '상' : it.prio === 'm' ? '중' : '하';
     const catName = PROJECTS[e.cat].name;
@@ -2132,25 +2269,30 @@ function renderProjects() {
     const k = keyOf(e.cat, it.name);
     const pct = (typeof it.progress === 'number') ? it.progress : null;
     const st = it.status || 'active';
-    const stLabel = st === 'done' ? '✓ 완료' : st === 'stop' ? '⏸ 스톱' : '● 진행';
+    const stLabel = st === 'done' ? '✓ 완료' : st === 'stop' ? '⏸ 중단' : '● 진행';
     const progBar = pct !== null ? '<div class="pi-prog"><div class="pi-prog-bar" style="width:' + pct + '%"></div><span class="pi-prog-num">' + pct + '%</span></div>' : '';
 
     // 결정 / 시기 / 유관 부서 (사용자 오버라이드 적용)
     const ovr = (DECISIONS[k] || {});
     const dec = ovr.decision || it.decision || 'go';
     const when = ovr.startWhen || it.startWhen || '';
-    const DEC_LABEL = { go: '🟢 GO', hold: '🟡 HOLD', later: '🔵 LATER' };
-    const decLabel = DEC_LABEL[dec] || '🟢 GO';
+    const decMeta = decisionMeta(dec);
+    const action = getAction(e.cat, it);
     const ownerDeptName = (DEPT_NAME[it.ownerDept] || '');
     const relatedHtml = (it.related && it.related.length) ? it.related.map(d => '<span class="pi-rel">' + (DEPT_NAME[d] || d) + '</span>').join('') : '';
     const meta = '<div class="pi-meta">'
-               + '<button class="pi-dec dec-' + dec + '" data-key="' + k + '" title="클릭해서 다음 결정으로 변경">' + decLabel + '</button>'
+               + '<select class="pi-action pi-action-select ' + action.cls + '" data-action-key="' + k + '" aria-label="프로젝트 처리 선택">'
+               + optionHtml(PROJECT_ACTIONS, action.key)
+               + '</select>'
+               + '<select class="pi-dec pi-dec-select ' + decMeta.cls + '" data-key="' + k + '" aria-label="프로젝트 결정 선택">'
+               + optionHtml(PROJECT_DECISIONS, decMeta.key)
+               + '</select>'
                + (when ? '<span class="pi-when">📅 ' + when + '</span>' : '')
                + '</div>';
     const relRow = (ownerDeptName || relatedHtml)
                ? '<div class="pi-rel-row">' + (ownerDeptName ? '<span class="pi-owner-dept">' + ownerDeptName + '</span>' : '') + (relatedHtml ? '<span class="pi-rel-sep">유관</span>' + relatedHtml : '') + '</div>'
                : '';
-    html += '<div class="proj-item flat-item ' + e.cat + ' st-' + st + ' dec-' + dec + '" data-key="' + k + '" data-cat="' + e.cat + '" data-name="' + it.name + '">'
+    htmlList += '<div class="proj-item flat-item ' + e.cat + ' st-' + st + ' dec-' + dec + ' ' + action.cls + '" data-key="' + k + '" data-cat="' + e.cat + '" data-owner="' + (it.ownerDept || '') + '" data-related="' + ((it.related || []).join(',')) + '" data-name="' + it.name + '">'
           + '<div class="pi-tag-row"><span class="pi-tag">' + catName + '</span><span class="pi-st">' + stLabel + '</span></div>'
           + '<div class="pi-row">'
           +   '<span class="pi-handle">⋮⋮</span>'
@@ -2164,8 +2306,8 @@ function renderProjects() {
           + descHtml
           + '</div>';
   });
-  html += '</div>';
-  body.innerHTML = html;
+  htmlList += '</div>';
+  body.innerHTML = html + htmlList;
 
   if (typeof Sortable !== 'undefined') {
     Sortable.create(document.querySelector('.proj-list.flat'), {
@@ -2180,24 +2322,33 @@ function renderProjects() {
     el.addEventListener('click', (e) => {
       if (e.target.closest('.pi-handle')) return;
       if (e.target.closest('.pi-dec')) return;
+      if (e.target.closest('.pi-action')) return;
+      focusProjectRelation(el.dataset.owner, (el.dataset.related || '').split(',').filter(Boolean));
       el.classList.toggle('open');
     });
   });
-  // 결정 버튼 클릭 → 다음 상태로 순환
-  document.querySelectorAll('.pi-dec').forEach(btn => {
+  document.querySelectorAll('[data-action-filter]').forEach(btn => {
     btn.addEventListener('click', (e) => {
       e.stopPropagation();
-      const key = btn.dataset.key;
-      const cur = (DECISIONS[key] && DECISIONS[key].decision) || (function(){
-        // PROJECTS에서 원본 찾아 디폴트
-        for (const cat of PCATS) {
-          const it = (PROJECTS[cat].items || []).find(x => (cat + '::' + x.name) === key);
-          if (it) return it.decision || 'go';
-        }
-        return 'go';
-      })();
-      const next = cycleDecision(cur);
-      DECISIONS[key] = Object.assign({}, DECISIONS[key] || {}, { decision: next });
+      PROJECT_ACTION_FILTER = btn.dataset.actionFilter || 'all';
+      localStorage.setItem('hanasm.projectActionFilter.v3', PROJECT_ACTION_FILTER);
+      renderProjects();
+    });
+  });
+  document.querySelectorAll('.pi-action-select').forEach(sel => {
+    sel.addEventListener('click', (e) => e.stopPropagation());
+    sel.addEventListener('change', (e) => {
+      e.stopPropagation();
+      setProjectAction(sel.dataset.actionKey, sel.value);
+      renderProjects();
+    });
+  });
+  document.querySelectorAll('.pi-dec-select').forEach(sel => {
+    sel.addEventListener('click', (e) => e.stopPropagation());
+    sel.addEventListener('change', (e) => {
+      e.stopPropagation();
+      const key = sel.dataset.key;
+      DECISIONS[key] = Object.assign({}, DECISIONS[key] || {}, { decision: sel.value });
       localStorage.setItem('hanasm.decisions', JSON.stringify(DECISIONS));
       renderProjects();
     });
@@ -2238,21 +2389,22 @@ function renderDeptProjects(deptId) {
   lbl.className = 'label';
   lbl.textContent = '신규 프로젝트 · ' + items.length;
   sec.appendChild(lbl);
-  const DEC_LABEL = { go: '🟢 GO', hold: '🟡 HOLD', later: '🔵 LATER' };
   items.forEach(({ cat, item }) => {
     const k = cat + '::' + item.name;
     const ovr = (DECISIONS[k] || {});
     const dec = ovr.decision || item.decision || 'go';
+    const action = getAction(cat, item);
     const isOwner = item.ownerDept === deptId;
     const card = document.createElement('div');
-    card.className = 'dept-proj-card dec-' + dec + (isOwner ? ' is-owner' : ' is-related');
+    card.className = 'dept-proj-card dec-' + dec + ' ' + action.cls + (isOwner ? ' is-owner' : ' is-related');
     const descBlock = item.desc ? '<div class="dpc-desc">' + item.desc + '</div>' : '';
     card.innerHTML =
       '<div class="dpc-h"><span class="dpc-role">' + (isOwner ? '주관' : '유관') + '</span>'
       + '<span class="dpc-cat ' + cat + '">' + PROJECTS[cat].name + '</span></div>'
       + '<div class="dpc-name">' + item.name + '</div>'
       + '<div class="dpc-foot">'
-      +   '<span class="dpc-dec">' + (DEC_LABEL[dec] || '') + '</span>'
+      +   '<span class="pi-action ' + action.cls + '" data-action-key="' + k + '">' + action.label + '</span>'
+      +   '<span class="dpc-dec">' + decisionMeta(dec).label + '</span>'
       +   (item.startWhen ? '<span class="dpc-when">📅 ' + item.startWhen + '</span>' : '')
       +   '<span class="dpc-prog">' + (item.progress || 0) + '%</span>'
       + '</div>'
@@ -2260,6 +2412,7 @@ function renderDeptProjects(deptId) {
     // 카드 클릭 시 desc 펼침/접기
     card.addEventListener('click', (e) => {
       e.stopPropagation();
+      focusProjectRelation(item.ownerDept, item.related || []);
       card.classList.toggle('open');
     });
     sec.appendChild(card);
