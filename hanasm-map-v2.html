@@ -763,11 +763,11 @@ body.edit-mode .node .frame { outline: 2px dashed rgba(251,191,36,0.6); outline-
 #editToggle.active { background: rgba(251,191,36,0.25) !important; }
 .proj-panel {
   position: fixed; top: 60px; right: 18px; bottom: 80px;
-  width: 360px; z-index: 210;
+  width: 460px; z-index: 210;
   background: rgba(8,9,28,0.94);
   border: 1px solid #a855f7;
   display: flex; flex-direction: column;
-  transform: translateX(400px); opacity: 0;
+  transform: translateX(500px); opacity: 0;
   transition: transform 0.4s cubic-bezier(.2,.7,.2,1), opacity 0.3s;
   pointer-events: none;
   clip-path: polygon(14px 0, 100% 0, 100% calc(100% - 14px), calc(100% - 14px) 100%, 0 100%, 0 14px);
@@ -856,6 +856,26 @@ body.edit-mode .node .frame { outline: 2px dashed rgba(251,191,36,0.6); outline-
   font-size: 10px; color: #c5c9e0; font-weight: 600; letter-spacing: 0.03em;
 }
 .pi-rel-row { display: flex; align-items: center; flex-wrap: wrap; gap: 5px; margin: 4px 0; font-size: 9.5px; }
+/* 부서 칩 (편집 가능) — 3단 순환: none → rel → owner */
+.dept-chips { display: flex; flex-wrap: wrap; gap: 4px; padding: 6px 0 4px; border-top: 1px dashed rgba(167,139,250,0.14); margin-top: 4px; }
+.dept-chip {
+  padding: 3px 9px; font-size: 10px; font-weight: 700; letter-spacing: 0.04em;
+  background: transparent; color: rgba(255,255,255,0.32);
+  border: 1px solid rgba(255,255,255,0.14);
+  cursor: pointer; user-select: none;
+  clip-path: polygon(3px 0, 100% 0, 100% calc(100% - 3px), calc(100% - 3px) 100%, 0 100%, 0 3px);
+  transition: all 0.14s;
+}
+.dept-chip:hover { background: rgba(255,255,255,0.08); color: #fff; }
+.dept-chip.is-rel {
+  background: rgba(203,213,225,0.22); color: #f1f5f9;
+  border-color: #cbd5e1;
+}
+.dept-chip.is-owner {
+  background: #60a5fa; color: #fff;
+  border-color: #60a5fa;
+  box-shadow: 0 2px 8px rgba(96,165,250,0.45);
+}
 .pi-owner-dept {
   font-weight: 800; padding: 2px 7px; color: #fff;
   background: var(--cat-c, #a855f7);
@@ -2260,8 +2280,57 @@ const PROJECT_DECISIONS = [
 ];
 let PROJECT_STATE = {};
 let PROJECT_ACTION_FILTER = 'all';
+let PROJECT_OVERRIDES = {};  // 사용자가 변경한 ownerDept/related 저장
 try { PROJECT_STATE = JSON.parse(localStorage.getItem('hanasm.projectState.v3') || '{}'); } catch(e) {}
 try { PROJECT_ACTION_FILTER = localStorage.getItem('hanasm.projectActionFilter.v3') || 'all'; } catch(e) {}
+try { PROJECT_OVERRIDES = JSON.parse(localStorage.getItem('hanasm.projectOverrides.v3') || '{}'); } catch(e) {}
+const ALL_DEPT_IDS = ['web','cs','design','dev','fin','sales','product','factory2'];
+function getEffective(cat, item) {
+  const k = cat + '::' + item.name;
+  const ovr = PROJECT_OVERRIDES[k] || {};
+  return {
+    ownerDept: (ovr.ownerDept !== undefined) ? ovr.ownerDept : (item.ownerDept || ''),
+    related: (ovr.related !== undefined) ? ovr.related : (item.related || [])
+  };
+}
+function getDeptState(cat, item, deptId) {
+  const eff = getEffective(cat, item);
+  if (eff.ownerDept === deptId) return 'owner';
+  if ((eff.related || []).includes(deptId)) return 'rel';
+  return 'none';
+}
+function cycleDeptState(cat, itemName, deptId) {
+  // none → rel → owner → none
+  const k = cat + '::' + itemName;
+  const ovr = Object.assign({}, PROJECT_OVERRIDES[k] || {});
+  // 현재 상태 계산
+  const items = (PROJECTS[cat] && PROJECTS[cat].items) || [];
+  const item = items.find(x => x.name === itemName); if (!item) return;
+  const eff = getEffective(cat, item);
+  const curOwner = eff.ownerDept;
+  const curRel = (eff.related || []).slice();
+  let nextState;
+  if (curOwner === deptId) nextState = 'none';
+  else if (curRel.includes(deptId)) nextState = 'owner';
+  else nextState = 'rel';
+  let newOwner = curOwner;
+  let newRel = curRel.slice();
+  if (nextState === 'none') {
+    if (newOwner === deptId) newOwner = null;
+    newRel = newRel.filter(d => d !== deptId);
+  } else if (nextState === 'rel') {
+    if (newOwner === deptId) newOwner = null;
+    if (!newRel.includes(deptId)) newRel.push(deptId);
+  } else if (nextState === 'owner') {
+    // 직접관련은 카드당 1개 - 기존 owner는 자동 해제
+    newOwner = deptId;
+    newRel = newRel.filter(d => d !== deptId);
+  }
+  ovr.ownerDept = newOwner || '';
+  ovr.related = newRel;
+  PROJECT_OVERRIDES[k] = ovr;
+  try { localStorage.setItem('hanasm.projectOverrides.v3', JSON.stringify(PROJECT_OVERRIDES)); } catch(e) {}
+}
 function projectKey(cat, name) { return cat + '::' + name; }
 function getProjectState(cat, item) {
   const key = projectKey(cat, item.name);
@@ -2384,18 +2453,24 @@ function renderProjects() {
     const when = ovr.startWhen || it.startWhen || '';
     const decMeta = decisionMeta(dec);
     const action = getAction(e.cat, it);
-    const ownerDeptName = (DEPT_NAME[it.ownerDept] || '');
-    const relatedHtml = (it.related && it.related.length) ? it.related.map(d => '<span class="pi-rel">' + (DEPT_NAME[d] || d) + '</span>').join('') : '';
+    const eff = getEffective(e.cat, it);
+    const ownerDeptName = (DEPT_NAME[eff.ownerDept] || '');
+    // 부서 칩 (8개) - 클릭 시 3단 순환 토글
+    const chipsHtml = '<div class="dept-chips" data-chips-key="' + k + '">' 
+      + ALL_DEPT_IDS.map(did => {
+          const st2 = getDeptState(e.cat, it, did);
+          const cls = st2 === 'owner' ? 'is-owner' : (st2 === 'rel' ? 'is-rel' : '');
+          return '<span class="dept-chip ' + cls + '" data-dept="' + did + '" data-name="' + it.name + '" data-cat="' + e.cat + '">' + DEPT_NAME[did] + '</span>';
+        }).join('')
+      + '</div>';
     const meta = '<div class="pi-meta">'
                + '<select class="pi-action pi-action-select ' + action.cls + '" data-action-key="' + k + '" aria-label="프로젝트 처리 선택">'
                + optionHtml(PROJECT_ACTIONS, action.key)
                + '</select>'
                + (when ? '<span class="pi-when">📅 ' + when + '</span>' : '')
                + '</div>';
-    const relRow = (ownerDeptName || relatedHtml)
-               ? '<div class="pi-rel-row">' + (ownerDeptName ? '<span class="pi-owner-dept">' + ownerDeptName + '</span>' : '') + (relatedHtml ? '<span class="pi-rel-sep">유관</span>' + relatedHtml : '') + '</div>'
-               : '';
-    htmlList += '<div class="proj-item flat-item ' + e.cat + ' st-' + st + ' dec-' + dec + ' ' + action.cls + '" data-key="' + k + '" data-cat="' + e.cat + '" data-owner="' + (it.ownerDept || '') + '" data-related="' + ((it.related || []).join(',')) + '" data-name="' + it.name + '">'
+    const relRow = chipsHtml;
+    htmlList += '<div class="proj-item flat-item ' + e.cat + ' st-' + st + ' dec-' + dec + ' ' + action.cls + '" data-key="' + k + '" data-cat="' + e.cat + '" data-owner="' + (eff.ownerDept || '') + '" data-related="' + ((eff.related || []).join(',')) + '" data-name="' + it.name + '">'
           + '<div class="pi-tag-row"><span class="pi-tag">' + catName + '</span><span class="pi-st">' + stLabel + '</span></div>'
           + '<div class="pi-row">'
           +   '<span class="pi-handle">⋮⋮</span>'
@@ -2426,8 +2501,20 @@ function renderProjects() {
       if (e.target.closest('.pi-handle')) return;
       if (e.target.closest('.pi-dec')) return;
       if (e.target.closest('.pi-action')) return;
+      if (e.target.closest('.dept-chip')) return;  // 칩 클릭은 카드 클릭 무시
       focusProjectRelation(el.dataset.owner, (el.dataset.related || '').split(',').filter(Boolean));
       el.classList.toggle('open');
+    });
+  });
+  // 부서 칩 클릭 - 3단 순환 토글 후 재렌더
+  document.querySelectorAll('.dept-chip').forEach(chip => {
+    chip.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const cat = chip.dataset.cat;
+      const name = chip.dataset.name;
+      const dept = chip.dataset.dept;
+      cycleDeptState(cat, name, dept);
+      renderProjects();
     });
   });
   document.querySelectorAll('[data-action-filter]').forEach(btn => {
@@ -2471,7 +2558,8 @@ function renderDeptProjects(deptId) {
   const items = [];
   PCATS.forEach(cat => {
     (PROJECTS[cat].items || []).forEach(it => {
-      if (it.ownerDept === deptId || (it.related && it.related.includes(deptId))) {
+      const eff = getEffective(cat, it);
+      if (eff.ownerDept === deptId || (eff.related && eff.related.includes(deptId))) {
         items.push({ cat, item: it });
       }
     });
@@ -2488,7 +2576,8 @@ function renderDeptProjects(deptId) {
     const ovr = (DECISIONS[k] || {});
     const dec = ovr.decision || item.decision || 'go';
     const action = getAction(cat, item);
-    const isOwner = item.ownerDept === deptId;
+    const efDp = getEffective(cat, item);
+    const isOwner = efDp.ownerDept === deptId;
     const card = document.createElement('div');
     card.className = 'dept-proj-card dec-' + dec + ' ' + action.cls + (isOwner ? ' is-owner' : ' is-related');
     const descBlock = item.desc ? '<div class="dpc-desc">' + item.desc + '</div>' : '';
@@ -2505,7 +2594,8 @@ function renderDeptProjects(deptId) {
     // 카드 클릭 시 desc 펼침/접기
     card.addEventListener('click', (e) => {
       e.stopPropagation();
-      focusProjectRelation(item.ownerDept, item.related || []);
+      const ef = getEffective(cat, item);
+      focusProjectRelation(ef.ownerDept, ef.related || []);
       card.classList.toggle('open');
     });
     sec.appendChild(card);
