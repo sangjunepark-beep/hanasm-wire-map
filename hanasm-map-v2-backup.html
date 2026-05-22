@@ -1,0 +1,2454 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>HANASM · 와이어 맵 v0.8</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --purple-1: #c084fc; --purple-2: #a855f7; --purple-3: #7c3aed;
+  --blue-1: #93c5fd;   --blue-2: #60a5fa;   --blue-3: #3b82f6;
+  --cyan: #22d3ee; --pink: #f472b6; --amber: #fbbf24;
+  --green: #34d399; --orange: #fb923c; --red: #f87171;
+  --bg-0: #050614; --bg-1: #08091c; --bg-2: #0d0f24;
+  --line: rgba(167,139,250,0.22);
+  --line-2: rgba(96,165,250,0.26);
+  --text-1: #f3f4fb; --text-2: #c5c9e0; --text-3: #8a8fad;
+}
+html, body {
+  height: 100vh; width: 100vw; overflow: hidden;
+  background: var(--bg-0);
+  font-family: "JetBrains Mono", "Inter", "Pretendard", "Noto Sans KR", monospace, system-ui;
+  color: var(--text-1);
+  -webkit-font-smoothing: antialiased;
+  letter-spacing: 0.01em;
+  font-weight: 500;
+}
+body {
+  background:
+    radial-gradient(ellipse at 25% 30%, rgba(167,139,250,0.08), transparent 60%),
+    radial-gradient(ellipse at 75% 70%, rgba(96,165,250,0.07), transparent 60%),
+    radial-gradient(circle at 50% 50%, rgba(34,211,238,0.025), transparent 55%),
+    linear-gradient(180deg, #050614 0%, #07091b 50%, #050614 100%);
+}
+/* grid bg removed for perf */
+
+/* TOP BAR */
+.topbar {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+  padding: 16px 24px;
+  display: flex; justify-content: space-between; align-items: center;
+  pointer-events: none;
+}
+.title { display: flex; gap: 12px; align-items: center; pointer-events: auto; }
+.brand-logo {
+  height: 16px; width: auto; object-fit: contain;
+  filter: drop-shadow(0 0 6px rgba(167,139,250,0.5)) brightness(1.15);
+}
+.title h1 {
+  font-size: 14px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 0.18em;
+  background: linear-gradient(90deg, var(--purple-1), var(--blue-1));
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+.title .ver {
+  font-size: 10px; padding: 3px 8px;
+  background: rgba(167,139,250,0.15); color: var(--purple-1);
+  border: 1px solid rgba(167,139,250,0.4);
+  font-weight: 700; letter-spacing: 0.1em;
+  clip-path: polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px);
+}
+.title .date { font-size: 11px; color: var(--text-3); letter-spacing: 0.05em; }
+.hint {
+  display: none;
+  font-size: 10.5px; color: var(--text-2); font-weight: 500;
+  background: rgba(8,9,28,0.78);
+  padding: 8px 14px;
+  border: 1px solid var(--line);
+  pointer-events: auto;
+  /* backdrop-filter removed for perf */
+  letter-spacing: 0.06em; text-transform: uppercase;
+  clip-path: polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px);
+}
+
+/* LEGEND / CONTROLS */
+.legend, .controls {
+  position: fixed; bottom: 18px; z-index: 100;
+  background: rgba(8,9,28,0.78);
+  border: 1px solid var(--line);
+  padding: 12px 14px;
+  font-size: 11px;
+  /* backdrop-filter removed for perf */
+  clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px);
+}
+.legend { left: 18px; }
+.controls { right: 18px; display: flex; gap: 8px; align-items: center; padding: 8px 12px; }
+.legend .row { display: flex; align-items: center; gap: 10px; margin: 5px 0; color: var(--text-2); font-weight: 500; letter-spacing: 0.04em; }
+.legend .sw {
+  width: 10px; height: 10px;
+  background: var(--c, var(--text-3));
+  box-shadow: 0 0 8px var(--c, var(--text-3));
+  clip-path: polygon(3px 0, 100% 0, 100% calc(100% - 3px), calc(100% - 3px) 100%, 0 100%, 0 3px);
+}
+.controls button {
+  background: transparent; border: 1px solid var(--line-2);
+  color: var(--blue-1);
+  padding: 6px 14px; font-size: 10.5px;
+  font-family: inherit; cursor: pointer; font-weight: 700;
+  letter-spacing: 0.1em; text-transform: uppercase;
+  transition: all 0.18s ease;
+  clip-path: polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px);
+}
+.controls button:hover {
+  background: rgba(96,165,250,0.12); color: var(--text-1);
+  border-color: var(--blue-2);
+  box-shadow: 0 0 16px rgba(96,165,250,0.4);
+}
+
+/* STAGE */
+.stage {
+  position: fixed; inset: 0; z-index: 2; overflow: hidden;
+  cursor: grab;
+}
+.stage.dragging { cursor: grabbing; }
+.stage.dragging .world { transition: none !important; }
+.world {
+  position: absolute; left: 0; top: 0;
+  width: 2400px; height: 1400px;
+  transform-origin: 0 0;
+  transition: transform 0.5s cubic-bezier(.2,.7,.15,1);
+}
+
+/* WIRES */
+svg.wires {
+  position: absolute; left: 0; top: 0;
+  width: 2400px; height: 1400px;
+  pointer-events: none; overflow: visible;
+}
+svg.wires path {
+  fill: none; stroke-linecap: round; stroke-linejoin: round;
+  opacity: 0.85;
+  stroke-width: 2;
+  transition: opacity 0.2s;
+}
+svg.wires path.flow {
+  stroke-dasharray: 6 8;
+  animation: flow 2.5s linear infinite;
+}
+@keyframes flow { to { stroke-dashoffset: -28; } }
+
+/* NODES */
+.node {
+  position: absolute; cursor: pointer;
+  transform: translate(-50%,-50%);
+  z-index: 10; user-select: none;
+}
+.node .frame {
+  position: relative; padding: 1.5px;
+  background: linear-gradient(135deg, var(--c1, var(--blue-2)), var(--c2, var(--purple-2)));
+  clip-path: polygon(12px 0%, 100% 0%, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0% 100%, 0% 12px);
+  box-shadow: 0 0 12px var(--c1, var(--blue-2));
+  transition: box-shadow 0.2s ease;
+}
+.node .core {
+  display: flex; align-items: center; gap: 12px;
+  background: linear-gradient(180deg, rgba(68,72,118,0.96), rgba(48,52,92,0.97));
+  padding: 14px 22px;
+  font-size: 15px; font-weight: 700;
+  color: var(--text-1);
+  white-space: nowrap;
+  letter-spacing: 0.02em;
+  clip-path: polygon(11px 0%, 100% 0%, 100% calc(100% - 11px), calc(100% - 11px) 100%, 0% 100%, 0% 11px);
+  position: relative;
+}
+
+/* 1차 클릭 = 빛 */
+.node.lit .frame {
+  box-shadow: 0 0 14px var(--c1, var(--blue-2));
+}
+.node.lit { transform: translate(-50%,-50%) scale(1.04); transition: transform 0.2s ease; }
+.world.has-focus svg.wires path.focus-wire {
+  opacity: 1 !important;
+  stroke-width: 3 !important;
+}
+
+/* 2차 클릭 = 정면 시점 (노드 frame만 3D, 패널은 평면 유지) */
+.node.zoomed {
+  transform: translate(-50%,-50%) scale(1.0) !important;
+  z-index: 200 !important;
+  transition: transform 0.55s cubic-bezier(.2,.7,.15,1);
+}
+.node.zoomed .frame {
+  transform: perspective(700px) rotateX(8deg);
+  transform-origin: center bottom;
+  transition: transform 0.55s cubic-bezier(.2,.7,.15,1);
+  box-shadow:
+    0 0 16px var(--c1, var(--blue-2)),
+    0 0 28px var(--c2, var(--purple-2)),
+    0 15px 30px rgba(0,0,0,0.55);
+}
+/* 패널은 회전 X (글씨 정상) */
+.node.zoomed .expanded {
+  transform: translateY(-50%) !important;
+}
+.world.has-focus .node:not(.lit):not(.zoomed) {
+  opacity: 0.18 !important;
+  transition: opacity 0.35s ease;
+}
+.world.has-focus .node.lit {
+  opacity: 1;
+}
+
+.node:hover { z-index: 50; }
+.node:hover .frame { box-shadow: 0 0 12px var(--c1, var(--blue-2)); }
+.node.prelit .frame { box-shadow: 0 0 10px var(--c1, var(--blue-2)); }
+svg.wires path.preview-wire {
+  opacity: 0.75 !important;
+  stroke-width: 2.6 !important;
+}
+
+.dot {
+  width: 8px; height: 8px; flex-shrink: 0;
+  background: var(--c, var(--text-3));
+  box-shadow: 0 0 10px var(--c, var(--text-3));
+  clip-path: polygon(2px 0, 100% 0, 100% calc(100% - 2px), calc(100% - 2px) 100%, 0 100%, 0 2px);
+}
+
+.node .sub {
+  font-size: 11px; color: var(--text-3); font-weight: 600;
+  margin-top: 7px; text-align: center;
+  letter-spacing: 0.12em; text-transform: uppercase;
+}
+
+/* === Expanded (줌인 시 옆에 떠오르는 패널) === */
+.expanded {
+  display: none;
+  position: absolute;
+  left: calc(100% + 14px); top: 50%;
+  transform: translateY(-50%);
+  min-width: 200px; max-width: 240px;
+  background: rgba(8,9,28,0.92);
+  border: 1px solid var(--c1, var(--purple-2));
+  padding: 14px 16px;
+  /* perf */
+  box-shadow: 0 18px 50px rgba(0,0,0,0.6), 0 0 24px color-mix(in srgb, var(--c1, #a855f7) 30%, transparent);
+  clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px);
+  animation: expandFly 0.45s cubic-bezier(.2,.8,.2,1);
+  z-index: 5;
+}
+@keyframes expandFly {
+  from { opacity: 0; transform: translateY(-50%) translateX(-30px) scale(0.9); }
+  to   { opacity: 1; transform: translateY(-50%) translateX(0) scale(1); }
+}
+.node.zoomed .expanded { display: block; }
+/* 부서 zoomed 시 2컬럼 분할 (좌: 멤버/기본, 우: 신규 프로젝트) */
+.node.zoomed.dept .expanded {
+  max-width: 620px !important;
+  width: 620px !important;
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  max-height: 78vh;
+  height: auto;
+  overflow: visible;
+  padding: 14px;
+}
+.node.zoomed.dept .expanded > .left-col-wrap {
+  width: 270px; flex-shrink: 0;
+  max-height: calc(78vh - 28px);
+  overflow-y: auto;
+}
+.node.zoomed.dept .expanded > .dept-projects-section {
+  flex: 1; min-width: 0;
+  margin-top: 0;
+  padding-top: 0;
+  border-top: none;
+  border-left: 1px dashed rgba(167,139,250,0.30);
+  padding-left: 14px;
+  max-height: calc(78vh - 28px);
+  overflow-y: auto;
+}
+.node.zoomed.dept .expanded > .dept-projects-section::-webkit-scrollbar { width: 6px; }
+.node.zoomed.dept .expanded > .dept-projects-section::-webkit-scrollbar-thumb { background: rgba(167,139,250,0.30); border-radius: 3px; }
+.node.zoomed.dept .expanded .member-grid { max-height: 36vh; overflow-y: auto; padding-right: 4px; }
+.node.zoomed.dept .expanded .member-grid::-webkit-scrollbar { width: 6px; }
+.node.zoomed.dept .expanded .member-grid::-webkit-scrollbar-thumb { background: rgba(167,139,250,0.30); border-radius: 3px; }
+/* 모바일 - 1열로 (스크롤만) */
+@media (max-width: 768px) {
+  .node.zoomed.dept .expanded {
+    width: 92vw !important; max-width: 92vw !important;
+    flex-direction: column;
+    max-height: 80vh;
+  }
+  .node.zoomed.dept .expanded > .left-col-wrap { width: 100%; }
+  .node.zoomed.dept .expanded > .dept-projects-section {
+    border-left: none;
+    border-top: 1px dashed rgba(167,139,250,0.30);
+    padding-left: 0; padding-top: 12px;
+    margin-top: 8px;
+  }
+}
+.expanded .label {
+  font-size: 9.5px; color: var(--text-3);
+  letter-spacing: 0.18em; text-transform: uppercase;
+  font-weight: 700; margin-bottom: 8px;
+}
+.expanded .desc {
+  font-size: 11.5px; color: var(--text-2);
+  line-height: 1.55; letter-spacing: 0.02em;
+  margin-bottom: 10px;
+}
+.desc-section {
+  font-size: 10px; font-weight: 800; letter-spacing: 0.14em; text-transform: uppercase;
+  color: #93c5fd;
+  margin-top: 10px; padding: 6px 0 4px;
+  border-top: 1px dashed rgba(167,139,250,0.30);
+}
+.desc-section:first-child { border-top: none; margin-top: 0; padding-top: 0; }
+.desc-line { padding: 2px 0 2px 8px; position: relative; }
+.desc-line::before {
+  content: '·'; position: absolute; left: 0; top: 2px; color: rgba(167,139,250,0.5); font-weight: 700;
+}
+.member-grid { display: flex; flex-direction: column; gap: 5px; }
+.member-chip {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 8px; padding: 6px 10px;
+  background: rgba(167,139,250,0.06);
+  border: 1px solid var(--line);
+  font-size: 11px; color: var(--text-1); font-weight: 600;
+  cursor: pointer;
+  transition: all 0.18s;
+  letter-spacing: 0.02em;
+  clip-path: polygon(5px 0, 100% 0, 100% calc(100% - 5px), calc(100% - 5px) 100%, 0 100%, 0 5px);
+}
+.member-chip:hover {
+  background: rgba(167,139,250,0.16);
+  border-color: var(--purple-2);
+  box-shadow: 0 0 12px rgba(167,139,250,0.3);
+}
+.member-chip .mname { display: flex; align-items: center; gap: 6px; }
+.member-chip .role-tag { font-size: 9px; color: var(--text-3); font-weight: 600; }
+.member-chip .badge {
+  font-size: 9px; padding: 2px 7px;
+  font-weight: 700; letter-spacing: 0.05em;
+  text-transform: uppercase;
+  clip-path: polygon(3px 0, 100% 0, 100% calc(100% - 3px), calc(100% - 3px) 100%, 0 100%, 0 3px);
+}
+.member-chip .badge.has  { background: rgba(34,211,238,0.18); color: var(--cyan); }
+.member-chip .badge.none { background: rgba(138,143,173,0.16); color: var(--text-3); }
+
+/* 진행중 / 예정 mini 카드 (zoomed 노드 옆에 뜸) */
+.pl-item {
+  display: flex; align-items: center; gap: 7px;
+  padding: 5px 8px;
+  background: rgba(167,139,250,0.05);
+  border-left: 2px solid var(--pl-c, var(--text-3));
+  font-size: 10.5px; color: var(--text-2);
+  margin: 3px 0;
+  letter-spacing: 0.015em;
+}
+.pl-item .pl-dot {
+  width: 6px; height: 6px; flex-shrink: 0;
+  background: var(--pl-c, var(--text-3));
+  box-shadow: 0 0 5px var(--pl-c, var(--text-3));
+}
+.pl-item .pl-name { flex: 1; line-height: 1.3; }
+.pl-item .pl-by { font-size: 9px; color: var(--text-3); font-weight: 600; }
+.pl-item.active   { --pl-c: #34d399; }
+.pl-item.planned  { --pl-c: #93c5fd; }
+.ad-item {
+  display: flex; align-items: center; gap: 7px;
+  padding: 5px 9px;
+  background: rgba(251,191,36,0.08);
+  border-left: 2px solid #fbbf24;
+  font-size: 10.5px; color: var(--text-2);
+  margin: 3px 0; letter-spacing: 0.015em;
+}
+.ad-item::before { content:"●"; color:#fbbf24; font-size:8px; }
+.ad-item.future::before { color:#94a3b8; }
+.ad-item.future { border-left-color:#94a3b8; background:rgba(148,163,184,0.06); }
+.ad-item.naver   { border-left-color:#03C75A; background:rgba(3,199,90,0.10); }
+.ad-badge {
+  position: absolute;
+  top: -28px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 8px;
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  font-size: 11px;
+  color: #cbd5e1;
+  white-space: nowrap;
+  letter-spacing: 0.02em;
+  pointer-events: none;
+  z-index: 3;
+}
+.ad-badge .ab-lbl { font-weight: 600; color: #e2e8f0; }
+.ad-badge svg { display: block; flex-shrink: 0; }
+.ad-badge .ab-lbl { font-weight: 700; color: #f1f5f9; }
+.node.zoomed .ad-badge { display: none; }
+.ad-item.naver::before { color:#03C75A; }
+.ad-item.adboost { border-left-color:#FF6B00; background:rgba(255,107,0,0.10); }
+.ad-item.adboost::before { color:#FF6B00; }
+.ad-item.google  { border-left-color:#4285F4; background:rgba(66,133,244,0.08); }
+.ad-item.google::before {
+  content:""; width:8px; height:8px; border-radius:50%;
+  background: conic-gradient(#4285F4 0deg 90deg, #EA4335 90deg 180deg, #FBBC05 180deg 270deg, #34A853 270deg 360deg);
+}
+.ad-item.coupang { border-left-color:#ED1C24; background:rgba(237,28,36,0.10); }
+.ad-item.coupang::before { color:#ED1C24; }
+.ad-item.esm     { border-left-color:#00ACE6; background:rgba(0,172,230,0.10); }
+.ad-item.esm::before { color:#00ACE6; }
+.ad-item.none    { border-left-color:#64748b; background:rgba(100,116,139,0.06); opacity:0.6; }
+.ad-item.none::before { color:#64748b; content:"○"; }
+.ch-item {
+  display: flex; align-items: center; gap: 7px;
+  padding: 5px 9px;
+  background: rgba(244,114,182,0.08);
+  border-left: 2px solid #f472b6;
+  font-size: 10.5px; color: var(--text-2);
+  margin: 3px 0; letter-spacing: 0.015em;
+}
+.ch-item::before { content:"●"; color:#f472b6; font-size:8px; }
+
+/* === Variants === */
+.node.ceo .frame { --c1: var(--cyan); --c2: var(--purple-1); }
+.node.ceo .core  { font-size: 18px; padding: 18px 28px; }
+.node.hanasm .frame { --c1: #c084fc; --c2: #60a5fa; padding: 2px; }
+.node.hanasm .core { font-size: 17px; padding: 16px 26px; letter-spacing: 0.05em; }
+
+.node.biz-personal .frame { --c1: var(--blue-2); --c2: var(--cyan); }
+.node.biz-personal .core  { font-size: 16px; padding: 15px 24px; }
+
+.node.biz-corp .frame { --c1: var(--purple-2); --c2: var(--pink); }
+.node.biz-corp .core  { font-size: 16px; padding: 15px 24px; }
+
+.node.ch-personal .frame { --c1: var(--blue-1); --c2: var(--blue-3); }
+.node.ch-corp .frame     { --c1: var(--purple-1); --c2: var(--purple-3); }
+.node.ch-personal .core, .node.ch-corp .core { min-width: 210px; justify-content: flex-start; }
+
+.node.dept .frame { --c1: var(--dc, var(--blue-2)); --c2: var(--dc2, var(--purple-2)); }
+.node.dept .core  { font-size: 14px; padding: 13px 20px; }
+
+.node.erp .frame {
+  --c1: var(--cyan); --c2: var(--blue-2); padding: 2px;
+  filter:
+    drop-shadow(0 0 18px var(--cyan))
+    drop-shadow(0 0 32px var(--blue-2))
+    drop-shadow(0 0 48px var(--cyan));
+}
+.node.erp .core { font-size: 17px; padding: 16px 26px; letter-spacing: 0.06em; }
+
+/* System nodes (Playauto, Ecount, Claude, GPT) */
+.node.sys .core { font-size: 13.5px; padding: 12px 18px; }
+.node.sys-playauto .frame { --c1: #fb923c; --c2: #f97316; }
+.node.sys-ecount   .frame { --c1: #34d399; --c2: #22d3ee; }
+.node.sys-ig    .frame { --c1: #E1306C; --c2: #f472b6; }
+.node.sys-nblog .frame { --c1: #03C75A; --c2: #34d399; }
+.node.sys-yt    .frame { --c1: #FF0000; --c2: #f87171; }
+.node.sys-call  .frame { --c1: #60a5fa; --c2: #34d399; }
+.node.sys-chat  .frame { --c1: #f472b6; --c2: #a855f7; }
+.node.sys-nas   .frame { --c1: #22d3ee; --c2: #3b82f6; }
+.node.sys-claude20 .frame { --c1: #d97706; --c2: #f97316; }
+.node.sys-claude5  .frame { --c1: #a855f7; --c2: #d97706; }
+.node.sys-gpt      .frame { --c1: #10b981; --c2: #22d3ee; }
+
+/* === Dim non-focus === */
+.world.has-focus .node:not(.lit):not(.zoomed) { filter: saturate(0.15) brightness(0.32); }
+.world.has-focus svg.wires path:not(.focus-wire) { opacity: 0.015; }
+.world.has-focus svg.wires path.focus-wire { opacity: 0.92; stroke-width: 2.4 !important; filter: drop-shadow(0 0 2px currentColor); }
+.world.has-focus svg.wires .dev-region { opacity: 0.15; }
+
+/* === Task Panel === */
+.task-panel {
+  position: fixed; top: 70px; left: 18px; bottom: 80px;
+  width: 380px;
+  background: rgba(8,9,28,0.94);
+  border: 1px solid #3b82f6;
+  padding: 0;
+  z-index: 220;
+  box-shadow: 10px 0 40px rgba(0,0,0,0.55), 0 0 30px rgba(59,130,246,0.22);
+  display: flex; flex-direction: column;
+  transform: translateX(-420px); opacity: 0;
+  transition: all 0.4s cubic-bezier(.2,.7,.2,1);
+  pointer-events: none;
+  clip-path: polygon(0 16px, 16px 0, 100% 0, 100% 100%, 16px 100%, 0 calc(100% - 16px));
+}
+.task-panel.show { transform: translateX(0); opacity: 1; pointer-events: auto; }
+.task-panel .tp-head { padding: 18px 20px 14px; border-bottom: 1px solid var(--line); }
+.task-panel .tp-head .tp-name {
+  font-size: 15px; font-weight: 800; letter-spacing: 0.04em;
+  background: linear-gradient(90deg, #60a5fa, #22d3ee);
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+  margin-bottom: 3px;
+}
+.task-panel .tp-head .tp-role {
+  font-size: 10px; color: var(--text-3);
+  letter-spacing: 0.15em; text-transform: uppercase; font-weight: 600;
+}
+.task-panel .tp-stats { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+.task-panel .tp-stats .st {
+  font-size: 9.5px; padding: 3px 8px;
+  font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase;
+  clip-path: polygon(3px 0, 100% 0, 100% calc(100% - 3px), calc(100% - 3px) 100%, 0 100%, 0 3px);
+}
+.task-panel .tp-stats .st.active  { background: rgba(52,211,153,0.18); color: var(--green); }
+.task-panel .tp-stats .st.routine { background: rgba(167,139,250,0.18); color: var(--purple-1); }
+.task-panel .tp-stats .st.hold    { background: rgba(251,146,60,0.20); color: var(--orange); }
+.task-panel .tp-stats .st.planned { background: rgba(138,143,173,0.20); color: var(--text-3); }
+
+.task-panel .tp-body { flex: 1; overflow-y: auto; padding: 14px 20px 20px; }
+.task-panel .tp-body::-webkit-scrollbar { width: 4px; }
+.task-panel .tp-body::-webkit-scrollbar-thumb { background: var(--line-2); }
+.task-panel .tp-empty {
+  text-align: center; padding: 40px 20px;
+  color: var(--text-3); font-size: 12px;
+  line-height: 1.7; letter-spacing: 0.02em;
+}
+.task-panel .tp-empty .ic { font-size: 26px; margin-bottom: 12px; color: var(--purple-1); letter-spacing: 0.2em; }
+.task-group { margin-bottom: 14px; }
+.task-group h4 {
+  font-size: 10px; color: var(--text-3); font-weight: 700;
+  letter-spacing: 0.18em; text-transform: uppercase;
+  padding: 6px 0; margin-bottom: 6px;
+  border-bottom: 1px dashed var(--line);
+  display: flex; justify-content: space-between; align-items: center;
+}
+.task-group h4 .cnt {
+  font-size: 10px; padding: 1px 7px;
+  background: rgba(255,255,255,0.05); color: var(--text-2);
+  clip-path: polygon(3px 0, 100% 0, 100% calc(100% - 3px), calc(100% - 3px) 100%, 0 100%, 0 3px);
+}
+.task-item {
+  display: flex; align-items: flex-start; gap: 8px;
+  padding: 6px 0;
+  font-size: 11px; color: var(--text-2);
+  line-height: 1.5; letter-spacing: 0.015em;
+}
+.task-item .tdot {
+  width: 6px; height: 6px; margin-top: 5px;
+  background: var(--st-c, var(--text-3));
+  flex-shrink: 0;
+  clip-path: polygon(2px 0, 100% 0, 100% calc(100% - 2px), calc(100% - 2px) 100%, 0 100%, 0 2px);
+  box-shadow: 0 0 6px var(--st-c, var(--text-3));
+}
+.task-item .tname { flex: 1; }
+.task-item .tname b { color: var(--text-3); font-weight: 600; font-size: 10px; margin-left: 6px; }
+.task-item .prio {
+  font-size: 9px; padding: 1px 5px;
+  font-weight: 800; letter-spacing: 0.05em;
+  flex-shrink: 0; margin-top: 3px;
+  clip-path: polygon(2px 0, 100% 0, 100% calc(100% - 2px), calc(100% - 2px) 100%, 0 100%, 0 2px);
+}
+.task-item .prio.h { background: rgba(248,113,113,0.20); color: var(--red); }
+.task-item .prio.m { background: rgba(251,191,36,0.20); color: var(--amber); }
+.task-item .prio.l { background: rgba(138,143,173,0.20); color: var(--text-3); }
+
+.task-group.s-active  .tdot, .task-group.s-active  h4 { --st-c: var(--green); color: var(--green); }
+.task-group.s-routine .tdot, .task-group.s-routine h4 { --st-c: var(--purple-1); color: var(--purple-1); }
+.task-group.s-hold    .tdot, .task-group.s-hold    h4 { --st-c: var(--orange); color: var(--orange); }
+.task-group.s-planned .tdot, .task-group.s-planned h4 { --st-c: var(--blue-1); color: var(--blue-1); }
+
+.task-panel .close-x {
+  position: absolute; top: 14px; right: 16px;
+  cursor: pointer; color: var(--text-3);
+  font-size: 14px; padding: 4px;
+}
+.task-panel .close-x:hover { color: var(--text-1); }
+
+/* === Mobile === */
+@media (max-width: 768px) {
+  .node .core { font-size: 12px; padding: 9px 14px; gap: 8px; }
+  .node .sub { font-size: 9px; margin-top: 4px; }
+  .node.ceo .core { font-size: 13px; padding: 11px 16px; }
+  .node.biz-personal .core, .node.biz-corp .core { font-size: 12.5px; padding: 10px 16px; }
+  .node.dept .core { font-size: 11px; padding: 9px 14px; }
+  .node.erp .core { font-size: 12.5px; padding: 10px 16px; }
+  .node.sys .core { font-size: 11.5px; padding: 9px 14px; }
+  .topbar { padding: 8px 12px; }
+  .title .date { display: none; }
+  .hint { display: none; }
+  .legend { font-size: 9.5px; padding: 8px 10px; bottom: 12px; left: 12px; }
+  .legend .row { margin: 3px 0; gap: 7px; }
+  .controls { padding: 6px 10px; bottom: 12px; right: 12px; }
+  .controls button { padding: 5px 10px; font-size: 9.5px; }
+  .in-progress {
+    min-width: auto; max-width: calc(100vw - 24px); width: calc(100vw - 24px);
+    padding: 8px 14px; bottom: 60px;
+  }
+  .in-progress .ip-title { font-size: 9px; margin-bottom: 5px; }
+  .in-progress .ip-item { font-size: 10.5px; padding: 2px 0; }
+  .task-panel { top: 50px; right: 8px; bottom: 60px; width: calc(100vw - 16px); }
+  .members { max-width: 200px; }
+  .members span { font-size: 9px; padding: 1px 6px; }
+}
+
+/* IN-PROGRESS BAR (하단 가운데) */
+.in-progress {
+  position: fixed; bottom: 18px; left: 50%;
+  transform: translateX(-50%);
+  z-index: 100;
+  background: rgba(8,9,28,0.85);
+  border: 1.5px solid rgba(251,146,60,0.5);
+  padding: 12px 22px;
+  min-width: 380px; max-width: 720px;
+  /* backdrop-filter removed for perf */
+  box-shadow: 0 0 24px rgba(251,146,60,0.20);
+  clip-path: polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px);
+}
+.in-progress .ip-title {
+  font-size: 10px; font-weight: 800; color: var(--orange);
+  letter-spacing: 0.22em; text-transform: uppercase;
+  margin-bottom: 8px;
+  display: flex; align-items: center; gap: 8px;
+}
+.in-progress .ip-title::before {
+  content: ""; width: 8px; height: 8px;
+  background: var(--orange); border-radius: 50%;
+  box-shadow: 0 0 10px var(--orange);
+  animation: ipPulse 1.5s ease-in-out infinite;
+}
+@keyframes ipPulse {
+  0%,100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(0.7); }
+}
+.in-progress .ip-item {
+  font-size: 12px; padding: 4px 0;
+  display: flex; gap: 10px; align-items: center; flex-wrap: wrap;
+}
+.in-progress .ip-num {
+  font-size: 9.5px; font-weight: 800; color: var(--orange);
+  background: rgba(251,146,60,0.15);
+  padding: 2px 7px; letter-spacing: 0.05em;
+  clip-path: polygon(3px 0, 100% 0, 100% calc(100% - 3px), calc(100% - 3px) 100%, 0 100%, 0 3px);
+}
+.in-progress .ip-name { color: var(--text-1); font-weight: 700; letter-spacing: 0.01em; }
+.in-progress .ip-by {
+  color: var(--text-3); font-size: 10px; font-weight: 600;
+  letter-spacing: 0.06em; text-transform: uppercase;
+}
+
+/* === 신규 프로젝트 패널 === */
+.proj-toggle {
+  position: fixed; top: 16px; right: 16px; z-index: 110;
+  background: rgba(8,9,28,0.8);
+  border: 1px solid #a855f7;
+  color: #c084fc;
+  padding: 8px 14px; font-size: 11px;
+  font-family: inherit; font-weight: 700; cursor: pointer;
+  letter-spacing: 0.12em; text-transform: uppercase;
+  clip-path: polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px);
+}
+.proj-toggle:hover { background: rgba(167,139,250,0.18); color: #fff; }
+.chip-bar {
+  position: fixed; bottom: 132px; left: 18px; z-index: 105;
+  display: flex; gap: 6px; flex-wrap: wrap; max-width: 60vw;
+}
+.chip {
+  background: rgba(8,9,28,0.72); border: 1px solid var(--c, #a5b4fc); color: var(--c, #a5b4fc);
+  padding: 5px 11px; font-size: 10.5px; font-weight: 700; letter-spacing: 0.10em;
+  font-family: inherit; cursor: pointer; text-transform: uppercase;
+  clip-path: polygon(5px 0, 100% 0, 100% calc(100% - 5px), calc(100% - 5px) 100%, 0 100%, 0 5px);
+  transition: opacity 0.18s, background 0.18s;
+}
+.chip:hover { background: rgba(255,255,255,0.06); }
+.chip.off { opacity: 0.30; }
+.chip.off::before { content: '⊘ '; }
+svg.wires path.cat-off { display: none !important; }
+.node.cat-off { opacity: 0.08; pointer-events: none; filter: saturate(0.2) brightness(0.55); transition: opacity 0.2s, filter 0.2s; }
+@keyframes nasBounceGlow {
+  0%   { transform: translate(-50%, -50%) scale(1); }
+  25%  { transform: translate(-50%, -56%) scale(1.05); }
+  50%  { transform: translate(-50%, -50%) scale(1.02); }
+  75%  { transform: translate(-50%, -53%) scale(1.04); }
+  100% { transform: translate(-50%, -50%) scale(1); }
+}
+.node.bounce { animation: nasBounceGlow 0.7s cubic-bezier(.5,.2,.3,1.4); }
+.node.bounce .frame { box-shadow: 0 0 18px var(--c1, var(--blue-2)) !important; transition: box-shadow 0.3s; }
+.node.cat-off .frame { box-shadow: none !important; }
+.dev-region {
+  fill: rgba(34,211,238,0.05);
+  stroke: rgba(34,211,238,0.30);
+  stroke-width: 1.5;
+  stroke-dasharray: 8 6;
+  pointer-events: none;
+}
+body.edit-mode .node { cursor: move; }
+body.edit-mode .node .frame { outline: 2px dashed rgba(251,191,36,0.6); outline-offset: 3px; }
+#editToggle.active { background: rgba(251,191,36,0.25) !important; }
+.proj-panel {
+  position: fixed; top: 60px; right: 18px; bottom: 80px;
+  width: 360px; z-index: 210;
+  background: rgba(8,9,28,0.94);
+  border: 1px solid #a855f7;
+  display: flex; flex-direction: column;
+  transform: translateX(400px); opacity: 0;
+  transition: transform 0.4s cubic-bezier(.2,.7,.2,1), opacity 0.3s;
+  pointer-events: none;
+  clip-path: polygon(14px 0, 100% 0, 100% calc(100% - 14px), calc(100% - 14px) 100%, 0 100%, 0 14px);
+  box-shadow: -10px 0 40px rgba(0,0,0,0.55);
+}
+.proj-panel.show { transform: translateX(0); opacity: 1; pointer-events: auto; }
+.proj-panel .pp-head { padding: 14px 18px 12px; border-bottom: 1px solid rgba(167,139,250,0.22); display: flex; justify-content: space-between; align-items: center; }
+.proj-panel .pp-title { font-size: 12px; font-weight: 800; letter-spacing: 0.14em; text-transform: uppercase; background: linear-gradient(90deg, #c084fc, #93c5fd); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.proj-panel .pp-x { cursor: pointer; color: #8a8fad; font-size: 14px; padding: 4px; }
+.proj-panel .pp-x:hover { color: #fff; }
+.proj-panel .pp-body { flex: 1; overflow-y: auto; padding: 12px 14px 18px; }
+.cat { margin-bottom: 14px; }
+.cat-h { display: flex; justify-content: space-between; align-items: center; font-size: 10px; font-weight: 800; letter-spacing: 0.16em; text-transform: uppercase; color: var(--cat-c, #c5c9e0); padding: 6px 4px; margin-bottom: 6px; border-bottom: 1px dashed rgba(167,139,250,0.22); }
+.cat-h .cnt { font-size: 9.5px; padding: 1px 7px; background: rgba(255,255,255,0.04); color: #c5c9e0; clip-path: polygon(3px 0, 100% 0, 100% calc(100% - 3px), calc(100% - 3px) 100%, 0 100%, 0 3px); }
+.proj-list { display: flex; flex-direction: column; gap: 10px; min-height: 8px; counter-reset: pi; }
+.proj-item.flat-item { counter-increment: pi; padding: 0; background: transparent; border: none; clip-path: none; border-left: none; flex-direction: column; gap: 0; }
+.pi-tag { display: inline-block; font-size: 9.5px; font-weight: 800; letter-spacing: 0.16em; text-transform: uppercase; padding: 3px 9px; margin-bottom: 4px; background: rgba(255,255,255,0.04); color: var(--cat-c, #c5c9e0); border-left: 3px solid var(--cat-c, #a855f7); clip-path: polygon(2px 0, 100% 0, 100% calc(100% - 2px), calc(100% - 2px) 100%, 0 100%, 0 2px); align-self: flex-start; }
+.pi-num { display: inline-flex; align-items: center; justify-content: center; min-width: 22px; height: 22px; padding: 0 4px; background: rgba(167,139,250,0.15); color: var(--cat-c, #c084fc); font-size: 10px; font-weight: 800; letter-spacing: 0; clip-path: polygon(3px 0, 100% 0, 100% calc(100% - 3px), calc(100% - 3px) 100%, 0 100%, 0 3px); }
+.pi-num::before { content: counter(pi); }
+.proj-item.flat-item .pi-row { display: flex; align-items: center; gap: 8px; padding: 8px 10px; background: rgba(167,139,250,0.06); border: 1px solid rgba(167,139,250,0.18); border-left: 2px solid var(--cat-c, #a855f7); font-size: 11.5px; color: #f3f4fb; font-weight: 600; letter-spacing: 0.015em; clip-path: polygon(5px 0, 100% 0, 100% calc(100% - 5px), calc(100% - 5px) 100%, 0 100%, 0 5px); cursor: pointer; }
+.proj-item.flat-item.ad      { --cat-c: #fbbf24; }
+.proj-item.flat-item.ai      { --cat-c: #c084fc; }
+.proj-item.flat-item.product { --cat-c: #34d399; }
+.proj-item.flat-item.system  { --cat-c: #60a5fa; }
+.proj-item.flat-item.offline { --cat-c: #fb923c; }
+
+.pi-tag-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; gap: 8px; }
+.pi-st { font-size: 9.5px; font-weight: 800; letter-spacing: 0.10em; padding: 2px 8px; clip-path: polygon(2px 0, 100% 0, 100% calc(100% - 2px), calc(100% - 2px) 100%, 0 100%, 0 2px); }
+.proj-item.flat-item.st-active .pi-st { background: rgba(34,211,238,0.18); color: #22d3ee; }
+.proj-item.flat-item.st-stop   .pi-st { background: rgba(248,113,113,0.20); color: #f87171; }
+.proj-item.flat-item.st-done   .pi-st { background: rgba(52,211,153,0.20); color: #34d399; }
+.proj-item.flat-item.st-stop .pi-row { border-color: rgba(248,113,113,0.35); border-left-color: #f87171 !important; }
+.pi-prog { position: relative; height: 6px; background: rgba(255,255,255,0.06); margin: 12px 0 4px; clip-path: polygon(2px 0, 100% 0, 100% calc(100% - 2px), calc(100% - 2px) 100%, 0 100%, 0 2px); }
+.pi-prog-bar { height: 100%; background: linear-gradient(90deg, var(--cat-c, #a855f7), color-mix(in srgb, var(--cat-c, #a855f7) 60%, #ffffff)); transition: width 0.3s ease; }
+.proj-item.flat-item.st-stop .pi-prog-bar { background: linear-gradient(90deg, #f87171, #fca5a5); }
+.pi-prog-num { position: absolute; right: 4px; top: -14px; font-size: 9px; font-weight: 800; letter-spacing: 0.05em; color: var(--cat-c, #c084fc); }
+.proj-item.flat-item.st-stop .pi-prog-num { color: #f87171; }
+
+.pi-meta { display: flex; align-items: center; gap: 8px; margin: 8px 0 4px; flex-wrap: wrap; }
+.pi-dec {
+  font-family: inherit; cursor: pointer; padding: 4px 10px;
+  font-size: 10px; font-weight: 800; letter-spacing: 0.08em;
+  border: 1px solid var(--dec-c, #a5b4fc);
+  background: rgba(8,9,28,0.6); color: var(--dec-c, #a5b4fc);
+  clip-path: polygon(3px 0, 100% 0, 100% calc(100% - 3px), calc(100% - 3px) 100%, 0 100%, 0 3px);
+}
+.pi-dec:hover { background: rgba(255,255,255,0.06); }
+.pi-dec.dec-go    { --dec-c: #22d3ee; }
+.pi-dec.dec-hold  { --dec-c: #fbbf24; }
+.pi-dec.dec-later { --dec-c: #94a3b8; }
+.pi-when {
+  font-size: 10px; color: #c5c9e0; font-weight: 600; letter-spacing: 0.03em;
+}
+.pi-rel-row { display: flex; align-items: center; flex-wrap: wrap; gap: 5px; margin: 4px 0; font-size: 9.5px; }
+.pi-owner-dept {
+  font-weight: 800; padding: 2px 7px; color: #fff;
+  background: var(--cat-c, #a855f7);
+  clip-path: polygon(2px 0, 100% 0, 100% calc(100% - 2px), calc(100% - 2px) 100%, 0 100%, 0 2px);
+  letter-spacing: 0.08em;
+}
+.pi-rel-sep { color: #6b7280; font-size: 9px; letter-spacing: 0.10em; padding: 0 4px; }
+.pi-rel {
+  padding: 2px 7px; color: #c5c9e0;
+  background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.10);
+  clip-path: polygon(2px 0, 100% 0, 100% calc(100% - 2px), calc(100% - 2px) 100%, 0 100%, 0 2px);
+  letter-spacing: 0.06em;
+}
+.proj-item.flat-item.dec-hold .pi-row { border-left-color: #fbbf24 !important; }
+.proj-item.flat-item.dec-later .pi-row { border-left-color: #94a3b8 !important; opacity: 0.92; }
+
+.dept-projects-section { margin-top: 14px; padding-top: 12px; border-top: 1px dashed rgba(167,139,250,0.30); }
+.dept-projects-section .label { font-size: 10.5px; font-weight: 800; letter-spacing: 0.16em; color: #c084fc; margin-bottom: 8px; }
+.dept-proj-card {
+  margin-bottom: 8px; padding: 8px 10px;
+  background: rgba(8,9,28,0.55); border: 1px solid rgba(167,139,250,0.22);
+  border-left: 3px solid var(--dc, #a855f7);
+  clip-path: polygon(5px 0, 100% 0, 100% calc(100% - 5px), calc(100% - 5px) 100%, 0 100%, 0 5px);
+}
+.dept-proj-card.dec-go    { --dc: #22d3ee; }
+.dept-proj-card.dec-hold  { --dc: #fbbf24; }
+.dept-proj-card.dec-later { --dc: #94a3b8; }
+.dept-proj-card .dpc-h { display: flex; gap: 7px; align-items: center; margin-bottom: 4px; }
+.dpc-role {
+  font-size: 9px; font-weight: 800; letter-spacing: 0.12em; padding: 2px 7px;
+  background: var(--dc); color: #0a0b22;
+  clip-path: polygon(2px 0, 100% 0, 100% calc(100% - 2px), calc(100% - 2px) 100%, 0 100%, 0 2px);
+}
+.dept-proj-card.is-related .dpc-role { background: rgba(148,163,184,0.30); color: #c5c9e0; }
+.dpc-cat { font-size: 9px; font-weight: 700; color: #8a8fad; letter-spacing: 0.10em; text-transform: uppercase; }
+.dpc-name { font-size: 11.5px; font-weight: 700; color: #f3f4fb; line-height: 1.35; margin-bottom: 6px; }
+.dpc-foot { display: flex; gap: 8px; align-items: center; font-size: 9.5px; color: #c5c9e0; flex-wrap: wrap; }
+.dpc-dec { font-weight: 700; }
+.dpc-when { color: #c5c9e0; }
+.dpc-prog { margin-left: auto; font-weight: 800; color: var(--dc); }
+.dept-proj-card { cursor: pointer; transition: background 0.18s; }
+.dept-proj-card:hover { background: rgba(8,9,28,0.78); }
+.dpc-desc {
+  display: none;
+  margin-top: 8px; padding-top: 8px;
+  border-top: 1px dashed rgba(167,139,250,0.22);
+  font-size: 10.5px; color: #c5c9e0;
+  line-height: 1.55; letter-spacing: 0.02em;
+  white-space: pre-line;
+}
+.dept-proj-card.open .dpc-desc { display: block; }
+.dpc-name::after { content: ' ▾'; color: rgba(167,139,250,0.45); font-size: 9px; }
+.dept-proj-card.open .dpc-name::after { content: ' ▴'; }
+.proj-item { display: flex; flex-direction: column; gap: 6px; padding: 8px 10px; background: rgba(167,139,250,0.06); border: 1px solid rgba(167,139,250,0.18); border-left: 2px solid var(--cat-c, #a855f7); font-size: 11.5px; color: #f3f4fb; font-weight: 600; cursor: pointer; letter-spacing: 0.015em; clip-path: polygon(5px 0, 100% 0, 100% calc(100% - 5px), calc(100% - 5px) 100%, 0 100%, 0 5px); }
+.proj-item .pi-row { display: flex; align-items: center; gap: 8px; }
+.proj-item .pi-handle { cursor: grab; }
+.proj-item .pi-desc { display: none; padding: 8px 6px 4px; font-size: 11px; color: #c5c9e0; font-weight: 500; line-height: 1.55; border-top: 1px dashed rgba(167,139,250,0.20); margin-top: 2px; white-space: normal; }
+.proj-item.open .pi-desc { display: block; }
+.proj-item .pi-owner { display: inline-block; font-size: 9.5px; font-weight: 800; letter-spacing: 0.10em; padding: 1px 6px; background: rgba(255,255,255,0.06); color: var(--cat-c, #c084fc); margin-right: 8px; vertical-align: 1px; clip-path: polygon(2px 0, 100% 0, 100% calc(100% - 2px), calc(100% - 2px) 100%, 0 100%, 0 2px); }
+.proj-item:hover { background: rgba(167,139,250,0.14); }
+.proj-item.sortable-ghost { opacity: 0.3; }
+.proj-item .pi-handle { color: #8a8fad; font-size: 10px; }
+.proj-item .pi-name { flex: 1; }
+.proj-item .pi-prio { font-size: 9px; padding: 1px 5px; font-weight: 800; clip-path: polygon(2px 0, 100% 0, 100% calc(100% - 2px), calc(100% - 2px) 100%, 0 100%, 0 2px); }
+.proj-item .pi-prio.h { background: rgba(248,113,113,0.20); color: #f87171; }
+.proj-item .pi-prio.m { background: rgba(251,191,36,0.20); color: #fbbf24; }
+.proj-item .pi-prio.l { background: rgba(148,163,184,0.20); color: #8a8fad; }
+.cat.ad      { --cat-c: #fbbf24; }
+.cat.ai      { --cat-c: #c084fc; }
+.cat.seo     { --cat-c: #22d3ee; }
+.cat.product { --cat-c: #34d399; }
+.cat.system  { --cat-c: #60a5fa; }
+.cat.offline { --cat-c: #fb923c; }
+.cat .cat-h { color: var(--cat-c); }
+.cat .proj-item { border-left-color: var(--cat-c); }
+
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="title">
+    <img class="brand-logo" src="https://www.hanasignmall.kr/image/common/hana_logo2.png" alt="HANASIGNMALL" />
+    
+    <span class="date" id="today"></span>
+  </div>
+  <div class="hint">클릭 = 빛 · 더블 = 확대 · 드래그 = 이동 · 휠 = 줌</div>
+</div>
+
+<div class="stage" id="stage">
+  <div class="world" id="world">
+    <svg class="wires" id="wires" viewBox="0 0 2400 1400"></svg>
+  </div>
+</div>
+
+<div class="legend">
+  <div class="row"><span class="sw" style="--c:#22d3ee"></span> CEO</div>
+  <div class="row"><span class="sw" style="--c:#60a5fa"></span> 개인사업자 · 스마트스토어</div>
+  <div class="row"><span class="sw" style="--c:#a855f7"></span> 법인사업자 · 자사몰·오픈마켓</div>
+  <div class="row"><span class="sw" style="--c:#c4b5fd"></span> 부서</div>
+</div>
+
+<div class="controls">
+  <button id="btnFit">RESET</button>
+</div>
+
+<div class="chip-bar" id="chipBar">
+  <button class="chip" data-cat="core"    style="--c:#fbbf24">핵심</button>
+  <button class="chip" data-cat="channel" style="--c:#60a5fa">채널</button>
+  <button class="chip" data-cat="dept"    style="--c:#a5b4fc">부서</button>
+  <button class="chip" data-cat="system"  style="--c:#22d3ee">시스템</button>
+  <button class="chip" data-cat="talk"    style="--c:#f472b6">상담</button>
+  <button class="chip" data-cat="sns"     style="--c:#ec4899">SNS</button>
+</div>
+
+
+
+<aside class="task-panel" id="taskPanel">
+  <span class="close-x" id="taskClose">✕</span>
+  <div class="tp-head">
+    <div class="tp-name" id="tpName"></div>
+    <div class="tp-role" id="tpRole"></div>
+    <div class="tp-stats" id="tpStats"></div>
+  </div>
+  <div class="tp-body" id="tpBody"></div>
+</aside>
+
+<script>
+const STAGE_W = 2400, STAGE_H = 1400;
+const CX = STAGE_W / 2, CY = STAGE_H / 2;
+
+// ============ TASKS ============
+const TASKS = {
+  parksj: [
+    { name:"네이버 광고 운영·입찰 조정", status:"정기", prio:"h" },
+    { name:"SEO 개선 / 검색 노출 최적화", status:"정기", prio:"h" },
+    { name:"데이터 분석 · 매출 전략", status:"정기", prio:"h" },
+    { name:"AI · 자동화 도입 검토", status:"정기", prio:"m" },
+    { name:"상품 · 상세페이지 기획", status:"정기", prio:"h" },
+    { name:"개발팀 커뮤니케이션", status:"상시", prio:"m" },
+    { name:"팀 업무 분장 · 관리", status:"상시", prio:"m" },
+    { name:"신규몰(로켓출력공장) 운영", status:"정기", prio:"h" }
+  ],
+  hwangki: [
+    { name:"상세페이지 디자인 (개인·법인 전 채널)", status:"정기", prio:"h" },
+    { name:"랜딩페이지 디자인", status:"정기", prio:"h" },
+    { name:"배너 디자인 (광고·프로모션)", status:"정기", prio:"h" },
+    { name:"디자인 시안 검수·디렉팅", status:"상시", prio:"h" },
+    { name:"신상품 등록용 디자인", status:"정기", prio:"m" },
+    { name:"상세페이지 개선·리뉴얼", status:"정기", prio:"m" }
+  ],
+  kimeh: [
+    { name:"상세페이지 디자인", status:"정기", prio:"h" },
+    { name:"랜딩페이지 디자인", status:"정기", prio:"m" },
+    { name:"배너 디자인", status:"정기", prio:"m" },
+    { name:"신상품 디자인 작업", status:"정기", prio:"m" },
+    { name:"오픈마켓 썸네일·이벤트 이미지", status:"정기", prio:"m" }
+  ],
+  hongjy: [
+    { name:"개인 결제창 정리 (월)", status:"정기", prio:"m" },
+    { name:"ESM·11번가 판매기간 연장/중지 (월)", status:"정기", prio:"m" },
+    { name:"사이트 판매수량 체크 (월)", status:"정기", prio:"m" },
+    { name:"스마트스토어 리뷰 답변", status:"정기", prio:"h" },
+    { name:"쿠팡 자동가격수정 확인 (주1)", status:"정기", prio:"m" },
+    { name:"일주일전건 판매량 기재 (월)", status:"정기", prio:"l" },
+    { name:"쿠팡 아이템위너·노출ID 분리 확인", status:"정기", prio:"m" },
+    { name:"네이버페이 취소건 확인", status:"정기", prio:"m" },
+    { name:"주별 주문현황 (금)", status:"정기", prio:"m" },
+    { name:"각 사이트 문의/배송·출고지연 확인", status:"정기", prio:"h" },
+    { name:"전 사이트 가격 수정", status:"정기", prio:"h", detail:"주차스티커·A형·게시판" },
+    { name:"오픈마켓·고도몰 자사몰 매칭", status:"정기", prio:"h", detail:"627/737 (85%)" },
+    { name:"신규몰 현장맞춤소재 업로드", status:"정기", prio:"m" },
+    { name:"신규몰·고도몰 A형 가격 정리", status:"정기", prio:"h" },
+    { name:"채널 매칭 기준 (1:N/1:1) 확인", status:"정기", prio:"h" },
+    { name:"경쟁사 벤치마킹 리포트", status:"정기", prio:"m", detail:"20/100 (20%)" },
+    { name:"상세페이지 부착·설치영상 업데이트", status:"정기", prio:"m", detail:"67/862 (7.8%)" },
+    { name:"해피톡·포스팅 데이터 검수", status:"정기", prio:"l" },
+    { name:"쿠팡 A형 재등록", status:"정기", prio:"h", detail:"754/929 (81%)" },
+    { name:"쿠팡 A형 상단이미지 수정", status:"정기", prio:"h", detail:"754/929 (81%)" },
+    { name:"쿠팡 상단 공통이미지 변경", status:"정기", prio:"m", detail:"798/1635 (49%)" },
+    { name:"쿠팡 하단 공통이미지 변경", status:"정기", prio:"m", detail:"798/1635 (49%)" },
+    { name:"쿠팡 유튜브 영상 위치 수정", status:"정기", prio:"l", detail:"798/1635 (49%)" },
+    { name:"쿠팡 옵션 배송메시지 삭제", status:"정기", prio:"l", detail:"798/1635 (49%)" },
+    { name:"쿠팡 광고노출 A형 썸네일 수정", status:"정기", prio:"h", detail:"426/794 (54%)" },
+    { name:"신규몰 안내판 2차 카테고리", status:"정기", prio:"m", detail:"10/565 (2%)" },
+    { name:"금손간판 신상품 등록", status:"정기", prio:"h", detail:"12건 · 가격대기" },
+    { name:"시공사례 신규몰 카테고리 정리", status:"정기", prio:"l" },
+    { name:"부착용투명알림판 신상 등록", status:"정기", prio:"m", detail:"가격대기" },
+    { name:"현황판 상품페이지·코드 업데이트", status:"정기", prio:"l", detail:"준비중" }
+  ],
+  limjm: [
+    { name:"일일 출고사진 정리·출고사례 (고도몰·신규몰)", status:"정기", prio:"m" },
+    { name:"게시판·오뚜기 출고사례 (신규몰)", status:"정기", prio:"m" },
+    { name:"네이버 블로그 노출 확인", status:"정기", prio:"m" },
+    { name:"네이버 블로그 포스팅", status:"정기", prio:"h" },
+    { name:"인스타그램 게시글", status:"정기", prio:"h" },
+    { name:"인스타그램 인사이트 확인", status:"정기", prio:"m" },
+    { name:"AI 이미지·영상 제작", status:"정기", prio:"h" },
+    { name:"인스타그램 릴스 제작·업로드", status:"정기", prio:"h" },
+    { name:"유튜브 쇼츠 업로드 (릴스 동일)", status:"정기", prio:"m" },
+    { name:"시공사례 블로그/인스타 포스팅", status:"정기", prio:"m" },
+    { name:"시공사례 신규몰 업로드", status:"정기", prio:"m" },
+    { name:"전월 출고사진 상품별 정리", status:"정기", prio:"l" }
+  ],
+  chunhj: [
+    { name:"오전 매출 정리 보고", status:"정기", prio:"h", detail:"매일" },
+    { name:"오후 매출 정리 보고 (CS콜+당일매출)", status:"정기", prio:"h", detail:"매일" },
+    { name:"주간 매출 정리 보고", status:"정기", prio:"h" },
+    { name:"하나사인몰 전체 상품 원가 계산", status:"정기", prio:"h" },
+    { name:"신상기획 단가 정리", status:"정기", prio:"h" },
+    { name:"신상 기획 (정현주 공동)", status:"정기", prio:"h" },
+    { name:"웹팀 신상기획 정리 회의", status:"정기", prio:"h" },
+    { name:"영업팀 견적 발행", status:"정기", prio:"h" },
+    { name:"상담 견적서 발행/작성", status:"정기", prio:"h" },
+    { name:"상담 타견적서 발행", status:"정기", prio:"m" },
+    { name:"이카운트 견적서 작성", status:"정기", prio:"m" },
+    { name:"방문 고객 상담 (정현주 공동)", status:"상시", prio:"h" },
+    { name:"채널 모니터링 (해피톡·메일·사이트·카톡·아파트)", status:"정기", prio:"h", detail:"5명 공동" },
+    { name:"고객 상담 일반·복귀콜·컴플레인", status:"정기", prio:"h", detail:"5명 공동" },
+    { name:"발주서 / 구글엑셀 발주현황", status:"정기", prio:"m", detail:"5명 공동" },
+    { name:"플레이오토 누적주문 정리", status:"정기", prio:"m", detail:"5명 공동" },
+    { name:"세금계산서 발행", status:"정기", prio:"m" },
+    { name:"미수금 입금요청 아웃콜", status:"정기", prio:"m", detail:"5명 공동" },
+    { name:"시공일정 잡기 / 조율 관리", status:"정기", prio:"h" },
+    { name:"제작실 납기 조율", status:"정기", prio:"m" },
+    { name:"계약서 작성", status:"정기", prio:"m" },
+    { name:"로켓출력공장 문의 처리", status:"정기", prio:"m", detail:"정현주 공동" },
+    { name:"로켓출력공장 디자인·자료 확인", status:"정기", prio:"m", detail:"정현주 공동" },
+    { name:"ERP 상담 내역 작성", status:"정기", prio:"m", detail:"5명 공동" },
+    { name:"화/목 CS 회의", status:"정기", prio:"l" },
+    { name:"CS팀 업무 분장·총괄", status:"상시", prio:"h" }
+  ],
+  kimdg: [
+    { name:"디자인 시안 체크 → 소재별·장비별 분류·편집", status:"정기", prio:"h" },
+    { name:"출력 데이터화 작업", status:"정기", prio:"h" },
+    { name:"제작업무 밀리지 않게 각 파트 지원", status:"상시", prio:"h" },
+    { name:"제작일정 조율", status:"상시", prio:"h" }
+  ],
+  leeje: [
+    { name:"라텍스·주차스티커 출력 및 합지", status:"정기", prio:"h" },
+    { name:"솔벤·시트지 출력 및 합지", status:"정기", prio:"h" },
+    { name:"수성·현수막 출력 및 후가공·포장", status:"정기", prio:"h" },
+    { name:"슬림게시판·강화유리게시판·패드배너 출력 및 합지", status:"정기", prio:"h" },
+    { name:"UV DTF·슈마 출력 후 재단", status:"정기", prio:"h" },
+    { name:"A형 작업 및 1층 포장 지원", status:"상시", prio:"m" },
+    { name:"쿠팡 작업", status:"정기", prio:"m" }
+  ],
+  leehn: [
+    { name:"하나사인몰 경리일보 작성", status:"정기", prio:"h", detail:"통장·매출·세금" },
+    { name:"경리일보 결재", status:"정기", prio:"h" },
+    { name:"점심 취합·주문", status:"정기", prio:"l" },
+    { name:"입고 검수", status:"정기", prio:"m" },
+    { name:"결재요청건 이체", status:"정기", prio:"h" },
+    { name:"신규몰 세금계산서 발행", status:"정기", prio:"h" },
+    { name:"직원 요청업무 (증명서·소모품·ERP·회계)", status:"상시", prio:"m" },
+    { name:"정기주문 소모품 체크", status:"정기", prio:"m" },
+    { name:"사무실 미화 체크", status:"정기", prio:"l" },
+    { name:"푸드박스 확인·결제", status:"정기", prio:"l" },
+    { name:"정기출금 정리·이체 (임대·매입·급여)", status:"정기", prio:"h" },
+    { name:"급여 계산 (4대보험·인센티브·명세서)", status:"정기", prio:"h" },
+    { name:"법인·개인 매입대·거래명세표 정리", status:"정기", prio:"m" },
+    { name:"구월식당 결제", status:"정기", prio:"l" },
+    { name:"세무사 발송용 월결산 자료 취합", status:"정기", prio:"h" },
+    { name:"간식 취합·주문", status:"정기", prio:"l" }
+  ],
+  factory2: [
+    { name:"구글시트 주문/제작 진행 게시판 확인", status:"정기", prio:"h", detail:"2인 공동" },
+    { name:"발주서 출력", status:"정기", prio:"h" },
+    { name:"원판 재단", status:"정기", prio:"h" },
+    { name:"제작실에서 가져온 시트 부착", status:"정기", prio:"h" },
+    { name:"부자재 부착", status:"정기", prio:"h" },
+    { name:"제품 사진 촬영", status:"정기", prio:"m" },
+    { name:"포장 작업", status:"정기", prio:"h" },
+    { name:"택배 발송", status:"정기", prio:"h" },
+    { name:"큰 제품 화물 발송", status:"정기", prio:"h", detail:"일부 건" },
+    { name:"오뚜기 제작·포장 (동일 흐름)", status:"정기", prio:"h" }
+  ],
+  junghj: [
+    { name:"디자인팀 업무 분배", status:"정기", prio:"h", detail:"매일 아침/점심 일감 분배" },
+    { name:"디자인팀 조율 + 타팀 간 조율", status:"상시", prio:"h" },
+    { name:"방문 고객 상담 (천현정 공동)", status:"상시", prio:"h" },
+    { name:"영업팀 견적 발행", status:"정기", prio:"h" },
+    { name:"상담 견적서 발행/작성", status:"정기", prio:"h" },
+    { name:"상담 타견적서 발행", status:"정기", prio:"m" },
+    { name:"이카운트 견적서 작성", status:"정기", prio:"m" },
+    { name:"신상 기획 (천현정 공동)", status:"정기", prio:"h" },
+    { name:"로켓출력공장 디자인 작업", status:"정기", prio:"h" },
+    { name:"로켓출력공장 문의 처리", status:"정기", prio:"m", detail:"천현정 공동" },
+    { name:"로켓출력공장 디자인·자료 확인", status:"정기", prio:"m" },
+    { name:"채널 모니터링 (해피톡·메일·사이트·카톡·아파트)", status:"정기", prio:"h", detail:"5명 공동" },
+    { name:"고객 상담 일반·복귀콜·컴플레인", status:"정기", prio:"h", detail:"5명 공동" },
+    { name:"발주서 / 구글엑셀 발주현황", status:"정기", prio:"m", detail:"5명 공동" },
+    { name:"플레이오토 누적주문 정리", status:"정기", prio:"m", detail:"5명 공동" },
+    { name:"세금계산서 발행", status:"정기", prio:"m" },
+    { name:"미수금 입금요청 아웃콜", status:"정기", prio:"m" },
+    { name:"시공일정 잡기 / 조율 관리", status:"정기", prio:"h" },
+    { name:"제작실 납기 조율", status:"정기", prio:"m" },
+    { name:"계약서 작성", status:"정기", prio:"m" },
+    { name:"ERP 상담 내역 작성", status:"정기", prio:"m" },
+    { name:"화/목 CS 회의", status:"정기", prio:"l" },
+    { name:"사무실 청소 / 청소 관리", status:"정기", prio:"l", detail:"김민주 공동" },
+    { name:"중간일 (지원성 잡무)", status:"상시", prio:"l" }
+  ],
+  kimmj: [
+    { name:"영업팀 견적 발행", status:"정기", prio:"h" },
+    { name:"상담 견적서 발행/작성", status:"정기", prio:"h" },
+    { name:"상담 타견적서 발행", status:"정기", prio:"m" },
+    { name:"이카운트 견적서 작성", status:"정기", prio:"m" },
+    { name:"고도몰 게시판 답변/문의 처리", status:"정기", prio:"h", detail:"김정란 공동" },
+    { name:"디자이너 추가문의 정리", status:"정기", prio:"m" },
+    { name:"로켓 파일 확인받기", status:"정기", prio:"m", detail:"이태경 공동" },
+    { name:"로켓공장 파일 올려드리기", status:"정기", prio:"m", detail:"이태경 공동" },
+    { name:"이태경 연차 시 백업 (주문·송장·현황 일괄)", status:"상시", prio:"h", detail:"자동화 1순위" },
+    { name:"채널 모니터링 (해피톡·메일·게시판·사이트·카톡·아파트)", status:"정기", prio:"h", detail:"5명 공동" },
+    { name:"고객 상담 일반·복귀콜·컴플레인", status:"정기", prio:"h", detail:"5명 공동" },
+    { name:"발주서 / 구글엑셀 발주현황", status:"정기", prio:"m", detail:"5명 공동" },
+    { name:"플레이오토 누적주문 정리", status:"정기", prio:"m", detail:"5명 공동" },
+    { name:"세금계산서 발행", status:"정기", prio:"m" },
+    { name:"업체 요청 서류 작성", status:"정기", prio:"m" },
+    { name:"출고건 청구발행 아웃콜", status:"정기", prio:"m" },
+    { name:"미수금 입금요청 아웃콜", status:"정기", prio:"m" },
+    { name:"시공일정 잡기 / 제작실 납기", status:"정기", prio:"m" },
+    { name:"계약서 작성", status:"정기", prio:"m" },
+    { name:"ERP 상담 내역 작성", status:"정기", prio:"m" },
+    { name:"화/목 CS 회의", status:"정기", prio:"l" },
+    { name:"사무실 청소 / 청소 관리", status:"정기", prio:"l", detail:"정현주 공동" },
+    { name:"쓰레기 / 중간일", status:"상시", prio:"l" }
+  ],
+  kimjr: [
+    { name:"ESM 게시판 답변", status:"정기", prio:"h" },
+    { name:"11번가 게시판 답변", status:"정기", prio:"h" },
+    { name:"네이버페이 게시판 답변", status:"정기", prio:"h", detail:"이태경 공동" },
+    { name:"네이버스마트스토어 게시판 답변", status:"정기", prio:"h", detail:"이태경 공동" },
+    { name:"쿠팡 게시판 답변", status:"정기", prio:"h" },
+    { name:"고도몰 게시판 답변/문의 처리", status:"정기", prio:"h", detail:"김민주 공동" },
+    { name:"외주 송장등록 (실사박사·해광·성원·신애드)", status:"정기", prio:"h" },
+    { name:"채널 모니터링 (해피톡·메일·게시판·사이트·카톡·아파트)", status:"정기", prio:"h", detail:"5명 공동" },
+    { name:"고객 상담 일반·복귀콜·컴플레인", status:"정기", prio:"h", detail:"5명 공동" },
+    { name:"발주서 / 구글엑셀 발주현황", status:"정기", prio:"m", detail:"5명 공동" },
+    { name:"플레이오토 누적주문 정리", status:"정기", prio:"m", detail:"5명 공동" },
+    { name:"세금계산서 발행", status:"정기", prio:"m" },
+    { name:"업체 요청 서류 작성", status:"정기", prio:"m" },
+    { name:"출고건 청구발행 아웃콜", status:"정기", prio:"m" },
+    { name:"미수금 입금요청 아웃콜", status:"정기", prio:"m" },
+    { name:"시공일정 잡기 / 제작실 납기", status:"정기", prio:"m" },
+    { name:"계약서 작성", status:"정기", prio:"m" },
+    { name:"ERP 상담 내역 작성", status:"정기", prio:"m" },
+    { name:"화/목 CS 회의", status:"정기", prio:"l" },
+    { name:"쓰레기 / 중간일", status:"상시", prio:"l" }
+  ],
+  leetk: [
+    { name:"주문서 수집 (일 3회)", status:"정기", prio:"h", detail:"자동화 1순위 · 김민주 백업" },
+    { name:"송장 출력 (일 3회)", status:"정기", prio:"h", detail:"자동화 1순위 · 김민주 백업" },
+    { name:"현황 작성 (일 2회)", status:"정기", prio:"h", detail:"자동화 1순위 · 김민주 백업" },
+    { name:"송장 등록 1-3층 (플레이오토+현황)", status:"정기", prio:"h" },
+    { name:"송장 등록 공장방 (플레이오토+현황)", status:"정기", prio:"h" },
+    { name:"플레이오토 송장 처리", status:"정기", prio:"h" },
+    { name:"사이트 발송기한 처리", status:"정기", prio:"h" },
+    { name:"제품 발송기한 조정 (제작팀 협의)", status:"정기", prio:"h" },
+    { name:"현황 취소/금액 변경건 처리", status:"정기", prio:"m" },
+    { name:"네이버페이 게시판 답변", status:"정기", prio:"h", detail:"김정란 공동" },
+    { name:"네이버스마트스토어 게시판 답변", status:"정기", prio:"h", detail:"김정란 공동" },
+    { name:"입금내역 (하나몰/하나사인몰) 정리", status:"정기", prio:"m" },
+    { name:"출고건 타견적서 발행", status:"정기", prio:"m" },
+    { name:"디자이너 요청사항 처리 (비용/사이즈/수량)", status:"상시", prio:"m" },
+    { name:"로켓 파일 확인받기", status:"정기", prio:"m", detail:"김민주 공동" },
+    { name:"로켓공장 파일 올려드리기", status:"정기", prio:"m", detail:"김민주 공동" },
+    { name:"카달로그/샘플 요청 발송", status:"정기", prio:"l" },
+    { name:"채널 모니터링 (해피톡·메일·게시판·사이트·카톡·아파트)", status:"정기", prio:"h", detail:"5명 공동" },
+    { name:"고객 상담 일반·복귀콜·컴플레인", status:"정기", prio:"h", detail:"5명 공동" },
+    { name:"발주서 / 구글엑셀 발주현황", status:"정기", prio:"m", detail:"5명 공동" },
+    { name:"플레이오토 누적주문 정리", status:"정기", prio:"m", detail:"5명 공동" },
+    { name:"세금계산서 발행 / 업체 서류", status:"정기", prio:"m" },
+    { name:"출고건 청구발행 / 미수금 입금요청", status:"정기", prio:"m" },
+    { name:"시공일정 잡기 / 제작실 납기", status:"정기", prio:"m" },
+    { name:"계약서 작성", status:"정기", prio:"m" },
+    { name:"ERP 상담 내역 작성", status:"정기", prio:"m" },
+    { name:"화/목 CS 회의", status:"정기", prio:"l" },
+    { name:"쓰레기 / 중간일", status:"상시", prio:"l" }
+  ],
+  namji: [
+    { name:"배송중 7일 경과 → 배송완료 자동 배치", status:"진행중", prio:"h", detail:"작업 완료 · 전달 예정 (90%)" },
+    { name:"관리자 시공사례 에디터 사진 첨부 오류", status:"진행중", prio:"m", detail:"간헐 발생 시 확인 (30%)" },
+    { name:"상품 옵션 0개 상세페이지 동작 구조 확인", status:"진행중", prio:"m", detail:"영향 범위·구조 검토 중 (20%)" },
+    { name:"업종별 카테고리 추가 (전시/관람)", status:"예정", prio:"m" },
+    { name:"네이버페이 결제형 구매 시 판매수 +1 (웹·모바일)", status:"예정", prio:"m" },
+    { name:"디자인 관리 옵션 일괄 설정 기능", status:"예정", prio:"m" },
+    { name:"상품 정가·할인가 데이터 공동 관리", status:"예정", prio:"m" }
+  ]
+};
+
+// ============ DATA ============
+const DATA = {
+  ceo: { id:"ceo", name:"김한열", sub:"CEO · 보고체계 최상위", desc:"하나사인몰 대표 · 전사 의사결정" },
+  hanasm: { id:"hanasm", name:"하나사인몰", sub:"COMPANY · 본체", desc:"회사 본체 · 개인/법인 사업자 통합 운영" },
+  personal: { id:"personal", name:"개인사업자", sub:"PERSONAL", desc:"네이버 스마트스토어 채널 3개를 운영하는 개인사업자 단위" },
+  corp: { id:"corp", name:"법인사업자", sub:"CORP · MAIN", desc:"자사몰 + 오픈마켓 다채널 운영. 회사 메인 사업자" },
+  erp: { id:"erp", name:"ERP", sub:"erp.hanasm.kr · CORE",
+         brand:"#22d3ee",
+         desc:"■ 시스템\n자체 개발 ERP (개발팀 산하)\n핵심 백본\n■ 도메인\nerp.hanasm.kr\n■ IP\n112.172.7.61\n내부 211 / 212\n■ 백업\n센터 서버 백업\n■ 외부 연동\nIDC hanasignmall.kr (49.247.31.206)\nElastic (49.247.40.116)\n상품정보 비교\n■ 장애 처리\n206 장애 시 116 자동 작동" },
+  playauto: { id:"playauto", name:"플레이오토", sub:"주문수집 SYS · API → ERP",
+              brand:"#fb923c",
+              desc:"■ 역할\n주문 통합 수집\n오픈마켓 · 스마트스토어 · 자사몰\n■ 연동\nAPI → ERP 공정 매칭\n■ 공정 4단계\n1. 품목 매칭\n2. 디자인\n3. 제작\n4. 출고\n■ 결과\n상품제작 진행상황 URL" },
+  ecount:   { id:"ecount", name:"이카운트", sub:"견적·세금계산서 SYS",
+              brand:"#34d399",
+              desc:"■ 견적서 발행\nCS팀\n■ 세금계산서 발행\n이하나 대리\n■ 부서 연결\nCS · 경영지원 유기적 연결" },
+  call:     { id:"call",  name:"전화상담", sub:"CS · 1644-7523", brand:"#60a5fa", desc:"고객 전화 상담 1644-7523 (CS팀 본업)" },
+  chat:     { id:"chat",  name:"채팅상담", sub:"CS · 해피톡 통합", brand:"#f472b6",
+              desc:"해피톡으로 통합 관리",
+              channels:["네이버 톡톡 (스마트스토어 3개)","카카오 비즈니스","고도몰","신규몰"] },
+  prtEpson: { id:"prtEpson", name:"EPSON SC-S80610L", sub:"에코솔벤 · 1500폭", brand:"#fbbf24",
+              desc:"■ 모델\nEpson SureColor SC-S80610L\n제작실 출력장비 ①\n■ 스펙\n잉크: 에코솔벤\n폭: 1500\n■ 가능 소재\n투명PVC-IT-30000\n화이트 캘-IT-2000 (자전거스티커 외)\n반사지 · 야광지 · 홀로그램 (단/출력용)\n플렉스 (조명 · 비조명)" },
+  prtHp:    { id:"prtHp", name:"HP 라텍스 800W", sub:"친환경 무취 · 1500폭", brand:"#34d399",
+              desc:"■ 모델\nHP 라텍스 800W\n제작실 출력장비 ②\n■ 스펙\n잉크: 친환경 무취\n폭: 1500\n■ 가능 소재\n배너 · 직물 · 포스터 · 캔버스\n벽지 · 비닐 · 투명PET\n투명리무버 · 투명무점착 (주차스티커)\n라텍스 전용 화이트캘 (IT-100/100G/200/2000G)\nUV PET 원단\n골드 · 실버 헤어라인 · 거울 PET\n빽릿 · 라텍스 전용 벽지\n반사지 · 야광지 홀로그램" },
+  prtExt:   { id:"prtExt", name:"EXTREME 1800 R1", sub:"수성잉크 · 1800폭", brand:"#60a5fa",
+              desc:"■ 모델\nEXTREME 1800 R1\n제작실 출력장비 ③\n■ 스펙\n잉크: 수성\n폭: 1800\n■ 가능 소재\n합성지 · 캘 · 캘리무버\nPET · 현수막\n부직포 · 텐트천 · 캔버스천" },
+  prtUv:    { id:"prtUv", name:"평판 UV 프린터", sub:"UV · 1200×2400mm", brand:"#a855f7",
+              desc:"■ 모델\n평판 UV 프린터\n제작실 출력장비 ④\n■ 스펙\n잉크: UV\n크기: 1200 × 2400mm\n■ 가능 소재\n포맥스 · 아크릴 투명리무버 · 투명무점착 (주차스티커)\nPVC (캘)\nUV PET · 가죽 · 천 · 타일 · 철판\n골드 · 실버 헤어라인 · 거울 PET\n반사지 · 야광지 홀로그램" },
+    nas:      { id:"nas",   name:"NAS", sub:"중요 데이터 저장소", brand:"#22d3ee",
+              desc:"■ 서버\n사내 NAS\n192.168.0.200 / 201\n■ 역할\nERP 서버 백업\n디자인팀 시안 DB\n웹팀 DB · 문서 일체\n■ 출력기 핫폴더 (4종)\nEPSON\nHP 라텍스\nEXTREME\n평판 UV\n■ 운영\nDocker (개발팀)" },
+  ig:       { id:"ig",    name:"인스타그램",   sub:"SNS · 임정민 주임", brand:"#E1306C", desc:"인스타 게시글 · 릴스 · AI 이미지/영상" },
+  nblog:    { id:"nblog", name:"네이버 블로그", sub:"SNS · 임정민 주임", brand:"#03C75A", desc:"네이버 블로그 포스팅 · 검색 노출 확인" },
+  yt:       { id:"yt",    name:"유튜브",       sub:"SNS · 임정민 주임", brand:"#FF0000", desc:"유튜브 쇼츠 (인스타 릴스 동일 영상)" },
+  claude20: { id:"claude20", name:"Claude Max 20×", sub:"AI · 팀 공용",
+              brand:"#d97706",
+              desc:"클로드 맥스 20X · 팀별 공용 (개발팀 제외 전사)" },
+  claude5:  { id:"claude5", name:"Claude Max 5×", sub:"AI · 개발 전용",
+              brand:"#a855f7",
+              desc:"클로드 맥스 5X · 개발팀 별도 사용" },
+  gpt:      { id:"gpt", name:"GPT Plus", sub:"AI · 전사 1계정",
+              brand:"#10b981",
+              desc:"GPT Plus 1개 계정 · 전사 공용" },
+
+  personalChannels: [
+    { id:"ss-hana",   name:"하나몰",       sub:"SMARTSTORE", brand:"#60a5fa", desc:"네이버 스마트스토어 · 하나몰 (메인) · ADBOOST 단독 진행", adBadge:{logo:"naver",label:"검색광고"}, ad:["네이버 검색광고","ADBOOST"] },
+    { id:"ss-baron",  name:"더바른사인",   sub:"SMARTSTORE", brand:"#60a5fa", desc:"네이버 스마트스토어 · 더바른사인", adBadge:{logo:"naver",label:"검색광고"}, ad:["네이버 검색광고"] },
+    { id:"ss-rocket", name:"로켓출력공장", sub:"SMARTSTORE", brand:"#60a5fa", desc:"네이버 스마트스토어 · 신규 · 시트/페트/포맥스/폼보드/DTF", adBadge:{logo:"naver",label:"검색광고"}, ad:["네이버 검색광고"] }
+  ],
+  corpChannels: [
+    { id:"godo",      name:"Hanasignmall.com", sub:"자사몰 · 고도몰",     brand:"#a855f7", desc:"자사몰 1 · 고도몰 (외부 솔루션) · 파워링크 점진 이전 예정", adBadge:{logo:"naver",label:"파워링크광고"}, ad:["네이버 파워링크"] },
+    { id:"self-mall", name:"Hanasignmall.kr",  sub:"자사몰 · 신규몰 (개발팀)", brand:"#c084fc", desc:"자사몰 2 · 자체개발몰 (신규몰) · 고도몰 파워링크 순차 연결 예정", adBadge:[{logo:"npay",label:"주문형/결제형"},{logo:"gads",label:"구글애즈"}], ad:["구글애즈","네이버 검색광고 일부","예정: 고도몰 파워링크 이전"] },
+    { id:"coupang",   name:"쿠팡",         sub:"오픈마켓", brand:"#f472b6", desc:"쿠팡 · 자체 AI 광고 진행 · 보류 업무 다수 누적 (7건)", ad:["쿠팡 자체 AI 광고"] },
+    { id:"11st",      name:"11번가",       sub:"오픈마켓", brand:"#ec4899", desc:"11번가 · 광고 X · 판매기간 연장 관리", ad:["광고 미집행"] },
+    { id:"auction",   name:"옥션",         sub:"ESM",      brand:"#fbbf24", desc:"옥션 (ESM) · ESM 자체 AI 광고 + 주력제품 별도", ad:["ESM 자체 AI 광고","지정 주력제품 별도 광고"] },
+    { id:"gmarket",   name:"G마켓",        sub:"ESM",      brand:"#22d3ee", desc:"G마켓 (ESM) · ESM 자체 AI 광고 + 주력제품 별도", ad:["ESM 자체 AI 광고","지정 주력제품 별도 광고"] }
+  ],
+  departments: [
+    { id:"web", name:"웹팀", color:"#60a5fa", color2:"#a855f7",
+      desc:"개인·법인 전 사업자 운영 (5명) · 상품/디자인/SNS",
+      links:["personal","corp"],
+      members:[
+        { name:"박상준", role:"차장", title:"웹팀 총괄", tasks: TASKS.parksj },
+        { name:"황국인", role:"과장", title:"디자인 (상세·랜딩·배너)", tasks: TASKS.hwangki },
+        { name:"김은혜", role:"주임", title:"디자인 (상세·랜딩·배너)", tasks: TASKS.kimeh },
+        { name:"홍재이", role:"주임", title:"상품관리 (개인·법인)", tasks: TASKS.hongjy },
+        { name:"임정민", role:"주임", title:"SNS (인스타·블로그·유튜브)", tasks: TASKS.limjm }
+      ]},
+    { id:"cs", name:"CS팀", color:"#a855f7", color2:"#22d3ee",
+      desc:"모든 몰(개인·법인)과 통화 · 전 채널 주문 수집 (9시·13시) → 업체현황시트 · ERP",
+      links:["personal","corp","erp"],
+      members:[
+        { name:"천현정", role:"차장", title:"CS팀 총괄 · 매출/원가/신상기획", tasks: TASKS.chunhj },
+        { name:"정현주", role:"과장", title:"디자인팀 업무분배·조율 · 견적", tasks: TASKS.junghj },
+        { name:"김민주", role:"대리", title:"견적·고도몰·로켓·이태경 백업", tasks: TASKS.kimmj },
+        { name:"김정란", role:"주임", title:"오픈마켓 게시판·외주 송장", tasks: TASKS.kimjr },
+        { name:"이태경", role:"주임", title:"주문·송장·현황 (자동화 1순위)", tasks: TASKS.leetk }
+      ]},
+    { id:"design", name:"디자인팀", color:"#f472b6", color2:"#a855f7",
+      desc:"주문고객응대 디자인 수정 컨펌 · 신규/기존 제품 시안 제작·수정 (5명) · ERP 사용",
+      links:["erp"],
+      members:[
+        { name:"정예진", role:"대리", title:"디자인", tasks: null },
+        { name:"김사랑", role:"대리", title:"디자인", tasks: null },
+        { name:"신혜리", role:"주임", title:"디자인", tasks: null },
+        { name:"이경민", role:"주임", title:"디자인", tasks: null },
+        { name:"박민진", role:"주임", title:"디자인", tasks: null }
+      ]},
+    { id:"dev", name:"개발팀", color:"#22d3ee", color2:"#3b82f6",
+      desc:"Hanasignmall.kr + ERP 자체 개발 (2명) · 웹팀·CS팀과 강하게 엮임 · 제작실 옅게",
+      links:["self-mall","erp","web","cs","product"],
+      members:[
+        { name:"강두원", role:"팀장", title:"개발 총괄", tasks: null },
+        { name:"나민지", role:"주임", title:"개발", tasks: TASKS.namji }
+      ]},
+    { id:"fin", name:"경영지원팀", color:"#7c3aed", color2:"#3b82f6",
+      desc:"회계 · 경리 · 인사 · 총무 (2명) · 전 부서·이카운트 연결",
+      links:["web","cs","design","dev","sales","factory2","product","ecount"],
+      members:[
+        { name:"송기용", role:"팀장", title:"경영지원 총괄", tasks: null },
+        { name:"이하나", role:"대리", title:"회계·경리·총무", tasks: TASKS.leehn }
+      ]},
+    { id:"sales", name:"외부영업", color:"#ec4899", color2:"#a855f7",
+      desc:"외부 영업 (1명) · CS팀과 견적 등 업무 협업",
+      links:["corp","cs","design"],
+      members:[ { name:"이영호", role:"과장", title:"외부영업 · 견적 협업", tasks: null } ]},
+    { id:"factory2", name:"2공장", color:"#3b82f6", color2:"#22d3ee",
+      desc:"동일 업무 2인 1조 · 시트/원판 재단·부착·포장·발송 · 오뚜기 동일 · CS·디자인·제작실·ERP 연결",
+      links:["cs","design","erp","product"],
+      members:[
+        { name:"최두학", role:"공장장", title:"제작 · 출력 (2인 1조)", tasks: TASKS.factory2 },
+        { name:"김현우", role:"주임", title:"제작 · 출력 (2인 1조)", tasks: TASKS.factory2 }
+      ]},
+    { id:"product", name:"제작실", color:"#c084fc", color2:"#60a5fa",
+      desc:"제작실 · 출력 (4명) · CS·디자인·2공장·ERP 연결",
+      links:["cs","erp"],
+      members:[
+        { name:"이지은", role:"대리", title:"출력·합지·재단·포장 (멀티)", tasks: TASKS.leeje },
+        { name:"우연형", role:"대리", title:"제작", tasks: null },
+        { name:"김동관", role:"대리", title:"제작 일정·시안 분류", tasks: TASKS.kimdg },
+        { name:"김민현", role:"주임", title:"제작", tasks: null }
+      ]}
+  ]
+};
+
+const world = document.getElementById('world');
+const wires = document.getElementById('wires');
+const POS = {};
+
+// camera state
+let camX = 0, camY = 0, camS = 1;
+let recentlyDragged = false;
+
+function placeNode(node, x, y, cls) {
+  const div = document.createElement('div');
+  div.className = `node ${cls}`;
+  div.dataset.id = node.id;
+  div.style.left = x + 'px';
+  div.style.top = y + 'px';
+  if (node.color)  div.style.setProperty('--dc', node.color);
+  if (node.color2) div.style.setProperty('--dc2', node.color2);
+
+  const frame = document.createElement('div'); frame.className = 'frame';
+  const core = document.createElement('div'); core.className = 'core';
+  if (node.brand) {
+    const dot = document.createElement('span'); dot.className = 'dot';
+    dot.style.setProperty('--c', node.brand);
+    core.appendChild(dot);
+  }
+  const txt = document.createElement('span'); txt.textContent = node.name;
+  core.appendChild(txt);
+  frame.appendChild(core);
+  div.appendChild(frame);
+
+  if (node.adBadge) {
+    const badges = Array.isArray(node.adBadge) ? node.adBadge : [node.adBadge];
+    badges.forEach((ab, idx) => {
+      const b = document.createElement('div'); b.className = 'ad-badge';
+      // 여러 개일 때 위로 쌓기 (배지 높이 약 32px 간격)
+      b.style.top = (-28 - idx * 22) + 'px';
+      let logoHtml = '';
+      if (ab.logo === 'naver') {
+        logoHtml = '<img src="naver.png" width="16" height="16" alt="네이버" style="display:block;">';
+      } else if (ab.logo === 'npay') {
+        logoHtml = '<img src="npay.png" width="36" height="16" alt="네이버페이" style="display:block;">';
+      } else if (ab.logo === 'gads') {
+        logoHtml = '<img src="gads.png" width="48" height="9" alt="Google Ads" style="display:block;">';
+      }
+      b.innerHTML = logoHtml + '<span class="ab-lbl">' + ab.label + '</span>';
+      div.appendChild(b);
+    });
+  }
+
+  if (node.sub) {
+    const sub = document.createElement('div'); sub.className = 'sub'; sub.textContent = node.sub;
+    div.appendChild(sub);
+  }
+
+  const exp = document.createElement('div'); exp.className = 'expanded';
+  if (node.desc) {
+    const lbl = document.createElement('div'); lbl.className = 'label'; lbl.textContent = 'INFO';
+    exp.appendChild(lbl);
+    const dscWrap = document.createElement('div'); dscWrap.className = 'desc';
+    node.desc.split('\n').forEach(line => {
+      const t = line.trim();
+      if (!t) return;
+      const row = document.createElement('div');
+      if (t.startsWith('■')) {
+        row.className = 'desc-section';
+        row.textContent = t.replace(/^■\s*/, '');
+      } else {
+        row.className = 'desc-line';
+        row.textContent = t;
+      }
+      dscWrap.appendChild(row);
+    });
+    exp.appendChild(dscWrap);
+  }
+  if (node.channels && node.channels.length) {
+    const lbl = document.createElement('div'); lbl.className = 'label'; lbl.style.marginTop = '8px';
+    lbl.textContent = '연결 채널 · ' + node.channels.length;
+    exp.appendChild(lbl);
+    node.channels.forEach(ch => {
+      const it = document.createElement('div');
+      it.className = 'ch-item';
+      it.textContent = ch;
+      exp.appendChild(it);
+    });
+  }
+  if (node.ad && node.ad.length) {
+    const lbl = document.createElement('div'); lbl.className = 'label'; lbl.style.marginTop = '8px';
+    lbl.textContent = `광고 집행 · ${node.ad.length}`;
+    exp.appendChild(lbl);
+    node.ad.forEach(a => {
+      const it = document.createElement('div');
+      let cls = 'ad-item';
+      if (a.startsWith('예정')) cls += ' future';
+      else if (a.includes('미집행')) cls += ' none';
+      else if (a.includes('구글')) cls += ' google';
+      else if (a.includes('네이버')) cls += ' naver';
+      else if (a.includes('ADBOOST')) cls += ' adboost';
+      else if (a.includes('쿠팡')) cls += ' coupang';
+      else if (a.includes('ESM') || a.includes('주력제품')) cls += ' esm';
+      it.className = cls;
+      it.textContent = a;
+      exp.appendChild(it);
+    });
+  }
+  if (node.members) {
+    const lbl = document.createElement('div'); lbl.className = 'label';
+    lbl.textContent = `MEMBERS · ${node.members.length}`;
+    exp.appendChild(lbl);
+    const grid = document.createElement('div'); grid.className = 'member-grid';
+    node.members.forEach(m => {
+      const chip = document.createElement('div');
+      chip.className = 'member-chip';
+      chip.dataset.dept = node.id;
+      chip.dataset.member = m.name;
+      chip.innerHTML = `<span class="mname">${m.name} <span class="role-tag">${m.role}</span></span>
+                       <span class="badge ${m.tasks ? 'has' : 'none'}">${m.tasks ? '업무 ' + m.tasks.length : '수집 대기'}</span>`;
+      chip.addEventListener('click', (e) => {
+        e.stopPropagation();
+        showTasks(node.id, m.name);
+      });
+      grid.appendChild(chip);
+    });
+    exp.appendChild(grid);
+  }
+  div.appendChild(exp);
+
+  world.appendChild(div);
+  POS[node.id] = { x, y, el: div, node };
+
+  // 등장 stagger
+  const idx = Object.keys(POS).length;
+  div.style.animationDelay = (idx * 0.035) + 's';
+
+  div.addEventListener('click', (e) => {
+    e.stopPropagation();
+    if (recentlyDragged) return;
+    // 확장 박스 안(.expanded) 클릭은 zoom 토글 비활성 - 빈 영역 눌러도 닫히지 않음
+    if (e.target.closest('.expanded')) return;
+    nodeClick(node.id);
+  });
+
+  // 호버 미리보기 제거 (사용자 요청)
+}
+
+// ============ LAYOUT ============
+const POS_X = { ceo: CX, bizP: CX - 470, bizC: CX + 470, chP: CX - 970, chC: CX + 970 };
+const DEPT_TOP_Y = 210, DEPT_BOT_Y = 1190;
+
+placeNode(DATA.ceo, POS_X.ceo, CY - 150, 'ceo');
+  placeNode(DATA.hanasm, POS_X.ceo, CY, 'hanasm');
+placeNode(DATA.personal, POS_X.bizP, CY, 'biz-personal');
+placeNode(DATA.corp,     POS_X.bizC, CY, 'biz-corp');
+
+function spreadY(items, gap) {
+  const n = items.length, total = (n - 1) * gap;
+  return items.map((it, i) => ({ it, y: CY - total/2 + i*gap }));
+}
+spreadY(DATA.personalChannels, 165).forEach(({it, y}) => placeNode(it, POS_X.chP, y, 'ch-personal'));
+spreadY(DATA.corpChannels, 150).forEach(({it, y}) => placeNode(it, POS_X.chC, y, 'ch-corp'));
+
+const depts = DATA.departments;
+function spreadX(items, gap) {
+  const n = items.length, total = (n - 1) * gap;
+  return items.map((it, i) => ({ it, x: CX - total/2 + i*gap }));
+}
+spreadX(depts.slice(0, 4), 510).forEach(({it, x}) => placeNode(it, x, DEPT_TOP_Y, 'dept'));
+spreadX(depts.slice(4),    510).forEach(({it, x}) => placeNode(it, x, DEPT_BOT_Y, 'dept'));
+
+// 플레이오토 + 이카운트 → CS팀 위쪽 영역 (CS팀 X=945 근처)
+placeNode(DATA.call, CX - 160, 80, 'sys sys-call');
+  placeNode(DATA.chat, CX + 160, 80, 'sys sys-chat');
+  placeNode(DATA.playauto, CX - 160, 380, 'sys sys-playauto');
+placeNode(DATA.ecount,   CX + 160, 380, 'sys sys-ecount');
+// SNS 3종 → 웹팀 위쪽 (X=435 근처)
+placeNode(DATA.ig,    180, 80,  'sys sys-ig');
+placeNode(DATA.nblog, 350, 80,  'sys sys-nblog');
+placeNode(DATA.yt,    520, 80,  'sys sys-yt');
+// ERP → Hanasignmall.kr (self-mall) 우측에 산하로
+placeNode(DATA.erp, 1965, 380, 'erp');
+placeNode(DATA.nas, 1965, 540, 'sys sys-nas');
+placeNode(DATA.prtEpson, 2240, 1030, 'sys sys-prt');
+placeNode(DATA.prtHp,    2240, 1120, 'sys sys-prt');
+placeNode(DATA.prtExt,   2240, 1210, 'sys sys-prt');
+placeNode(DATA.prtUv,    2240, 1300, 'sys sys-prt');
+
+// ============ WIRES ============
+function nodeSize(id) {
+  const el = POS[id]?.el; if (!el) return { w: 120, h: 50 };
+  const frame = el.querySelector('.frame');
+  if (frame) return { w: frame.offsetWidth || 120, h: frame.offsetHeight || 50 };
+  return { w: el.offsetWidth || 120, h: el.offsetHeight || 50 };
+}
+function edge(id, side) {
+  const r = POS[id]; if (!r) return { x: 0, y: 0 };
+  const { w, h } = nodeSize(id);
+  if (side === 'right') return { x: r.x + w/2, y: r.y };
+  if (side === 'left')  return { x: r.x - w/2, y: r.y };
+  if (side === 'top')   return { x: r.x, y: r.y - h/2 + 6 };
+  if (side === 'bot')   return { x: r.x, y: r.y + h/2 - 6 };
+  return { x: r.x, y: r.y };
+}
+function orthoPath(p1, p2, mode) {
+  // 동적 control - 거리가 한쪽으로 치우치면 대칭, 비스듬하면 약한 비대칭
+  if (mode === 'H') {
+    const dx = p2.x - p1.x;
+    const adx = Math.abs(dx);
+    const ady = Math.abs(p2.y - p1.y);
+    // 같은 높이 가까이 → 대칭 부드러운 곡선
+    if (ady < 80 || adx < 220) {
+      return `M${p1.x},${p1.y} C${p1.x + dx*0.42},${p1.y} ${p2.x - dx*0.42},${p2.y} ${p2.x},${p2.y}`;
+    }
+    // 비스듬한 경우만 약한 비대칭 (도착지 쪽 0.55)
+    return `M${p1.x},${p1.y} C${p1.x + dx*0.35},${p1.y} ${p2.x - dx*0.55},${p2.y} ${p2.x},${p2.y}`;
+  } else {
+    const dy = p2.y - p1.y;
+    const ady = Math.abs(dy);
+    const adx = Math.abs(p2.x - p1.x);
+    if (adx < 80 || ady < 220) {
+      return `M${p1.x},${p1.y} C${p1.x},${p1.y + dy*0.42} ${p2.x},${p2.y - dy*0.42} ${p2.x},${p2.y}`;
+    }
+    return `M${p1.x},${p1.y} C${p1.x},${p1.y + dy*0.35} ${p2.x},${p2.y - dy*0.55} ${p2.x},${p2.y}`;
+  }
+}
+function drawWire(fromId, toId, color, opts={}, cat=null) {
+  const a = POS[fromId], b = POS[toId];
+  if (!a || !b) return;
+  const dx = b.x - a.x, dy = b.y - a.y;
+  const mode = Math.abs(dy) > Math.abs(dx) * 1.2 ? 'V' : 'H';
+  const fSide = mode === 'V' ? (dy > 0 ? 'bot' : 'top') : (dx > 0 ? 'right' : 'left');
+  const tSide = mode === 'V' ? (dy > 0 ? 'top' : 'bot') : (dx > 0 ? 'left' : 'right');
+  const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+  path.setAttribute('d', orthoPath(edge(fromId, fSide), edge(toId, tSide), mode));
+  path.setAttribute('stroke', color);
+  path.style.color = color;
+  if (opts.flow) path.classList.add('flow');
+  if (opts.dashed) path.setAttribute('stroke-dasharray', '6 6');
+  path.setAttribute('stroke-width', opts.width || 1.4);
+  if (opts.opacity != null) path.style.opacity = opts.opacity;
+  path.dataset.from = fromId;
+  path.dataset.to = toId;
+  if (cat) path.dataset.cat = cat;
+  wires.appendChild(path);
+}
+function drawRegion(x, y, w, h, color, label) {
+  const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+  rect.setAttribute('x', x); rect.setAttribute('y', y);
+  rect.setAttribute('width', w); rect.setAttribute('height', h);
+  rect.setAttribute('fill', color + '14');
+  rect.setAttribute('stroke', color);
+  rect.setAttribute('stroke-width', '2.5');
+  rect.setAttribute('stroke-dasharray', '14 10');
+  rect.setAttribute('rx', '20');
+  rect.style.opacity = '0.55';
+  rect.style.filter = `drop-shadow(0 0 18px ${color})`;
+  wires.appendChild(rect);
+
+  const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+  text.setAttribute('x', x + w/2); text.setAttribute('y', y - 16);
+  text.setAttribute('fill', color);
+  text.setAttribute('text-anchor', 'middle');
+  text.setAttribute('font-size', '28');
+  text.setAttribute('font-weight', '800');
+  text.setAttribute('letter-spacing', '6');
+  text.style.filter = `drop-shadow(0 0 12px ${color})`;
+  text.textContent = label;
+  wires.appendChild(text);
+}
+
+// 개발 클러스터 배경 (자동 bbox)
+const DEV_CLUSTER = ['dev', 'erp', 'nas', 'self-mall'];
+function drawDevRegion() {
+  const pts = DEV_CLUSTER.map(id => POS[id]).filter(Boolean);
+  if (pts.length < 2) return;
+  let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+  pts.forEach(r => {
+    const { w, h } = nodeSize(r.node.id);
+    minX = Math.min(minX, r.x - w/2);
+    minY = Math.min(minY, r.y - h/2);
+    maxX = Math.max(maxX, r.x + w/2);
+    maxY = Math.max(maxY, r.y + h/2);
+  });
+  const padX = 40;
+  const padTop = 80;
+  const padBottom = 40;
+  const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+  rect.setAttribute('x', minX - padX);
+  rect.setAttribute('y', minY - padTop);
+  rect.setAttribute('width',  (maxX - minX) + padX*2);
+  rect.setAttribute('height', (maxY - minY) + padTop + padBottom);
+  rect.setAttribute('rx', 28);
+  rect.setAttribute('class', 'dev-region');
+  // wires SVG의 첫 자식으로 삽입 (배경 깊이)
+  wires.insertBefore(rect, wires.firstChild);
+
+  const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+  text.setAttribute('x', minX - padX + 22);
+  text.setAttribute('y', minY - padTop + 38);
+  text.setAttribute('fill', 'rgba(34,211,238,0.55)');
+  text.setAttribute('font-size', '14');
+  text.setAttribute('font-weight', '800');
+  text.setAttribute('letter-spacing', '4');
+  text.style.pointerEvents = 'none';
+  text.textContent = 'DEV · SYSTEM';
+  wires.insertBefore(text, rect.nextSibling);
+}
+
+function drawAllWires() {
+  wires.innerHTML = '';
+  // DEV 영역 박스 제거 (정상 레이아웃 복원)
+  const WEAK   = { width: 1.0, opacity: 0.18 };  // 약한 연결
+  const NORMAL = { width: 1.4, opacity: 0.28 };  // 보통
+  const STRONG = { width: 2.4, opacity: 0.45 };  // 강한 핵심
+  // 핵심(강한) - 대표·사업자·산하 ERP·CS-ERP·개발-ERP-CS
+  drawWire('ceo', 'hanasm',   '#fbbf24', STRONG, 'core');
+  drawWire('hanasm', 'personal', '#fbbf24', STRONG, 'core');
+  drawWire('hanasm', 'corp',     '#fbbf24', STRONG, 'core');
+  drawWire('self-mall', 'erp','#22d3ee', STRONG, 'system');
+  drawWire('cs', 'erp',       '#22d3ee', STRONG, 'system');  // CS-ERP 핵심
+  drawWire('dev', 'erp',      '#22d3ee', STRONG, 'system');  // 개발-ERP 핵심
+  drawWire('dev', 'cs',       '#22d3ee', STRONG, 'dept');  // 개발-CS 강한 연결
+  drawWire('web', 'cs',       '#60a5fa', STRONG, 'dept');  // 웹-CS 유기적
+  // 보통 - 사업자→채널, 부서간 흐름
+  DATA.personalChannels.forEach(c => drawWire('personal', c.id, '#60a5fa', NORMAL, 'channel'));
+  DATA.corpChannels.forEach(c => drawWire('corp', c.id, '#a855f7', NORMAL, 'channel'));
+  drawWire('cs', 'call',     '#60a5fa', NORMAL, 'talk');
+  drawWire('cs', 'chat',     '#f472b6', NORMAL, 'talk');
+  drawWire('chat', 'ss-hana',  '#f472b6', WEAK, 'talk');
+  drawWire('chat', 'ss-baron', '#f472b6', WEAK, 'talk');
+  drawWire('chat', 'ss-rocket','#f472b6', WEAK, 'talk');
+  drawWire('chat', 'godo',     '#f472b6', WEAK, 'talk');
+  drawWire('chat', 'self-mall','#f472b6', WEAK, 'system');
+  drawWire('cs', 'playauto', '#fb923c', NORMAL, 'system');
+  DATA.personalChannels.forEach(ch => drawWire(ch.id, 'playauto', '#fb923c', WEAK, 'system'));
+  DATA.corpChannels.forEach(ch => drawWire(ch.id, 'playauto', '#fb923c', WEAK, 'system'));
+  drawWire('cs', 'ecount',   '#34d399', NORMAL, 'system');
+  drawWire('fin', 'ecount',  '#34d399', NORMAL, 'system');
+  drawWire('design', 'web',  '#f472b6', NORMAL, 'dept');
+  drawWire('cs', 'design',   '#a855f7', NORMAL, 'dept');
+  drawWire('design', 'product', '#f472b6', NORMAL, 'dept');
+  drawWire('dev', 'web',     '#22d3ee', NORMAL, 'dept');
+  drawWire('dev', 'self-mall','#22d3ee', NORMAL, 'system');
+  // 약한 연결 - 부서.links 자동 (외부영업→웹팀 제거: 2026-05-22)
+  // 웹팀 → SNS 3종 (임정민 주임)
+  drawWire('web', 'ig',    '#E1306C', NORMAL, 'sns');
+  drawWire('web', 'nblog', '#03C75A', NORMAL, 'sns');
+  drawWire('web', 'yt',    '#FF0000', NORMAL, 'sns');
+  depts.forEach(d => d.links.forEach(t => drawWire(d.id, t, '#a5b4fc', WEAK, 'dept')));
+  // NAS → 부서 (factory2 제외) 7곳 - 옅은 시스템 와이어
+  ['web','cs','design','dev','fin','sales','product'].forEach(deptId => {
+    drawWire('nas', deptId, '#22d3ee', WEAK, 'system');
+  });
+  // 제작실 → 출력장비 4종 (점선 · 핫폴더는 NAS에 있음)
+  ['prtEpson','prtHp','prtExt','prtUv'].forEach(pid => {
+    drawWire('product', pid, '#c084fc', { width: 1.4, opacity: 0.35, dashed: true }, 'system');
+  });
+  // 채널 → 웹팀 숨김 와이어 (채널 클릭 시에만 강조)
+  [...DATA.personalChannels, ...DATA.corpChannels].forEach(ch => {
+    drawWire(ch.id, 'web', '#60a5fa', { width: 1.4, opacity: 0 }, 'ch-web');
+    const p = wires.lastChild;
+    if (p && p.classList) p.classList.add('ch-web');
+  });
+  // 개발 클러스터 배경 (자동 bbox)
+  if (typeof drawDevRegion === 'function') drawDevRegion();
+  // 카테고리 필터 재적용 (와이어 새로 그렸으므로)
+  if (typeof window.__applyCatFilter === 'function') window.__applyCatFilter();
+  return;
+  drawWire('ceo', 'personal', '#60a5fa', { width: 2.0, flow: true }, 'dept');
+  drawWire('ceo', 'corp',     '#a855f7', { width: 2.0, flow: true }, 'dept');
+  DATA.personalChannels.forEach(c => drawWire('personal', c.id, '#60a5fa', { width: 1.5, flow: true }, 'channel'));
+  DATA.corpChannels.forEach(c => drawWire('corp', c.id, '#a855f7', { width: 1.5, flow: true }, 'channel'));
+  drawWire('self-mall', 'erp', '#22d3ee', { width: 1.4, opacity: 0.4 }, 'system');
+  // 시스템 (옅게)
+  drawWire('cs', 'playauto', '#fb923c', { width: 1.0, opacity: 0.25 }, 'system');
+  drawWire('cs', 'ecount',   '#34d399', { width: 1.0, opacity: 0.25 }, 'system');
+  drawWire('fin', 'ecount',  '#34d399', { width: 1.0, opacity: 0.25 }, 'system');
+  // 부서 간 인과 (옅게)
+  drawWire('design', 'web',     '#f472b6', { width: 1.0, opacity: 0.18 }, 'dept');
+  drawWire('web', 'cs',         '#60a5fa', { width: 1.0, opacity: 0.18 }, 'dept');
+  drawWire('cs', 'design',      '#a855f7', { width: 1.0, opacity: 0.18 }, 'dept');
+  drawWire('design', 'product', '#f472b6', { width: 1.0, opacity: 0.18 }, 'dept');
+  drawWire('product', 'factory2','#2dd4bf', { width: 1.0, opacity: 0.18 }, 'dept');
+  drawWire('cs', 'erp',         '#22d3ee', { width: 1.0, opacity: 0.18 }, 'system');
+  drawWire('sales', 'web',      '#ec4899', { width: 0.8, opacity: 0.12 }, 'dept'); // 외부영업→웹팀 약한 연결 (임정민 시공 이미지 공유)
+  // 부서 → 사업자 (매우 옅게)
+  depts.forEach(d => d.links.forEach(t => drawWire(d.id, t, d.color, { width: 0.8, opacity: 0.10 }, 'dept')));
+}
+
+// ============ CAMERA ============
+function applyCam() {
+  world.style.transform = `translate(${camX}px, ${camY}px) scale(${camS})`;
+}
+function fitView() {
+  const vw = window.innerWidth, vh = window.innerHeight;
+  const isMobile = vw < 768;
+  const padX = isMobile ? 30 : 280;
+  const padY = isMobile ? 100 : 220;
+  const sx = (vw - padX) / STAGE_W;
+  const sy = (vh - padY) / STAGE_H;
+  let s = Math.min(sx, sy) * (isMobile ? 1.0 : 0.92);
+  // 모바일에서 최소 가독 줌 보장 (가로 스크롤은 드래그로 가능)
+  if (isMobile) s = Math.max(s, 0.42);
+  camS = s;
+  camX = (vw - STAGE_W * camS) / 2;
+  camY = (vh - STAGE_H * camS) / 2;
+  applyCam();
+}
+function cameraTo(id) {
+  const r = POS[id]; if (!r) return;
+  const vw = window.innerWidth, vh = window.innerHeight;
+  let zoom;
+  if (id === 'ceo') zoom = 1.2;
+  else if (id === 'personal' || id === 'corp') zoom = 1.15;
+  else if (depts.find(x => x.id === id)) zoom = 1.1;  // 부서 패널 자리 위해 살짝 줄임
+  else zoom = 1.5;
+  const isDept = !!depts.find(x => x.id === id);
+  camS = zoom;
+  // 노드를 화면 가운데에서 왼쪽으로 살짝 이동 (오른쪽 패널 자리 확보)
+  const offsetX = (isDept || id === 'ceo' || id === 'personal' || id === 'corp') ? vw * 0.18 : 0;
+  camX = vw/2 - r.x * camS - offsetX;
+  camY = (isDept ? vh*0.4 : vh*0.5) - r.y * camS;
+  applyCam();
+}
+
+// ============ INTERACTION ============
+let currentId = null, currentStage = 0;
+const taskPanel = document.getElementById('taskPanel');
+
+function nodeClick(id) {
+  if (currentId === id && currentStage === 1) {
+    setStage(id, 2);
+  } else if (currentId === id && currentStage === 2) {
+    closeAll();
+  } else {
+    setStage(id, 1);
+  }
+}
+
+function setStage(id, stage) {
+  document.querySelectorAll('.node.lit, .node.zoomed, .node.bounce').forEach(n => n.classList.remove('lit', 'zoomed', 'bounce'));
+  document.querySelectorAll('svg.wires path.focus-wire, svg.wires path.flow').forEach(p => p.classList.remove('focus-wire','flow'));
+  taskPanel.classList.remove('show');
+
+  if (!id) {
+    world.classList.remove('has-focus');
+    currentId = null; currentStage = 0;
+    fitView();
+    return;
+  }
+
+  world.classList.add('has-focus');
+  currentId = id;
+  currentStage = stage;
+  const rec = POS[id]; if (!rec) return;
+
+  const connected = new Set([id]);
+  const isDept = !!depts.find(x => x.id === id);
+  const isDeptNode = (nid) => !!depts.find(x => x.id === nid);
+
+  // call(전화상담) / sales(외부영업) 클릭 시 cs 통해서 사업자 + 산하 채널 점선 표시
+  const isCallOrSales = (id === 'call' || id === 'sales');
+
+  if (isDept) {
+    // 부서 클릭 → 직접 연결된 노드만 + 사업자 산하 채널/CEO
+    wires.querySelectorAll('path').forEach(p => {
+      if (p.dataset.from === id || p.dataset.to === id) {
+        connected.add(p.dataset.from); connected.add(p.dataset.to);
+      }
+    });
+    // 사업자 산하 채널 + 점선 애니메이션 와이어 (flow)
+    // 디자인팀은 채널 강조 제외 (사용자 요청)
+    if (connected.has('personal') && id !== 'design') {
+      DATA.personalChannels.forEach(c => {
+        connected.add(c.id);
+        wires.querySelectorAll(`path[data-from="personal"][data-to="${c.id}"], path[data-from="${c.id}"][data-to="personal"]`).forEach(p => p.classList.add('focus-wire','flow'));
+      });
+    }
+    if (connected.has('corp') && id !== 'design') {
+      DATA.corpChannels.forEach(c => {
+        connected.add(c.id);
+        wires.querySelectorAll(`path[data-from="corp"][data-to="${c.id}"], path[data-from="${c.id}"][data-to="corp"]`).forEach(p => p.classList.add('focus-wire','flow'));
+      });
+    }
+    // ERP 사용 부서 자동 (ERP가 connected에 있으면 CS/디자인/제작실/2공장 자동 추가)
+    if (connected.has('erp')) {
+      ['cs','design','product','factory2'].forEach(deptId => {
+        if (deptId === id) return;
+        connected.add(deptId);
+        wires.querySelectorAll(`path[data-from="erp"][data-to="${deptId}"], path[data-from="${deptId}"][data-to="erp"]`).forEach(p => p.classList.add('focus-wire','flow'));
+      });
+    }
+    if (connected.has('self-mall')) connected.add('erp');
+    connected.add('ceo');
+
+    // sales(외부영업) 클릭 시: cs→personal/corp + 모든 채널 점선 강조
+    if (isCallOrSales) {
+      connected.add('cs');
+      connected.add('personal'); connected.add('corp');
+      ['personal','corp'].forEach(t => {
+        wires.querySelectorAll(`path[data-from="cs"][data-to="${t}"], path[data-from="${t}"][data-to="cs"]`).forEach(p => p.classList.add('focus-wire','flow'));
+      });
+      DATA.personalChannels.forEach(c => {
+        connected.add(c.id);
+        wires.querySelectorAll(`path[data-from="personal"][data-to="${c.id}"], path[data-from="${c.id}"][data-to="personal"]`).forEach(p => p.classList.add('focus-wire','flow'));
+      });
+      DATA.corpChannels.forEach(c => {
+        connected.add(c.id);
+        wires.querySelectorAll(`path[data-from="corp"][data-to="${c.id}"], path[data-from="${c.id}"][data-to="corp"]`).forEach(p => p.classList.add('focus-wire','flow'));
+      });
+    }
+  } else {
+    // 비부서 노드 클릭 → 직접 연결만
+    wires.querySelectorAll('path').forEach(p => {
+      if (p.dataset.from === id || p.dataset.to === id) {
+        connected.add(p.dataset.from); connected.add(p.dataset.to);
+      }
+    });
+    // NAS 클릭: 부서 7곳 (factory2 제외) 바운스 + flow 와이어 강조
+    if (id === 'nas') {
+      const nasDepts = ['web', 'cs', 'design', 'dev', 'fin', 'sales', 'product'];
+      const nasPrinters = ['prtEpson', 'prtHp', 'prtExt', 'prtUv'];
+      [...nasDepts, ...nasPrinters].forEach(targetId => {
+        connected.add(targetId);
+        // NAS↔타깃 직접 와이어 강조 (출력기는 직접 와이어 없음)
+        wires.querySelectorAll(`path[data-from="nas"][data-to="${targetId}"], path[data-from="${targetId}"][data-to="nas"]`).forEach(p => p.classList.add('focus-wire','flow'));
+        const el = POS[targetId]?.el;
+        if (el) {
+          el.classList.remove('bounce');
+          void el.offsetWidth;
+          el.classList.add('bounce');
+          setTimeout(() => el.classList.remove('bounce'), 750);
+        }
+      });
+      // 제작실 → 출력기 점선 와이어도 함께 강조 (NAS 핫폴더 흐름)
+      nasPrinters.forEach(pid => {
+        wires.querySelectorAll(`path[data-from="product"][data-to="${pid}"], path[data-from="${pid}"][data-to="product"]`).forEach(p => p.classList.add('focus-wire','flow'));
+      });
+    }
+    // call(전화상담) 클릭 시: cs 통해서 사업자 + 산하 채널 점선 강조
+    if (id === 'call') {
+      connected.add('cs');
+      connected.add('personal'); connected.add('corp');
+      ['personal','corp'].forEach(t => {
+        wires.querySelectorAll(`path[data-from="cs"][data-to="${t}"], path[data-from="${t}"][data-to="cs"]`).forEach(p => p.classList.add('focus-wire','flow'));
+      });
+      DATA.personalChannels.forEach(c => {
+        connected.add(c.id);
+        wires.querySelectorAll(`path[data-from="personal"][data-to="${c.id}"], path[data-from="${c.id}"][data-to="personal"]`).forEach(p => p.classList.add('focus-wire','flow'));
+      });
+      DATA.corpChannels.forEach(c => {
+        connected.add(c.id);
+        wires.querySelectorAll(`path[data-from="corp"][data-to="${c.id}"], path[data-from="${c.id}"][data-to="corp"]`).forEach(p => p.classList.add('focus-wire','flow'));
+      });
+    }
+  }
+
+  // 와이어 강조: 클릭 노드 직접 연결만 (ch-web은 채널 클릭 시만)
+  const isChannel = [...DATA.personalChannels, ...DATA.corpChannels].some(x => x.id === id);
+  wires.querySelectorAll('path').forEach(p => {
+    if (p.dataset.from === id || p.dataset.to === id) {
+      if (p.classList.contains('ch-web') && !isChannel) return;
+      p.classList.add('focus-wire');
+    }
+  });
+
+  if (stage === 1) {
+    connected.forEach(cid => POS[cid]?.el.classList.add('lit'));
+  } else if (stage === 2) {
+    connected.forEach(cid => POS[cid]?.el.classList.add('lit'));
+    rec.el.classList.remove('lit');
+    rec.el.classList.add('zoomed');
+    cameraTo(id);
+    if (isDept && typeof renderDeptProjects === 'function') {
+      renderDeptProjects(id);
+      // 패널 위치 보정 - 위쪽 잘림 방지
+      requestAnimationFrame(() => {
+        const expEl = rec.el.querySelector('.expanded');
+        if (!expEl) return;
+        const r = expEl.getBoundingClientRect();
+        const safeTop = 60;
+        if (r.top < safeTop) {
+          // 노드 좌표에서 transform 보정
+          const delta = safeTop - r.top;
+          expEl.style.transform = `translateY(calc(-50% + ${delta}px))`;
+        }
+      });
+    }
+  }
+}
+
+function closeAll() { setStage(null); }
+
+// ============ TASKS ============
+function showTasks(deptId, memberName) {
+  const d = depts.find(x => x.id === deptId);
+  if (!d) return;
+  const m = d.members.find(x => x.name === memberName);
+  if (!m) return;
+
+  document.getElementById('tpName').textContent = `${m.name} ${m.role}`;
+  document.getElementById('tpRole').textContent = `${d.name} · ${m.title || ''}`;
+
+  const stats = { routine: 0, aux: 0, active: 0, hold: 0, planned: 0 };
+  const groups = { '정기': [], '상시': [] };
+  if (m.tasks) {
+    m.tasks.forEach(t => {
+      const k = t.status === '상시' ? '정기' : t.status;
+      if (!groups[k]) groups[k] = [];
+      groups[k].push(t);
+      if (t.status === '진행중') stats.active++;
+      else if (t.status === '보류') stats.hold++;
+      else if (t.status === '예정') stats.planned++;
+      else stats.routine++;
+    });
+  }
+
+  const statsEl = document.getElementById('tpStats');
+  if (m.tasks) {
+    statsEl.innerHTML = `
+      ${stats.active   ? `<span class="st active">진행중 ${stats.active}</span>` : ''}
+      ${stats.planned  ? `<span class="st planned">예정 ${stats.planned}</span>` : ''}
+      ${stats.hold     ? `<span class="st hold">보류 ${stats.hold}</span>` : ''}
+      ${stats.routine  ? `<span class="st routine">정기 ${stats.routine}</span>` : ''}
+      ${stats.aux      ? `<span class="st active">상시 ${stats.aux}</span>` : ''}
+    `;
+  } else {
+    statsEl.innerHTML = '';
+  }
+
+  const body = document.getElementById('tpBody');
+  if (!m.tasks) {
+    body.innerHTML = `
+      <div class="tp-empty">
+        <div class="ic">◇</div>
+        업무 인터뷰 대기 중<br>
+        <span style="font-size:10px; color:var(--text-3); letter-spacing:0.1em;">박상준 차장에게 전달 필요</span>
+      </div>`;
+  } else {
+    let html = '';
+    const order = [
+      { key:'진행중', cls:'s-active',  label:'진행중' },
+      { key:'예정',   cls:'s-routine', label:'예정' },
+      { key:'보류',   cls:'s-hold',    label:'보류' },
+      { key:'정기',   cls:'s-routine', label:'정기' },
+      { key:'상시',   cls:'s-active',  label:'상시' }
+    ];
+    order.forEach(({key, cls, label}) => {
+      if (groups[key] && groups[key].length) {
+        html += `<div class="task-group ${cls}"><h4>${label} <span class="cnt">${groups[key].length}</span></h4>`;
+        const prioRank = { h: 0, m: 1, l: 2 };
+        const sorted = [...groups[key]].sort((a, b) => (prioRank[a.prio || 'l'] - prioRank[b.prio || 'l']));
+        sorted.forEach(t => {
+          const prio = t.prio || 'l';
+          const prioLabel = prio === 'h' ? '상' : prio === 'm' ? '중' : '하';
+          html += `<div class="task-item">
+            <span class="tdot"></span>
+            <span class="tname">${t.name}${t.detail ? ` <b>${t.detail}</b>` : ''}</span>
+            <span class="prio ${prio}">${prioLabel}</span>
+          </div>`;
+        });
+        html += `</div>`;
+      }
+    });
+    body.innerHTML = html;
+  }
+  // 신규 프로젝트 패널 자동 닫음 (겹침 방지)
+  const pp = document.getElementById('projPanel');
+  if (pp) pp.classList.remove('show');
+  taskPanel.classList.add('show');
+}
+
+// ============ EVENTS ============
+document.getElementById('taskClose').addEventListener('click', () => taskPanel.classList.remove('show'));
+
+const stageEl = document.getElementById('stage');
+let isDragging = false, dragStart = null;
+
+stageEl.addEventListener('mousedown', (e) => {
+  if (e.button !== 0) return;
+  if (e.target.closest('.task-panel') || e.target.closest('.controls') || e.target.closest('.topbar') || e.target.closest('.legend')) return;
+  dragStart = { camX, camY, x: e.clientX, y: e.clientY };
+});
+
+window.addEventListener('mousemove', (e) => {
+  if (!dragStart) return;
+  const dx = e.clientX - dragStart.x, dy = e.clientY - dragStart.y;
+  if (!isDragging && Math.hypot(dx, dy) > 5) { isDragging = true; stageEl.classList.add('dragging'); }
+  if (isDragging) { camX = dragStart.camX + dx; camY = dragStart.camY + dy; applyCam(); }
+});
+
+window.addEventListener('mouseup', () => {
+  if (isDragging) { recentlyDragged = true; setTimeout(() => recentlyDragged = false, 60); stageEl.classList.remove('dragging'); }
+  isDragging = false; dragStart = null;
+});
+
+// Touch 지원 (모바일)
+stageEl.addEventListener('touchstart', (e) => {
+  if (e.target.closest('.task-panel') || e.target.closest('.controls') || e.target.closest('.topbar') || e.target.closest('.legend')) return;
+  if (e.touches.length === 1) {
+    dragStart = { camX, camY, x: e.touches[0].clientX, y: e.touches[0].clientY };
+  }
+}, { passive: true });
+stageEl.addEventListener('touchmove', (e) => {
+  if (!dragStart || e.touches.length !== 1) return;
+  const dx = e.touches[0].clientX - dragStart.x, dy = e.touches[0].clientY - dragStart.y;
+  if (!isDragging && Math.hypot(dx, dy) > 5) { isDragging = true; stageEl.classList.add('dragging'); }
+  if (isDragging) { camX = dragStart.camX + dx; camY = dragStart.camY + dy; applyCam(); e.preventDefault(); }
+}, { passive: false });
+stageEl.addEventListener('touchend', () => {
+  if (isDragging) { recentlyDragged = true; setTimeout(() => recentlyDragged = false, 60); stageEl.classList.remove('dragging'); }
+  isDragging = false; dragStart = null;
+});
+// 휠 확대/축소 (마우스 포인터 기준)
+stageEl.addEventListener('wheel', (e) => {
+  // 패널 안에서는 스테이지 줌 막고 패널 스크롤 유지
+  if (e.target.closest('.expanded') || e.target.closest('.task-panel') || e.target.closest('.proj-panel')) return;
+  e.preventDefault();
+  const factor = e.deltaY > 0 ? 0.9 : 1.1;
+  const ns = Math.max(0.3, Math.min(3.5, camS * factor));
+  const mx = e.clientX, my = e.clientY;
+  const wx = (mx - camX) / camS, wy = (my - camY) / camS;
+  camS = ns; camX = mx - wx * camS; camY = my - wy * camS;
+  world.style.transition = 'none'; applyCam();
+  requestAnimationFrame(() => world.style.transition = '');
+}, { passive: false });
+
+stageEl.addEventListener('click', (e) => {
+  if (recentlyDragged) { e.stopPropagation(); return; }
+  // 패널·툴바·칩바·확장 영역 안 클릭이면 닫지 않음
+  if (e.target.closest('.node') || e.target.closest('.expanded') || e.target.closest('.task-panel') || e.target.closest('.proj-panel') || e.target.closest('.proj-toggle') || e.target.closest('.chip-bar') || e.target.closest('.controls') || e.target.closest('.topbar')) return;
+  closeAll();
+}, true);
+document.getElementById('today').textContent = new Date().toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' }).toUpperCase();
+function init() {
+  fitView(); drawAllWires();
+  setTimeout(() => { drawAllWires(); fitView(); }, 200);
+  setTimeout(() => { drawAllWires(); fitView(); }, 600);
+}
+if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
+
+// ===== 편집 모드: 노드 드래그 + 위치 저장 (다음 세션에서 재구현 예정) =====
+// 임시 비활성화 — editToggle 버튼이 첫 <script> 바깥에 있어 null 에러 발생했음
+// 다음 세션: 토글 버튼 DOM 위치를 <script> 앞으로 이동 + DOMContentLoaded 안에서 바인딩
+
+// 사용자 정리 디폴트 레이아웃 (localStorage 없는 신규 방문자에게 적용)
+const DEFAULT_LAYOUT = {
+  dev:        { x: 1953.20, y:  211.97 },
+  erp:        { x: 1955.27, y:   73.72 },
+  'self-mall':{ x: 2168.60, y:   72.65 },
+  nas:        { x: 2111.76, y:  161.34 },
+  product:    { x: 1955.17, y: 1197.86 },
+  coupang:    { x: 2170.00, y:  530.63 },
+  '11st':     { x: 2166.07, y:  702.26 },
+  auction:    { x: 2166.07, y:  871.92 },
+  gmarket:    { x: 2166.07, y: 1035.68 },
+  playauto:   { x:  943.66, y:  385.90 },
+  ecount:     { x:  945.16, y:  531.39 },
+  call:       { x:  943.66, y:   81.97 },
+  chat:       { x: 1094.58, y:   81.97 },
+  prtUv:      { x: 1815.33, y: 1313.76 },
+  prtExt:     { x: 1932.66, y: 1409.77 },
+  prtHp:      { x: 2053.54, y: 1326.59 },
+  prtEpson:   { x: 2131.16, y: 1228.03 },
+  godo:       { x: 2168.03, y:  368.25 }
+};
+function applyDefaultLayout() {
+  Object.keys(DEFAULT_LAYOUT).forEach(id => {
+    const r = POS[id]; if (!r) return;
+    r.x = DEFAULT_LAYOUT[id].x;
+    r.y = DEFAULT_LAYOUT[id].y;
+    r.el.style.left = r.x + 'px';
+    r.el.style.top  = r.y + 'px';
+  });
+}
+applyDefaultLayout();
+
+function loadPositions() {
+  try {
+    const saved = JSON.parse(localStorage.getItem('hanasm.positions') || '{}');
+    Object.keys(saved).forEach(id => {
+      if (POS[id]) {
+        POS[id].x = saved[id].x;
+        POS[id].y = saved[id].y;
+        POS[id].el.style.left = saved[id].x + 'px';
+        POS[id].el.style.top  = saved[id].y + 'px';
+      }
+    });
+    drawAllWires();
+  } catch(e) {}
+}
+loadPositions();
+
+window.addEventListener('resize', () => { fitView(); drawAllWires(); });
+</script>
+
+<button class="proj-toggle" id="undoBtn" style="right: 290px; display: none;">↶ 되돌리기 <span id="undoCnt" style="opacity:0.7;">0</span></button>
+<button class="proj-toggle" id="editToggle" style="right: 175px;">✎ 편집</button>
+<button class="proj-toggle" id="projToggle">≡ 신규 프로젝트</button>
+<aside class="proj-panel" id="projPanel">
+  <div class="pp-head">
+    <div class="pp-title">신규 프로젝트 보드</div>
+    <span class="pp-x" id="ppClose">✕</span>
+  </div>
+  <div class="pp-body" id="ppBody"></div>
+</aside>
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+<script>
+const PROJECTS = {
+  ad:      { name:'광고', items:[
+    { name:'네이버 검색광고 에이전트 빌드', prio:'h', progress:50, status:'active',
+      ownerDept:'web', related:[], decision:'go', startWhen:'진행 중',
+      desc:'현재 대표 일일보고용 별도 운용 중. 주간 데이터까지 합쳐서 빼고 있음. AI 통계·판단·입찰조정까지는 미완성 → 그 단계가 되어야 완전한 에이전트 수준.', owner:'박상준' }
+  ]},
+  ai:      { name:'AI·자동화', items:[
+    { name:'AI 챗봇 / RAG 앵커DB (전상품 DB화)', prio:'h', progress:30, status:'active',
+      ownerDept:'web', related:['design','cs'], decision:'go', startWhen:'진행 중',
+      desc:'하나사인몰 전상품 DB화 작업. 모든 상품 데이터 엑셀 정리 중. 게시판·입간판 카테고리 완료 → 대표 보고. 현재 주차스티커 정리 중. 완료된 것부터 노드데이터로 만들어 외주 챗봇 DB로 투입.', owner:'박상준' }
+  ]},
+  product: { name:'신상품·등록', items:[
+    { name:'주력제품 가격인상 (주차→A형)', prio:'h', progress:40, status:'active',
+      ownerDept:'web', related:['cs'], decision:'go', startWhen:'이번 주 → 6월 중순',
+      desc:'홍재이 주임 진행 중. 이번 주 주차스티커 완료 예상, 차주 A형입간판 진행 예정. 제품 수가 많아 6월 초·중순까지 이어질 수 있음.', owner:'홍재이' },
+    { name:'어드민 카테고리·토글 정리 (LLM)', prio:'m', progress:70, status:'stop',
+      ownerDept:'web', related:[], decision:'hold', startWhen:'미정',
+      desc:'신규몰 어드민 상품별 공간별 토글 정리. 1차는 룰 적용, 2차는 LLM 적용 테스트 진행했으나 개인별 차로 완벽 분리 어려운 부분이 있어 스톱. 공정률 70%.', owner:'박상준' },
+    { name:'MDF게시판 제품 상세페이지', prio:'m', progress:80, status:'active',
+      ownerDept:'web', related:['design','fin'], decision:'hold', startWhen:'사이즈 확인 후',
+      desc:'황국인 과장이 MDF + 집게 옵션 상세페이지 완료. 포켓 관련 도면은 송기용 팀장이 새로 잡음. 포켓 사이즈가 달라져서 진행 여부 확인 필요. 진행 확정 시 이미지·사이즈 수정만 추가하면 마무리.', owner:'황국인' }
+  ]},
+  system:  { name:'시스템·자사몰', items:[
+    { name:'ERP 공정 매칭 자동화 (4단계)', prio:'h', progress:40, status:'active',
+      ownerDept:'dev', related:['cs','design','product','factory2'], decision:'go', startWhen:'진행 중',
+      desc:'주문 들어오면 플레이오토에서 API로 주문정보 수신 → 공정 매칭 4단계 자동화: ① 등록 품목 매칭 (신규몰/ERP 선작업·오픈몰 코드·품목·기계 기록) → ② 디자인 작업 (디자이너 배정·구매자 소통 URL·확정 파일 ERP 서버 저장) → ③ 제작 (결정 디자인으로 작업·품목 코스대로 출력기별 출력·자동 기록) → ④ 출고 (주문자 기준 출고·판매처 주문상태값 변경). 모든 데이터가 상품제작 진행상황 URL 한 곳에 모이도록 진행.', owner:'개발팀' },
+    { name:'A형입간판 시안 카톡 발송 (ERP 연계)', prio:'h', progress:30, status:'active',
+      ownerDept:'dev', related:['cs','design'], decision:'go', startWhen:'진행 중',
+      desc:'A형입간판 시안을 카톡으로 자동 발송하는 부분. ERP 공정 매칭 흐름과 연계되어 함께 진행 중.', owner:'개발팀' },
+    { name:'웹팀 KPI 업무표 시스템', prio:'h', progress:80, status:'active',
+      ownerDept:'web', related:['dev'], decision:'go', startWhen:'5월 마지막 주 운영 시작',
+      desc:'웹팀 전용 KPI 적용 업무표. 1차 완료. 팀장이 대시보드로 팀원 업무 진척도·지연도에 따른 KPI 지수 정리 가능. 기존 노션보다 데이터 활용 폭이 높고 무한대라 변경용 제작. 5월 마지막 주부터 운영 시작 예정.', owner:'박상준' },
+    { name:'플레이오토 마스터 상품 (채널 옵션 별도)', prio:'h', progress:20, status:'active',
+      ownerDept:'web', related:['cs'], decision:'later', startWhen:'검토 단계',
+      desc:'플레이오토 관련 마스터 상품 등록. 확인 결과 마스터 상품이라도 각 채널별 옵션은 별도로 조절해 업로드해야 함. 한 군데서 통합 작업한다는 장점은 있음. 이걸 기초로 개인사업자 판매채널 확대 여부 검토 필요.', owner:'박상준' }
+  ]},
+  offline: { name:'오프라인·영업', items:[] }
+};
+const PCATS = ['ad','ai','product','system','offline'];
+const DEPT_NAME = { web:'웹팀', cs:'CS팀', design:'디자인팀', dev:'개발팀', fin:'경영지원', sales:'외부영업', product:'제작실', factory2:'2공장' };
+let DECISIONS = {};
+try { DECISIONS = JSON.parse(localStorage.getItem('hanasm.decisions') || '{}'); } catch(e) {}
+function cycleDecision(d) { return d === 'go' ? 'hold' : d === 'hold' ? 'later' : 'go'; }
+function renderProjects() {
+  const body = document.getElementById('ppBody');
+  if (!body) return;
+  // 평면화: [{cat, item}]
+  const all = [];
+  PCATS.forEach(key => {
+    (PROJECTS[key].items || []).forEach(it => all.push({ cat: key, item: it }));
+  });
+  // 저장 순서 ['cat:name', ...] 따라 정렬
+  const savedOrder = JSON.parse(localStorage.getItem('hanasm.projects.flat') || '[]');
+  const keyOf = (cat, name) => cat + '::' + name;
+  const map = new Map(all.map(e => [keyOf(e.cat, e.item.name), e]));
+  const ordered = [];
+  savedOrder.forEach(k => {
+    if (map.has(k)) { ordered.push(map.get(k)); map.delete(k); }
+  });
+  // 저장에 없는 새 항목은 뒤로
+  map.forEach(v => ordered.push(v));
+
+  let html = '<div class="proj-list flat" data-list="flat">';
+  ordered.forEach(e => {
+    const it = e.item;
+    const label = it.prio === 'h' ? '상' : it.prio === 'm' ? '중' : '하';
+    const catName = PROJECTS[e.cat].name;
+    const descHtml = it.desc ? '<div class="pi-desc">' + (it.owner ? '<span class="pi-owner">' + it.owner + '</span>' : '') + it.desc + '</div>' : '';
+    const k = keyOf(e.cat, it.name);
+    const pct = (typeof it.progress === 'number') ? it.progress : null;
+    const st = it.status || 'active';
+    const stLabel = st === 'done' ? '✓ 완료' : st === 'stop' ? '⏸ 스톱' : '● 진행';
+    const progBar = pct !== null ? '<div class="pi-prog"><div class="pi-prog-bar" style="width:' + pct + '%"></div><span class="pi-prog-num">' + pct + '%</span></div>' : '';
+
+    // 결정 / 시기 / 유관 부서 (사용자 오버라이드 적용)
+    const ovr = (DECISIONS[k] || {});
+    const dec = ovr.decision || it.decision || 'go';
+    const when = ovr.startWhen || it.startWhen || '';
+    const DEC_LABEL = { go: '🟢 GO', hold: '🟡 HOLD', later: '🔵 LATER' };
+    const decLabel = DEC_LABEL[dec] || '🟢 GO';
+    const ownerDeptName = (DEPT_NAME[it.ownerDept] || '');
+    const relatedHtml = (it.related && it.related.length) ? it.related.map(d => '<span class="pi-rel">' + (DEPT_NAME[d] || d) + '</span>').join('') : '';
+    const meta = '<div class="pi-meta">'
+               + '<button class="pi-dec dec-' + dec + '" data-key="' + k + '" title="클릭해서 다음 결정으로 변경">' + decLabel + '</button>'
+               + (when ? '<span class="pi-when">📅 ' + when + '</span>' : '')
+               + '</div>';
+    const relRow = (ownerDeptName || relatedHtml)
+               ? '<div class="pi-rel-row">' + (ownerDeptName ? '<span class="pi-owner-dept">' + ownerDeptName + '</span>' : '') + (relatedHtml ? '<span class="pi-rel-sep">유관</span>' + relatedHtml : '') + '</div>'
+               : '';
+    html += '<div class="proj-item flat-item ' + e.cat + ' st-' + st + ' dec-' + dec + '" data-key="' + k + '" data-cat="' + e.cat + '" data-name="' + it.name + '">'
+          + '<div class="pi-tag-row"><span class="pi-tag">' + catName + '</span><span class="pi-st">' + stLabel + '</span></div>'
+          + '<div class="pi-row">'
+          +   '<span class="pi-handle">⋮⋮</span>'
+          +   '<span class="pi-num"></span>'
+          +   '<span class="pi-name">' + it.name + '</span>'
+          +   '<span class="pi-prio ' + it.prio + '">' + label + '</span>'
+          + '</div>'
+          + meta
+          + relRow
+          + progBar
+          + descHtml
+          + '</div>';
+  });
+  html += '</div>';
+  body.innerHTML = html;
+
+  if (typeof Sortable !== 'undefined') {
+    Sortable.create(document.querySelector('.proj-list.flat'), {
+      animation: 180, ghostClass: 'sortable-ghost', handle: '.pi-handle',
+      onEnd: () => {
+        const order = [...document.querySelectorAll('.proj-list.flat .proj-item')].map(x => x.dataset.key);
+        localStorage.setItem('hanasm.projects.flat', JSON.stringify(order));
+      }
+    });
+  }
+  document.querySelectorAll('.proj-item').forEach(el => {
+    el.addEventListener('click', (e) => {
+      if (e.target.closest('.pi-handle')) return;
+      if (e.target.closest('.pi-dec')) return;
+      el.classList.toggle('open');
+    });
+  });
+  // 결정 버튼 클릭 → 다음 상태로 순환
+  document.querySelectorAll('.pi-dec').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const key = btn.dataset.key;
+      const cur = (DECISIONS[key] && DECISIONS[key].decision) || (function(){
+        // PROJECTS에서 원본 찾아 디폴트
+        for (const cat of PCATS) {
+          const it = (PROJECTS[cat].items || []).find(x => (cat + '::' + x.name) === key);
+          if (it) return it.decision || 'go';
+        }
+        return 'go';
+      })();
+      const next = cycleDecision(cur);
+      DECISIONS[key] = Object.assign({}, DECISIONS[key] || {}, { decision: next });
+      localStorage.setItem('hanasm.decisions', JSON.stringify(DECISIONS));
+      renderProjects();
+    });
+  });
+}
+// 부서 노드 확대 시 그 부서가 주관·유관인 PROJECTS 항목 표시
+function renderDeptProjects(deptId) {
+  const r = POS[deptId]; if (!r) return;
+  const exp = r.el.querySelector('.expanded'); if (!exp) return;
+
+  // 좌측 컬럼 한번만 wrap (이미 있으면 재사용)
+  let leftCol = exp.querySelector('.left-col-wrap');
+  if (!leftCol) {
+    leftCol = document.createElement('div');
+    leftCol.className = 'left-col-wrap';
+    // expanded의 모든 직계 자식 (dept-projects-section 제외) 이동
+    const movables = [...exp.children].filter(c => !c.classList.contains('dept-projects-section'));
+    movables.forEach(c => leftCol.appendChild(c));
+    exp.insertBefore(leftCol, exp.firstChild);
+  }
+
+  // 기존 dept-projects-section 제거
+  const oldSec = exp.querySelector('.dept-projects-section');
+  if (oldSec) oldSec.remove();
+
+  const items = [];
+  PCATS.forEach(cat => {
+    (PROJECTS[cat].items || []).forEach(it => {
+      if (it.ownerDept === deptId || (it.related && it.related.includes(deptId))) {
+        items.push({ cat, item: it });
+      }
+    });
+  });
+  if (!items.length) return;
+  const sec = document.createElement('div');
+  sec.className = 'dept-projects-section';
+  const lbl = document.createElement('div');
+  lbl.className = 'label';
+  lbl.textContent = '신규 프로젝트 · ' + items.length;
+  sec.appendChild(lbl);
+  const DEC_LABEL = { go: '🟢 GO', hold: '🟡 HOLD', later: '🔵 LATER' };
+  items.forEach(({ cat, item }) => {
+    const k = cat + '::' + item.name;
+    const ovr = (DECISIONS[k] || {});
+    const dec = ovr.decision || item.decision || 'go';
+    const isOwner = item.ownerDept === deptId;
+    const card = document.createElement('div');
+    card.className = 'dept-proj-card dec-' + dec + (isOwner ? ' is-owner' : ' is-related');
+    const descBlock = item.desc ? '<div class="dpc-desc">' + item.desc + '</div>' : '';
+    card.innerHTML =
+      '<div class="dpc-h"><span class="dpc-role">' + (isOwner ? '주관' : '유관') + '</span>'
+      + '<span class="dpc-cat ' + cat + '">' + PROJECTS[cat].name + '</span></div>'
+      + '<div class="dpc-name">' + item.name + '</div>'
+      + '<div class="dpc-foot">'
+      +   '<span class="dpc-dec">' + (DEC_LABEL[dec] || '') + '</span>'
+      +   (item.startWhen ? '<span class="dpc-when">📅 ' + item.startWhen + '</span>' : '')
+      +   '<span class="dpc-prog">' + (item.progress || 0) + '%</span>'
+      + '</div>'
+      + descBlock;
+    // 카드 클릭 시 desc 펼침/접기
+    card.addEventListener('click', (e) => {
+      e.stopPropagation();
+      card.classList.toggle('open');
+    });
+    sec.appendChild(card);
+  });
+  exp.appendChild(sec);
+
+  // 초기 콘텐츠 높이를 측정해서 영역 고정 → 카드 펼침은 영역 안 스크롤로만
+  requestAnimationFrame(() => {
+    const h = sec.offsetHeight;
+    if (h > 0) {
+      sec.style.height = h + 'px';
+      sec.style.maxHeight = h + 'px';
+    }
+  });
+}
+
+// 페이지 로드 시 초기 렌더만 (자동 펼침 X)
+setTimeout(() => { renderProjects(); }, 500);
+document.getElementById('projToggle').addEventListener('click', () => {
+  const tp = document.getElementById('taskPanel');
+  if (tp) tp.classList.remove('show');
+  document.getElementById('projPanel').classList.add('show');
+  renderProjects();
+});
+document.getElementById('ppClose').addEventListener('click', () => {
+  document.getElementById('projPanel').classList.remove('show');
+});
+
+// ===== 카테고리 필터 칩 =====
+(function(){
+  const chipBar = document.getElementById('chipBar');
+  if (!chipBar) return;
+  const STATE_KEY = 'hanasm.catFilter';
+  function getOff() {
+    try { return new Set(JSON.parse(localStorage.getItem(STATE_KEY) || '[]')); }
+    catch(e) { return new Set(); }
+  }
+  function saveOff(set) { localStorage.setItem(STATE_KEY, JSON.stringify([...set])); }
+  // 노드 → 카테고리 매핑 (한 노드는 한 카테고리)
+  const NODE_CAT = {
+    ceo: 'core', hanasm: 'core', personal: 'core', corp: 'core',
+    web: 'dept', cs: 'dept', design: 'dept', dev: 'dept', fin: 'dept', sales: 'dept', factory2: 'dept', product: 'dept',
+    erp: 'system', playauto: 'system', ecount: 'system', nas: 'system',
+    call: 'talk', chat: 'talk',
+    ig: 'sns', nblog: 'sns', yt: 'sns',
+    prtEpson: 'system', prtHp: 'system', prtExt: 'system', prtUv: 'system',
+    'ss-hana': 'channel', 'ss-baron': 'channel', 'ss-rocket': 'channel',
+    godo: 'channel', 'self-mall': 'channel', coupang: 'channel', '11st': 'channel', auction: 'channel', gmarket: 'channel'
+  };
+
+  function applyFilter() {
+    const off = getOff();
+    document.querySelectorAll('#chipBar .chip').forEach(c => {
+      c.classList.toggle('off', off.has(c.dataset.cat));
+    });
+    // 와이어
+    document.querySelectorAll('svg.wires path[data-cat]').forEach(p => {
+      const c = p.dataset.cat;
+      const hidden = off.has(c) || (c === 'ch-web' && off.has('channel'));
+      p.classList.toggle('cat-off', hidden);
+    });
+    // 노드
+    document.querySelectorAll('.node').forEach(n => {
+      const cat = NODE_CAT[n.dataset.id];
+      const hidden = cat && off.has(cat);
+      n.classList.toggle('cat-off', !!hidden);
+    });
+  }
+  chipBar.querySelectorAll('.chip').forEach(c => {
+    c.addEventListener('click', () => {
+      const set = getOff();
+      const cat = c.dataset.cat;
+      if (set.has(cat)) set.delete(cat); else set.add(cat);
+      saveOff(set);
+      applyFilter();
+    });
+  });
+  window.__applyCatFilter = applyFilter;
+  setTimeout(applyFilter, 250);
+  setTimeout(applyFilter, 800);
+})();
+
+// ===== 편집 모드: 노드 드래그 + 위치 저장 + Undo (최대 10) =====
+(function(){
+  const editBtn = document.getElementById('editToggle');
+  const undoBtn = document.getElementById('undoBtn');
+  const undoCnt = document.getElementById('undoCnt');
+  if (!editBtn) return;
+  const worldEl = document.getElementById('world');
+  let editMode = false;
+  let nodeDrag = null;
+  const UNDO_MAX = 10;
+  const undoStack = [];
+
+  function refreshUndoUi() {
+    if (undoCnt) undoCnt.textContent = undoStack.length;
+    if (undoBtn) {
+      undoBtn.style.opacity = undoStack.length ? '1' : '0.45';
+      undoBtn.style.pointerEvents = undoStack.length ? 'auto' : 'none';
+    }
+  }
+  function setEditMode(on) {
+    editMode = on;
+    document.body.classList.toggle('edit-mode', on);
+    editBtn.classList.toggle('active', on);
+    editBtn.textContent = on ? '✓ 편집 종료' : '✎ 편집';
+    if (undoBtn) undoBtn.style.display = on ? '' : 'none';
+    refreshUndoUi();
+  }
+  editBtn.addEventListener('click', () => setEditMode(!editMode));
+
+  function pushUndo(entry) {
+    undoStack.push(entry);
+    while (undoStack.length > UNDO_MAX) undoStack.shift();
+    refreshUndoUi();
+  }
+  function doUndo() {
+    if (!undoStack.length) return;
+    const last = undoStack.pop();
+    const r = POS[last.id];
+    if (r) {
+      r.x = last.x; r.y = last.y;
+      r.el.style.left = r.x + 'px';
+      r.el.style.top  = r.y + 'px';
+      try {
+        const saved = JSON.parse(localStorage.getItem('hanasm.positions') || '{}');
+        saved[last.id] = { x: last.x, y: last.y };
+        localStorage.setItem('hanasm.positions', JSON.stringify(saved));
+      } catch(err) {}
+      if (typeof drawAllWires === 'function') drawAllWires();
+    }
+    refreshUndoUi();
+  }
+  if (undoBtn) undoBtn.addEventListener('click', (e) => { e.stopPropagation(); doUndo(); });
+  window.addEventListener('keydown', (e) => {
+    if (!editMode) return;
+    if ((e.ctrlKey || e.metaKey) && (e.key === 'z' || e.key === 'Z')) {
+      e.preventDefault();
+      doUndo();
+    }
+  });
+
+  worldEl.addEventListener('mousedown', (e) => {
+    if (!editMode) return;
+    const nodeEl = e.target.closest('.node');
+    if (!nodeEl) return;
+    const id = nodeEl.dataset.id;
+    if (!id || !POS[id]) return;
+    e.stopPropagation();
+    e.preventDefault();
+    nodeDrag = {
+      id,
+      sx: e.clientX, sy: e.clientY,
+      ox: POS[id].x, oy: POS[id].y,
+      moved: false
+    };
+    nodeEl.style.zIndex = 999;
+  }, true);
+
+  window.addEventListener('mousemove', (e) => {
+    if (!nodeDrag) return;
+    const dx = (e.clientX - nodeDrag.sx) / camS;
+    const dy = (e.clientY - nodeDrag.sy) / camS;
+    if (!nodeDrag.moved && Math.hypot(dx, dy) > 1) nodeDrag.moved = true;
+    const r = POS[nodeDrag.id];
+    r.x = nodeDrag.ox + dx;
+    r.y = nodeDrag.oy + dy;
+    r.el.style.left = r.x + 'px';
+    r.el.style.top  = r.y + 'px';
+    if (typeof drawAllWires === 'function') drawAllWires();
+  });
+
+  window.addEventListener('mouseup', () => {
+    if (!nodeDrag) return;
+    if (nodeDrag.moved) {
+      pushUndo({ id: nodeDrag.id, x: nodeDrag.ox, y: nodeDrag.oy });
+      try {
+        const saved = JSON.parse(localStorage.getItem('hanasm.positions') || '{}');
+        saved[nodeDrag.id] = { x: POS[nodeDrag.id].x, y: POS[nodeDrag.id].y };
+        localStorage.setItem('hanasm.positions', JSON.stringify(saved));
+      } catch(err) {}
+    }
+    POS[nodeDrag.id].el.style.zIndex = '';
+    nodeDrag = null;
+  });
+})();
+
+</script>
+
+</body>
+</html>
+                                                    
