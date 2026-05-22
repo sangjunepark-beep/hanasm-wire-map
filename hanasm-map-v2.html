@@ -1883,6 +1883,9 @@ function setStage(id, stage) {
     rec.el.classList.add('zoomed');
     cameraTo(id);
     if (isDept && typeof renderDeptProjects === 'function') {
+      // 부서 확대 시 우측 프로젝트 패널 자동 닫기 (중복 표시 방지)
+      const pp = document.getElementById('projPanel');
+      if (pp) pp.classList.remove('show');
       renderDeptProjects(id);
       // 패널 위치 보정 - 위쪽 잘림 방지
       requestAnimationFrame(() => {
@@ -2137,7 +2140,10 @@ const PROJECTS = {
       desc:'신규몰 어드민 상품별 공간별 토글 정리. 1차는 룰 적용, 2차는 LLM 적용 테스트 진행했으나 개인별 차로 완벽 분리 어려운 부분이 있어 중단. 공정률 70%.', owner:'박상준' },
     { name:'MDF게시판 제품 상세페이지', prio:'m', progress:80, status:'active',
       ownerDept:'web', related:['design','fin'], decision:'hold', startWhen:'사이즈 확인 후',
-      desc:'황국인 과장이 MDF + 집게 옵션 상세페이지 완료. 포켓 관련 도면은 송기용 팀장이 새로 잡음. 포켓 사이즈가 달라져서 진행 여부 확인 필요. 진행 확정 시 이미지·사이즈 수정만 추가하면 마무리.', owner:'황국인' }
+      desc:'황국인 과장이 MDF + 집게 옵션 상세페이지 완료. 포켓 관련 도면은 송기용 팀장이 새로 잡음. 포켓 사이즈가 달라져서 진행 여부 확인 필요. 진행 확정 시 이미지·사이즈 수정만 추가하면 마무리.', owner:'황국인' },
+    { name:'주차스티커 상세페이지 일체 리뉴얼', prio:'h', progress:30, status:'active',
+      ownerDept:'web', related:[], decision:'go', startWhen:'진행 중',
+      desc:'기존 상세페이지가 고객의 편의성·이해도에 미치지 못해 전반적인 스텝바이스텝 방식으로 리뉴얼 작업 중. 황국인 과장 (웹팀 디자인) 주관.', owner:'황국인' }
   ]},
   system:  { name:'시스템·자사몰', items:[
     { name:'ERP 공정 매칭 자동화 (4단계)', prio:'h', progress:40, status:'active',
