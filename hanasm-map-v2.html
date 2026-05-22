@@ -1884,15 +1884,20 @@ function applyCam() {
 function fitView() {
   const vw = window.innerWidth, vh = window.innerHeight;
   const isMobile = vw < 768;
+  // 우측 패널이 열려 있으면 그 폭(460+margin) 만큼 가용 영역에서 제외
+  const projPanel = document.getElementById('projPanel');
+  const panelOpen = projPanel && projPanel.classList.contains('show');
+  const rightReserve = (panelOpen && !isMobile) ? 490 : 0;
   const padX = isMobile ? 30 : 280;
   const padY = isMobile ? 100 : 220;
-  const sx = (vw - padX) / STAGE_W;
+  const availW = Math.max(400, vw - padX - rightReserve);
+  const sx = availW / STAGE_W;
   const sy = (vh - padY) / STAGE_H;
   let s = Math.min(sx, sy) * (isMobile ? 1.0 : 0.92);
-  // 모바일에서 최소 가독 줌 보장 (가로 스크롤은 드래그로 가능)
   if (isMobile) s = Math.max(s, 0.42);
   camS = s;
-  camX = (vw - STAGE_W * camS) / 2;
+  // 카메라 X: 가용 영역 중심에 맞춤 (우측 패널 자리 빼고)
+  camX = (vw - rightReserve - STAGE_W * camS) / 2;
   camY = (vh - STAGE_H * camS) / 2;
   applyCam();
 }
@@ -2347,15 +2352,14 @@ try { DECISIONS = JSON.parse(localStorage.getItem('hanasm.decisions') || '{}'); 
 const PROJECT_ACTIONS = [
   { key:'first', label:'우선', cls:'action-first' },
   { key:'run',   label:'진행', cls:'action-run' },
-  { key:'after', label:'이후', cls:'action-after' },
-  { key:'hold',  label:'잠정중단', cls:'action-hold' },
+  { key:'hold',  label:'보류', cls:'action-hold' },
   { key:'stop',  label:'중단', cls:'action-stop' },
   { key:'merge', label:'통합', cls:'action-merge' }
 ];
 const PROJECT_DECISIONS = [
   { key:'go',    label:'진행', cls:'dec-go' },
-  { key:'hold',  label:'잠정중단', cls:'dec-hold' },
-  { key:'later', label:'이후', cls:'dec-later' }
+  { key:'hold',  label:'보류', cls:'dec-hold' },
+  { key:'later', label:'보류', cls:'dec-later' }
 ];
 let PROJECT_STATE = {};
 let PROJECT_ACTION_FILTER = 'all';
@@ -2421,8 +2425,10 @@ function getProjectState(cat, item) {
 }
 function getAction(cat, item) {
   const st = getProjectState(cat, item);
-  const fallback = item.status === 'stop' ? 'stop' : (item.decision === 'hold' ? 'hold' : item.decision === 'later' ? 'after' : 'run');
-  return PROJECT_ACTIONS.find(a => a.key === (st.action || fallback)) || PROJECT_ACTIONS[1];
+  const fallback = item.status === 'stop' ? 'stop' : (item.decision === 'hold' ? 'hold' : item.decision === 'later' ? 'hold' : 'run');
+  // 'after' 제거됨 (2026-05-22) → 기존 저장값이 'after'면 'hold'로 처리
+  const cur = (st.action === 'after' ? 'hold' : st.action) || fallback;
+  return PROJECT_ACTIONS.find(a => a.key === cur) || PROJECT_ACTIONS[1];
 }
 function saveProjectState() {
   localStorage.setItem('hanasm.projectState.v3', JSON.stringify(PROJECT_STATE));
@@ -2532,7 +2538,7 @@ function renderProjects() {
   let html = '<div class="project-summary">'
            + '<div class="sum">전체 ' + summary.total + '</div>'
            + '<div class="sum">우선 ' + summary.first + '</div>'
-           + '<div class="sum">잠정중단/중단 ' + (summary.hold + summary.stop) + '</div>'
+           + '<div class="sum">보류/중단 ' + (summary.hold + summary.stop) + '</div>'
            + '</div>';
   html += '<div class="project-filter">';
   filters.forEach(f => {
@@ -2760,9 +2766,19 @@ document.getElementById('projToggle').addEventListener('click', () => {
   if (tp) tp.classList.remove('show');
   document.getElementById('projPanel').classList.add('show');
   renderProjects();
+  // 패널 열기 → 카메라 자동 재조정 (와이어 맵 가려지지 않게)
+  setTimeout(() => {
+    if (document.body.classList.contains('proj-focus')) return; // focus 줌 중이면 유지
+    fitView();
+  }, 50);
 });
 document.getElementById('ppClose').addEventListener('click', () => {
   document.getElementById('projPanel').classList.remove('show');
+  // 패널 닫기 → 카메라 복원
+  setTimeout(() => {
+    if (document.body.classList.contains('proj-focus')) return;
+    fitView();
+  }, 50);
 });
 
 // ===== 카테고리 필터 칩 =====
