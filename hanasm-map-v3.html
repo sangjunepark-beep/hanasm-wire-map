@@ -2126,7 +2126,7 @@ const PROJECTS = {
       desc:'홍재이 주임 진행 중. 이번 주 주차스티커 완료 예상, 차주 A형입간판 진행 예정. 제품 수가 많아 6월 초·중순까지 이어질 수 있음.', owner:'홍재이' },
     { name:'어드민 카테고리·토글 정리 (LLM)', prio:'m', progress:70, status:'stop',
       ownerDept:'web', related:[], decision:'hold', startWhen:'미정',
-      desc:'신규몰 어드민 상품별 공간별 토글 정리. 1차는 룰 적용, 2차는 LLM 적용 테스트 진행했으나 개인별 차로 완벽 분리 어려운 부분이 있어 스톱. 공정률 70%.', owner:'박상준' },
+      desc:'신규몰 어드민 상품별 공간별 토글 정리. 1차는 룰 적용, 2차는 LLM 적용 테스트 진행했으나 개인별 차로 완벽 분리 어려운 부분이 있어 중단. 공정률 70%.', owner:'박상준' },
     { name:'MDF게시판 제품 상세페이지', prio:'m', progress:80, status:'active',
       ownerDept:'web', related:['design','fin'], decision:'hold', startWhen:'사이즈 확인 후',
       desc:'황국인 과장이 MDF + 집게 옵션 상세페이지 완료. 포켓 관련 도면은 송기용 팀장이 새로 잡음. 포켓 사이즈가 달라져서 진행 여부 확인 필요. 진행 확정 시 이미지·사이즈 수정만 추가하면 마무리.', owner:'황국인' }
@@ -2156,7 +2156,7 @@ const PROJECT_ACTIONS = [
   { key:'first', label:'우선', cls:'action-first' },
   { key:'run',   label:'진행', cls:'action-run' },
   { key:'after', label:'이후', cls:'action-after' },
-  { key:'hold',  label:'홀드', cls:'action-hold' },
+  { key:'hold',  label:'보류', cls:'action-hold' },
   { key:'stop',  label:'중단', cls:'action-stop' },
   { key:'merge', label:'통합', cls:'action-merge' }
 ];
@@ -2234,7 +2234,7 @@ function renderProjects() {
   let html = '<div class="project-summary">'
            + '<div class="sum">전체 ' + summary.total + '</div>'
            + '<div class="sum">우선 ' + summary.first + '</div>'
-           + '<div class="sum">홀드/중단 ' + (summary.hold + summary.stop) + '</div>'
+           + '<div class="sum">보류/중단 ' + (summary.hold + summary.stop) + '</div>'
            + '</div>';
   html += '<div class="project-filter">';
   filters.forEach(f => {
@@ -2255,7 +2255,7 @@ function renderProjects() {
     const k = keyOf(e.cat, it.name);
     const pct = (typeof it.progress === 'number') ? it.progress : null;
     const st = it.status || 'active';
-    const stLabel = st === 'done' ? '✓ 완료' : st === 'stop' ? '⏸ 스톱' : '● 진행';
+    const stLabel = st === 'done' ? '✓ 완료' : st === 'stop' ? '⏸ 중단' : '● 진행';
     const progBar = pct !== null ? '<div class="pi-prog"><div class="pi-prog-bar" style="width:' + pct + '%"></div><span class="pi-prog-num">' + pct + '%</span></div>' : '';
 
     // 결정 / 시기 / 유관 부서 (사용자 오버라이드 적용)
@@ -2268,7 +2268,7 @@ function renderProjects() {
     const ownerDeptName = (DEPT_NAME[it.ownerDept] || '');
     const relatedHtml = (it.related && it.related.length) ? it.related.map(d => '<span class="pi-rel">' + (DEPT_NAME[d] || d) + '</span>').join('') : '';
     const meta = '<div class="pi-meta">'
-               + '<button class="pi-action ' + action.cls + '" data-action-key="' + k + '" title="클릭해서 우선/진행/이후/홀드/중단/통합 순환">' + action.label + '</button>'
+               + '<button class="pi-action ' + action.cls + '" data-action-key="' + k + '" title="클릭해서 우선/진행/이후/보류/중단/통합 순환">' + action.label + '</button>'
                + '<button class="pi-dec dec-' + dec + '" data-key="' + k + '" title="클릭해서 다음 결정으로 변경">' + decLabel + '</button>'
                + (when ? '<span class="pi-when">📅 ' + when + '</span>' : '')
                + '</div>';
