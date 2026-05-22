@@ -3,24 +3,23 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>HANASM 프로젝트 결정판 v3</title>
+<title>HANASM 업무 전개맵 v3</title>
 <style>
 :root {
-  --bg: #f4f6f8;
+  --bg: #f3f5f7;
   --panel: #ffffff;
-  --panel-2: #f9fafb;
-  --line: #d8dee6;
-  --line-strong: #b7c0cc;
+  --panel-soft: #f8fafc;
+  --line: #d7dde5;
+  --line-strong: #aeb8c6;
   --text: #17202a;
-  --muted: #657180;
-  --soft: #eef2f6;
+  --muted: #667085;
+  --dark: #111827;
   --blue: #2563eb;
-  --teal: #0f766e;
   --green: #15803d;
   --amber: #b7791f;
   --red: #b91c1c;
   --purple: #7c3aed;
-  --shadow: 0 8px 20px rgba(20, 29, 41, 0.08);
+  --teal: #0f766e;
 }
 * { box-sizing: border-box; }
 html, body { margin: 0; min-height: 100%; }
@@ -33,243 +32,218 @@ body {
 }
 button, input, select, textarea { font: inherit; }
 button, select { cursor: pointer; }
-.app {
-  min-height: 100vh;
-  display: grid;
-  grid-template-rows: auto 1fr;
-}
+.app { min-height: 100vh; display: grid; grid-template-rows: auto 1fr; }
 .topbar {
-  min-height: 62px;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 18px;
+  min-height: 62px;
   padding: 12px 20px;
-  background: #111827;
-  color: #f9fafb;
-  border-bottom: 1px solid #0f172a;
+  background: var(--dark);
+  color: #fff;
+  border-bottom: 1px solid #0b1220;
 }
-.brand {
-  display: flex;
-  align-items: baseline;
-  gap: 10px;
-  min-width: 260px;
-}
-.brand h1 {
-  margin: 0;
-  font-size: 17px;
-  font-weight: 800;
-}
-.brand .ver {
-  color: #93c5fd;
-  font-size: 12px;
-  font-weight: 800;
-}
-.top-stats {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-wrap: wrap;
-  justify-content: flex-end;
-}
+.brand { display: flex; align-items: baseline; gap: 10px; min-width: 280px; }
+.brand h1 { margin: 0; font-size: 18px; font-weight: 900; }
+.brand .ver { color: #93c5fd; font-size: 12px; font-weight: 900; }
+.stats { display: flex; gap: 8px; align-items: center; justify-content: flex-end; flex-wrap: wrap; }
 .stat {
   display: inline-flex;
   gap: 6px;
   align-items: center;
   padding: 5px 9px;
-  background: rgba(255,255,255,0.08);
-  border: 1px solid rgba(255,255,255,0.12);
+  background: rgba(255,255,255,.08);
+  border: 1px solid rgba(255,255,255,.14);
   color: #dbeafe;
   font-size: 12px;
-  font-weight: 700;
+  font-weight: 800;
 }
 .layout {
   display: grid;
-  grid-template-columns: 230px minmax(0, 1fr) 360px;
-  gap: 0;
+  grid-template-columns: 230px minmax(0, 1fr) 370px;
   min-height: 0;
 }
 .side {
-  border-right: 1px solid var(--line);
   background: var(--panel);
+  border-right: 1px solid var(--line);
   padding: 16px 14px;
+  overflow: auto;
 }
 .side-section { margin-bottom: 20px; }
 .side-title {
   margin: 0 0 9px;
   color: var(--muted);
   font-size: 11px;
-  font-weight: 800;
+  font-weight: 900;
   letter-spacing: .08em;
 }
-.step-list {
-  display: grid;
-  gap: 7px;
-}
+.steps { display: grid; gap: 7px; }
 .step {
   display: grid;
-  grid-template-columns: 22px 1fr;
+  grid-template-columns: 23px 1fr;
   gap: 8px;
   align-items: center;
   padding: 8px;
-  background: var(--panel-2);
+  background: var(--panel-soft);
   border: 1px solid var(--line);
 }
 .step-num {
-  width: 22px;
-  height: 22px;
+  width: 23px;
+  height: 23px;
   display: grid;
   place-items: center;
-  background: #111827;
-  color: white;
+  background: var(--dark);
+  color: #fff;
   font-size: 11px;
-  font-weight: 800;
+  font-weight: 900;
 }
-.step-main { font-size: 13px; font-weight: 800; }
-.step-sub { color: var(--muted); font-size: 11px; margin-top: 2px; }
-.filter-stack {
-  display: grid;
-  gap: 8px;
-}
-.filter-stack button,
+.step-main { font-size: 13px; font-weight: 900; }
+.step-sub { margin-top: 2px; color: var(--muted); font-size: 11px; line-height: 1.35; }
+.view-buttons, .quick-filters { display: grid; gap: 8px; }
+.view-buttons button,
+.quick-filters button,
 .toolbar button,
 .action-btn {
   border: 1px solid var(--line-strong);
   background: var(--panel);
   color: var(--text);
   padding: 8px 10px;
-  font-weight: 800;
+  font-weight: 900;
 }
-.filter-stack button.active,
-.toolbar button.active {
-  border-color: #111827;
-  background: #111827;
+.view-buttons button.active,
+.quick-filters button.active {
+  background: var(--dark);
   color: #fff;
+  border-color: var(--dark);
 }
-.content {
+.main {
   min-width: 0;
   padding: 16px;
   overflow: auto;
 }
 .toolbar {
   display: grid;
-  grid-template-columns: minmax(220px, 1fr) 150px 150px 150px auto auto;
+  grid-template-columns: minmax(240px, 1fr) 145px 145px 145px 145px auto;
   gap: 8px;
   margin-bottom: 14px;
 }
-.toolbar input,
-.toolbar select {
+.toolbar input, .toolbar select {
+  min-width: 0;
   border: 1px solid var(--line-strong);
   background: var(--panel);
   padding: 8px 10px;
-  min-width: 0;
 }
-.board-title {
-  display: flex;
-  justify-content: space-between;
+.map-head {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  gap: 12px;
   align-items: center;
-  margin: 0 0 10px;
+  margin-bottom: 12px;
 }
-.board-title h2 {
-  margin: 0;
-  font-size: 16px;
-}
-.board-title span {
-  color: var(--muted);
-  font-size: 12px;
-  font-weight: 700;
-}
-.project-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 10px;
-}
-.lane-board {
-  display: grid;
-  grid-template-columns: repeat(6, minmax(230px, 1fr));
-  gap: 10px;
-  align-items: start;
-  min-width: 1420px;
-}
-.purpose-board {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(260px, 1fr));
-  gap: 10px;
-}
-.lane,
-.purpose-group {
-  background: var(--panel-2);
-  border: 1px solid var(--line);
-  min-height: 120px;
-}
-.lane-head,
-.purpose-head {
-  padding: 9px 10px;
-  border-bottom: 1px solid var(--line);
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+.axis-line { height: 1px; background: var(--line-strong); }
+.center-node {
+  min-width: 180px;
+  padding: 12px 18px;
+  text-align: center;
+  background: var(--dark);
+  color: #fff;
+  border: 1px solid var(--dark);
   font-weight: 900;
 }
-.lane-body,
-.purpose-body {
-  padding: 8px;
-  display: grid;
-  gap: 8px;
+.board-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 10px;
 }
-.project-card {
+.board-meta h2 { margin: 0; font-size: 16px; }
+.board-meta span { color: var(--muted); font-size: 12px; font-weight: 800; }
+.axis-board {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  align-items: start;
+}
+.axis {
   background: var(--panel);
   border: 1px solid var(--line);
-  border-left: 4px solid var(--blue);
+  min-height: 240px;
+}
+.axis.personal { border-top: 4px solid var(--blue); }
+.axis.corp { border-top: 4px solid var(--purple); }
+.axis-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  align-items: center;
+  padding: 11px 12px;
+  border-bottom: 1px solid var(--line);
+  background: var(--panel-soft);
+}
+.axis-head h3 { margin: 0; font-size: 15px; font-weight: 900; }
+.axis-head p { margin: 3px 0 0; color: var(--muted); font-size: 12px; }
+.axis-body { padding: 10px; display: grid; gap: 9px; }
+.section-title {
+  margin: 10px 0 6px;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: .08em;
+}
+.card {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-left: 5px solid var(--line-strong);
   padding: 10px;
 }
-.project-card.selected {
-  outline: 2px solid #111827;
-  outline-offset: 0;
-}
-.project-card.need {
-  border-left-color: var(--amber);
-}
-.project-card.hold {
-  border-left-color: var(--red);
-}
+.card:first-child { margin-top: 0; }
+.card.selected { outline: 2px solid var(--dark); outline-offset: 0; }
+.card[data-action="먼저"] { border-left-color: var(--red); }
+.card[data-action="진행"] { border-left-color: var(--green); }
+.card[data-action="대기"] { border-left-color: var(--blue); }
+.card[data-action="보류"] { border-left-color: var(--amber); }
+.card[data-action="제거"] { border-left-color: #6b7280; opacity: .72; }
+.card[data-action="통합"] { border-left-color: var(--purple); }
 .card-top {
   display: flex;
   justify-content: space-between;
-  gap: 10px;
+  gap: 8px;
   align-items: flex-start;
-  margin-bottom: 7px;
 }
-.card-title {
+.card h4 {
   margin: 0;
   font-size: 14px;
-  line-height: 1.35;
+  line-height: 1.36;
   font-weight: 900;
 }
 .badge-row {
   display: flex;
-  gap: 5px;
   flex-wrap: wrap;
-  margin: 7px 0;
+  gap: 5px;
+  margin: 8px 0;
 }
 .badge {
   display: inline-flex;
   align-items: center;
   min-height: 22px;
   padding: 3px 7px;
-  background: var(--soft);
-  color: var(--muted);
+  background: #eef2f6;
   border: 1px solid var(--line);
+  color: var(--muted);
   font-size: 11px;
-  font-weight: 800;
+  font-weight: 900;
 }
-.badge.go { color: var(--green); background: #ecfdf3; border-color: #bbf7d0; }
-.badge.hold { color: var(--amber); background: #fffbeb; border-color: #fde68a; }
-.badge.later { color: var(--blue); background: #eff6ff; border-color: #bfdbfe; }
-.badge.stop { color: var(--red); background: #fef2f2; border-color: #fecaca; }
+.badge.type-current { color: var(--teal); background: #ecfdf5; border-color: #99f6e4; }
+.badge.type-ax { color: var(--purple); background: #f5f3ff; border-color: #ddd6fe; }
+.badge.type-new { color: var(--blue); background: #eff6ff; border-color: #bfdbfe; }
+.badge.type-system { color: #334155; background: #f1f5f9; border-color: #cbd5e1; }
+.badge.need { color: var(--amber); background: #fffbeb; border-color: #fde68a; }
+.badge.remove { color: #6b7280; background: #f3f4f6; border-color: #d1d5db; }
 .meta {
   display: grid;
-  gap: 5px;
+  gap: 4px;
   color: var(--muted);
   font-size: 12px;
   line-height: 1.45;
@@ -287,36 +261,53 @@ button, select { cursor: pointer; }
   background: #fff;
   padding: 6px;
   font-size: 12px;
-  font-weight: 700;
+  font-weight: 800;
 }
 .progress {
   height: 6px;
   background: #e5e7eb;
-  margin-top: 9px;
+  margin-top: 8px;
   overflow: hidden;
 }
-.progress span {
-  display: block;
-  height: 100%;
-  background: #111827;
+.progress span { display: block; height: 100%; background: var(--dark); }
+.lane-board {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(230px, 1fr));
+  gap: 10px;
+  align-items: start;
+  min-width: 1420px;
 }
+.dept-board {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 10px;
+}
+.lane, .dept-box {
+  background: var(--panel-soft);
+  border: 1px solid var(--line);
+}
+.lane-head, .dept-head {
+  padding: 9px 10px;
+  border-bottom: 1px solid var(--line);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-weight: 900;
+}
+.lane-body, .dept-body { padding: 8px; display: grid; gap: 8px; }
 .detail {
-  border-left: 1px solid var(--line);
   background: var(--panel);
-  min-width: 0;
+  border-left: 1px solid var(--line);
   padding: 16px;
   overflow: auto;
+  min-width: 0;
 }
-.detail h2 {
-  margin: 0 0 8px;
-  font-size: 18px;
-  line-height: 1.35;
-}
+.detail h2 { margin: 0 0 8px; font-size: 18px; line-height: 1.35; }
 .detail-empty {
-  color: var(--muted);
   padding: 18px;
   border: 1px dashed var(--line-strong);
-  background: var(--panel-2);
+  background: var(--panel-soft);
+  color: var(--muted);
 }
 .detail-section {
   border-top: 1px solid var(--line);
@@ -325,63 +316,48 @@ button, select { cursor: pointer; }
 }
 .detail-section h3 {
   margin: 0 0 8px;
-  font-size: 12px;
   color: var(--muted);
+  font-size: 12px;
+  font-weight: 900;
   letter-spacing: .08em;
 }
-.field-grid {
-  display: grid;
-  gap: 8px;
+.relation-flow {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  align-items: center;
 }
+.arrow { color: var(--muted); font-weight: 900; }
+.chip {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+  padding: 4px 8px;
+  background: #eef2ff;
+  border: 1px solid #c7d2fe;
+  color: #3730a3;
+  font-size: 12px;
+  font-weight: 900;
+}
+.field-grid { display: grid; gap: 8px; }
 .field label {
   display: block;
   margin-bottom: 4px;
   color: var(--muted);
   font-size: 12px;
-  font-weight: 800;
+  font-weight: 900;
 }
-.field input,
-.field select,
-.field textarea {
+.field input, .field select, .field textarea {
   width: 100%;
   border: 1px solid var(--line-strong);
   background: #fff;
   color: var(--text);
   padding: 8px;
 }
-.field textarea { min-height: 74px; resize: vertical; }
-.relation {
-  display: grid;
-  gap: 8px;
-}
-.relation-row {
-  display: grid;
-  grid-template-columns: 70px 1fr;
-  gap: 8px;
-  align-items: start;
-}
-.relation-label {
-  color: var(--muted);
-  font-size: 12px;
-  font-weight: 800;
-  padding-top: 4px;
-}
-.chip-list {
-  display: flex;
-  gap: 6px;
-  flex-wrap: wrap;
-}
-.dept-chip {
-  padding: 5px 8px;
-  background: #eef2ff;
-  border: 1px solid #c7d2fe;
-  color: #3730a3;
-  font-size: 12px;
-  font-weight: 800;
-}
+.field textarea { min-height: 72px; resize: vertical; }
 .copy-box {
   width: 100%;
-  min-height: 160px;
+  min-height: 180px;
   border: 1px solid var(--line-strong);
   padding: 10px;
   background: #0b1020;
@@ -389,23 +365,19 @@ button, select { cursor: pointer; }
   font-family: Consolas, "Courier New", monospace;
   font-size: 12px;
 }
-.small-note {
-  color: var(--muted);
-  font-size: 12px;
-  line-height: 1.5;
-}
-.hidden { display: none !important; }
+.small-note { color: var(--muted); font-size: 12px; line-height: 1.5; }
+.empty { padding: 10px; color: var(--muted); font-size: 12px; border: 1px dashed var(--line); background: #fff; }
 @media (max-width: 1180px) {
-  .layout { grid-template-columns: 190px minmax(0, 1fr); }
+  .layout { grid-template-columns: 200px minmax(0, 1fr); }
   .detail { grid-column: 1 / -1; border-left: none; border-top: 1px solid var(--line); }
   .toolbar { grid-template-columns: 1fr 1fr 1fr; }
 }
 @media (max-width: 760px) {
-  .topbar { align-items: flex-start; flex-direction: column; }
+  .topbar { flex-direction: column; align-items: flex-start; }
   .layout { display: block; }
   .side { border-right: none; border-bottom: 1px solid var(--line); }
   .toolbar { grid-template-columns: 1fr; }
-  .purpose-board { grid-template-columns: 1fr; }
+  .axis-board { grid-template-columns: 1fr; }
   .lane-board { min-width: 0; grid-template-columns: 1fr; }
 }
 </style>
@@ -414,70 +386,90 @@ button, select { cursor: pointer; }
 <div class="app">
   <header class="topbar">
     <div class="brand">
-      <h1>HANASM 프로젝트 결정판</h1>
+      <h1>하나사인몰 업무 전개맵</h1>
       <span class="ver">v3</span>
     </div>
-    <div class="top-stats" id="topStats"></div>
+    <div class="stats" id="stats"></div>
   </header>
 
   <div class="layout">
     <aside class="side">
       <section class="side-section">
-        <p class="side-title">회의 순서</p>
-        <div class="step-list">
-          <div class="step"><span class="step-num">1</span><div><div class="step-main">펼침</div><div class="step-sub">신규 프로젝트 전부 보기</div></div></div>
-          <div class="step"><span class="step-num">2</span><div><div class="step-main">묶음</div><div class="step-sub">목적별로 재분류</div></div></div>
-          <div class="step"><span class="step-num">3</span><div><div class="step-main">밀도</div><div class="step-sub">총력/집중/진행/준비</div></div></div>
-          <div class="step"><span class="step-num">4</span><div><div class="step-main">액션</div><div class="step-sub">다음 행동과 막힘 정리</div></div></div>
-          <div class="step"><span class="step-num">5</span><div><div class="step-main">일정</div><div class="step-sub">목표 시점 확정</div></div></div>
+        <p class="side-title">대표 회의 흐름</p>
+        <div class="steps">
+          <div class="step"><span class="step-num">1</span><div><div class="step-main">다 펼침</div><div class="step-sub">AX, 타 업무, 신규 프로젝트를 한 판에 올림</div></div></div>
+          <div class="step"><span class="step-num">2</span><div><div class="step-main">사업축 확인</div><div class="step-sub">개인사업자 / 법인사업자 흐름으로 나눔</div></div></div>
+          <div class="step"><span class="step-num">3</span><div><div class="step-main">부서 관계</div><div class="step-sub">주관, 유관, 막힘을 같이 봄</div></div></div>
+          <div class="step"><span class="step-num">4</span><div><div class="step-main">판단</div><div class="step-sub">먼저, 대기, 보류, 제거, 통합 결정</div></div></div>
+          <div class="step"><span class="step-num">5</span><div><div class="step-main">액션</div><div class="step-sub">다음 행동과 목표 시점 확정</div></div></div>
         </div>
       </section>
+
       <section class="side-section">
-        <p class="side-title">보기</p>
-        <div class="filter-stack" id="viewButtons">
-          <button type="button" data-view="all" class="active">전체 펼침</button>
-          <button type="button" data-view="density">투입 밀도</button>
-          <button type="button" data-view="purpose">목적 묶음</button>
-          <button type="button" data-view="decision">대표 결정</button>
+        <p class="side-title">보기 방식</p>
+        <div class="view-buttons" id="viewButtons">
+          <button type="button" data-view="axis" class="active">사업축 전개</button>
+          <button type="button" data-view="dept">부서 관계</button>
+          <button type="button" data-view="action">판단 상태</button>
+          <button type="button" data-view="decision">결정 내역</button>
         </div>
       </section>
+
+      <section class="side-section">
+        <p class="side-title">빠른 보기</p>
+        <div class="quick-filters" id="quickFilters">
+          <button type="button" data-filter="all" class="active">전체</button>
+          <button type="button" data-filter="먼저">먼저 할 것</button>
+          <button type="button" data-filter="보류">보류</button>
+          <button type="button" data-filter="제거">제거 후보</button>
+          <button type="button" data-filter="미정">판단 미정</button>
+        </div>
+      </section>
+
       <section class="side-section">
         <p class="side-title">공유</p>
         <button type="button" class="action-btn" id="exportBtn">결정 내용 내보내기</button>
-        <p class="small-note">브라우저에서 바꾼 값은 이 PC에 저장됩니다. 공유 전에는 내보내기로 결정 내용을 확인하세요.</p>
+        <p class="small-note">이 화면에서 바꾼 값은 현재 브라우저에 저장됩니다. 회의 후에는 내보내기로 정리본을 확인하세요.</p>
       </section>
     </aside>
 
-    <main class="content">
+    <main class="main">
       <div class="toolbar">
-        <input id="searchInput" type="search" placeholder="프로젝트, 부서, 담당자 검색" />
-        <select id="purposeFilter"></select>
-        <select id="densityFilter"></select>
+        <input id="search" type="search" placeholder="업무, AX, 프로젝트, 부서, 담당자 검색" />
+        <select id="axisFilter"></select>
+        <select id="typeFilter"></select>
         <select id="deptFilter"></select>
-        <button type="button" id="resetFilters">필터 해제</button>
-        <button type="button" id="clearSelection">선택 해제</button>
+        <select id="actionFilter"></select>
+        <button type="button" id="resetBtn">필터 해제</button>
       </div>
-      <div class="board-title">
-        <h2 id="boardHeading">전체 펼침</h2>
+
+      <div class="map-head">
+        <div class="axis-line"></div>
+        <div class="center-node">하나사인몰</div>
+        <div class="axis-line"></div>
+      </div>
+
+      <div class="board-meta">
+        <h2 id="boardTitle">사업축 전개</h2>
         <span id="boardCount"></span>
       </div>
       <section id="board"></section>
     </main>
 
-    <aside class="detail" id="detailPane"></aside>
+    <aside class="detail" id="detail"></aside>
   </div>
 </div>
 
 <template id="exportTemplate">
   <div>
     <h2>결정 내용 내보내기</h2>
-    <p class="small-note">아래 JSON에는 회의 중 변경한 목적 묶음, 투입 밀도, 결정 상태, 다음 액션, 막힘, 목표 시점이 들어갑니다.</p>
-    <textarea class="copy-box" id="exportText" readonly></textarea>
+    <p class="small-note">판단 상태, 다음 액션, 막힘, 목표 시점만 회의 후 정리해도 바로 쓸 수 있게 JSON으로 뽑습니다.</p>
+    <textarea id="exportText" class="copy-box" readonly></textarea>
   </div>
 </template>
 
 <script>
-const DEPT_NAME = {
+const DEPTS = {
   web: "웹팀",
   cs: "CS팀",
   design: "디자인팀",
@@ -488,246 +480,271 @@ const DEPT_NAME = {
   factory2: "2공장"
 };
 
-const PURPOSES = [
-  "미분류",
-  "단기 매출",
-  "광고/유입",
-  "상품/DB",
-  "ERP/공정",
-  "CS/디자인",
-  "조직관리/KPI",
-  "생산/출고",
-  "보류/검토"
-];
+const AXES = {
+  personal: { label: "개인사업자", sub: "오픈마켓, 스마트스토어, 채널 판매 중심" },
+  corp: { label: "법인사업자", sub: "자사몰, ERP, 제작/출고, 기업 거래 중심" },
+  both: { label: "공통 기반", sub: "양쪽 사업축에 모두 걸리는 업무" }
+};
 
-const DENSITIES = ["미정", "총력", "집중", "진행", "준비", "보류", "통합/폐기"];
-const DECISIONS = ["GO", "HOLD", "LATER", "결정필요"];
+const TYPES = ["현재 업무", "AX/자동화", "신규 프로젝트", "시스템", "광고/마케팅", "상품/DB", "운영관리"];
+const ACTIONS = ["미정", "먼저", "진행", "대기", "보류", "제거", "통합"];
 
-const PROJECTS = [
+const BASE_ITEMS = [
+  {
+    id: "personal-channel-ops",
+    axis: "personal",
+    type: "현재 업무",
+    title: "개인사업자 채널 운영",
+    ownerDept: "web",
+    related: ["cs"],
+    owner: "웹팀",
+    action: "미정",
+    target: "상시",
+    progress: 55,
+    nextAction: "채널별 매출/광고/상품 등록 업무를 한 판에 올려 우선순위 확인",
+    blocker: "채널별 업무가 흩어져 있어 누가 무엇을 보고 있는지 불명확",
+    memo: "스마트스토어, 쿠팡, 11번가/옥션/G마켓 등 개인사업자 축 운영 흐름."
+  },
+  {
+    id: "corp-mall-ops",
+    axis: "corp",
+    type: "현재 업무",
+    title: "법인사업자 자사몰·고도몰 운영",
+    ownerDept: "web",
+    related: ["cs", "design"],
+    owner: "웹팀",
+    action: "미정",
+    target: "상시",
+    progress: 50,
+    nextAction: "자사몰/고도몰에서 새 프로젝트와 기존 운영 업무 충돌 확인",
+    blocker: "신규몰, 고도몰, ERP, 디자인 업무가 각각 따로 움직임",
+    memo: "법인사업자 축의 판매/운영 기반."
+  },
+  {
+    id: "cs-talk-channel",
+    axis: "both",
+    type: "현재 업무",
+    title: "CS 상담·톡톡·채널 문의 흐름",
+    ownerDept: "cs",
+    related: ["web", "design"],
+    owner: "CS팀",
+    action: "미정",
+    target: "상시",
+    progress: 45,
+    nextAction: "반복 문의와 자동화 가능한 상담 흐름 분리",
+    blocker: "주문/디자인/제작 상태가 한 곳에서 보이지 않아 확인 비용 발생",
+    memo: "개인/법인 양쪽 채널 문의가 CS와 디자인, 제작 흐름으로 이어짐."
+  },
+  {
+    id: "design-production-flow",
+    axis: "corp",
+    type: "현재 업무",
+    title: "디자인 시안·제작 연결",
+    ownerDept: "design",
+    related: ["cs", "product", "factory2"],
+    owner: "디자인팀",
+    action: "미정",
+    target: "상시",
+    progress: 45,
+    nextAction: "시안 확정 후 제작으로 넘어가는 기준과 저장 위치 정리",
+    blocker: "확정 파일, 구매자 소통, 제작 지시가 분리되어 있음",
+    memo: "법인사업자 축 주문 제작 흐름의 병목 후보."
+  },
   {
     id: "naver-ad-agent",
-    name: "네이버 검색광고 에이전트 빌드",
-    purpose: "광고/유입",
-    density: "미정",
-    sourceCat: "광고",
+    axis: "personal",
+    type: "AX/자동화",
+    title: "네이버 검색광고 에이전트 빌드",
     ownerDept: "web",
     related: [],
     owner: "박상준",
-    status: "진행",
-    progress: 50,
-    decision: "GO",
+    action: "미정",
     target: "진행 중",
+    progress: 50,
     nextAction: "AI 통계·판단·입찰조정 범위를 1차로 확정",
     blocker: "완전 자동 입찰조정 단계는 아직 미완성",
-    desc: "현재 대표 일일보고용 별도 운용 중. 주간 데이터까지 합쳐서 빼고 있음. AI 통계·판단·입찰조정까지는 미완성."
+    memo: "현재 대표 일일보고용 별도 운용 중. 주간 데이터까지 합쳐서 보고 중."
+  },
+  {
+    id: "dm-automation",
+    axis: "personal",
+    type: "AX/자동화",
+    title: "주문 데이터 기반 DM 자동 발송",
+    ownerDept: "web",
+    related: ["cs"],
+    owner: "미정",
+    action: "미정",
+    target: "검토",
+    progress: 10,
+    nextAction: "어떤 고객 조건에서 어떤 메시지를 보낼지 기준 작성",
+    blocker: "이벤트 페이지, 고객 조건, 발송 주기 기준이 필요",
+    memo: "대표 의견 중 주기적으로 발생하는 업무는 시스템 사이클로 자동화해야 한다는 예시."
   },
   {
     id: "rag-anchor-db",
-    name: "AI 챗봇 / RAG 앵커DB (전상품 DB화)",
-    purpose: "상품/DB",
-    density: "미정",
-    sourceCat: "AI·자동화",
+    axis: "both",
+    type: "상품/DB",
+    title: "AI 챗봇 / RAG 앵커DB (전상품 DB화)",
     ownerDept: "web",
     related: ["design", "cs"],
     owner: "박상준",
-    status: "진행",
-    progress: 30,
-    decision: "GO",
+    action: "미정",
     target: "진행 중",
+    progress: 30,
     nextAction: "완료 카테고리부터 챗봇 DB 투입 기준 정리",
     blocker: "상품 데이터 정리 범위가 커서 단계 분리가 필요",
-    desc: "하나사인몰 전상품 DB화 작업. 게시판·입간판 카테고리 완료 후 현재 주차스티커 정리 중."
+    memo: "하나사인몰 전상품 DB화. 게시판·입간판 완료 후 주차스티커 정리 중."
   },
   {
     id: "price-increase-core-products",
-    name: "주력제품 가격인상 (주차→A형)",
-    purpose: "단기 매출",
-    density: "미정",
-    sourceCat: "신상품·등록",
+    axis: "both",
+    type: "신규 프로젝트",
+    title: "주력제품 가격인상 (주차→A형)",
     ownerDept: "web",
     related: ["cs"],
     owner: "홍재이",
-    status: "진행",
-    progress: 40,
-    decision: "GO",
+    action: "미정",
     target: "이번 주 → 6월 중순",
+    progress: 40,
     nextAction: "주차스티커 완료 후 A형입간판 가격인상 진행",
     blocker: "제품 수가 많아 6월 초·중순까지 이어질 수 있음",
-    desc: "홍재이 주임 진행 중. 이번 주 주차스티커 완료 예상, 차주 A형입간판 진행 예정."
+    memo: "단기 매출 기여 후보."
   },
   {
     id: "admin-category-toggle-llm",
-    name: "어드민 카테고리·토글 정리 (LLM)",
-    purpose: "보류/검토",
-    density: "미정",
-    sourceCat: "신상품·등록",
+    axis: "corp",
+    type: "AX/자동화",
+    title: "어드민 카테고리·토글 정리 (LLM)",
     ownerDept: "web",
     related: [],
     owner: "박상준",
-    status: "스톱",
-    progress: 70,
-    decision: "HOLD",
+    action: "미정",
     target: "미정",
-    nextAction: "재개 여부 판단 전까지 보류 사유 정리",
-    blocker: "개인별 차로 완벽 분리 어려운 부분이 있음",
-    desc: "신규몰 어드민 상품별 공간별 토글 정리. 룰 적용과 LLM 테스트를 진행했으나 현재 스톱."
+    progress: 70,
+    nextAction: "재개, 보류, 제거 중 하나로 판단 필요",
+    blocker: "개인별 차로 완벽 분리 어려운 부분이 있어 스톱",
+    memo: "신규몰 어드민 상품별 공간별 토글 정리. 룰 적용과 LLM 테스트 진행 후 중단."
   },
   {
     id: "mdf-board-detail-page",
-    name: "MDF게시판 제품 상세페이지",
-    purpose: "상품/DB",
-    density: "미정",
-    sourceCat: "신상품·등록",
+    axis: "corp",
+    type: "신규 프로젝트",
+    title: "MDF게시판 제품 상세페이지",
     ownerDept: "web",
     related: ["design", "fin"],
     owner: "황국인",
-    status: "진행",
-    progress: 80,
-    decision: "HOLD",
+    action: "미정",
     target: "사이즈 확인 후",
+    progress: 80,
     nextAction: "포켓 사이즈 변경분 확인 후 진행 여부 확정",
     blocker: "포켓 관련 도면과 사이즈가 변경됨",
-    desc: "MDF + 집게 옵션 상세페이지 완료. 포켓 사이즈 변경으로 진행 여부 확인 필요."
+    memo: "상세페이지는 상당 부분 완료. 진행 확정 시 이미지·사이즈 수정만 추가."
   },
   {
     id: "erp-process-matching",
-    name: "ERP 공정 매칭 자동화 (4단계)",
-    purpose: "ERP/공정",
-    density: "미정",
-    sourceCat: "시스템·자사몰",
+    axis: "corp",
+    type: "시스템",
+    title: "ERP 공정 매칭 자동화 (4단계)",
     ownerDept: "dev",
     related: ["cs", "design", "product", "factory2"],
     owner: "개발팀",
-    status: "진행",
-    progress: 40,
-    decision: "GO",
+    action: "미정",
     target: "진행 중",
+    progress: 40,
     nextAction: "등록 품목 매칭 기준과 1차 흐름 범위 확정",
     blocker: "오픈몰 코드, ERP 품목, 기계 기록 기준 정렬 필요",
-    desc: "주문 수신 후 등록 품목 매칭, 디자인 작업, 제작, 출고까지 상품제작 진행상황 URL 한 곳에 모으는 흐름."
+    memo: "주문 수신 후 등록 품목 매칭, 디자인, 제작, 출고까지 한 URL에 모으는 흐름."
   },
   {
     id: "a-sign-kakao-erp",
-    name: "A형입간판 시안 카톡 발송 (ERP 연계)",
-    purpose: "CS/디자인",
-    density: "미정",
-    sourceCat: "시스템·자사몰",
+    axis: "corp",
+    type: "AX/자동화",
+    title: "A형입간판 시안 카톡 발송 (ERP 연계)",
     ownerDept: "dev",
     related: ["cs", "design"],
     owner: "개발팀",
-    status: "진행",
-    progress: 30,
-    decision: "GO",
+    action: "미정",
     target: "진행 중",
+    progress: 30,
     nextAction: "ERP 공정 매칭 흐름 안에서 발송 조건 정의",
     blocker: "ERP 연계 범위와 메시지 발송 조건 확정 필요",
-    desc: "A형입간판 시안을 카톡으로 자동 발송하는 부분. ERP 공정 매칭 흐름과 연계."
+    memo: "A형입간판 시안을 카톡으로 자동 발송하는 부분."
   },
   {
     id: "web-kpi-board",
-    name: "웹팀 KPI 업무표 시스템",
-    purpose: "조직관리/KPI",
-    density: "미정",
-    sourceCat: "시스템·자사몰",
+    axis: "both",
+    type: "운영관리",
+    title: "웹팀 KPI 업무표 시스템",
     ownerDept: "web",
     related: ["dev"],
     owner: "박상준",
-    status: "진행",
-    progress: 80,
-    decision: "GO",
+    action: "미정",
     target: "5월 마지막 주 운영 시작",
+    progress: 80,
     nextAction: "운영 시작 전 지표 입력 기준과 팀장 대시보드 확인",
     blocker: "기존 노션 업무표와 전환 기준 정리 필요",
-    desc: "웹팀 전용 KPI 적용 업무표. 팀장이 대시보드로 팀원 업무 진척도·지연도에 따른 KPI 지수 정리 가능."
+    memo: "웹팀 전용 KPI 적용 업무표. 업무 진척도·지연도에 따른 KPI 지수 정리 가능."
   },
   {
     id: "playauto-master-product",
-    name: "플레이오토 마스터 상품 (채널 옵션 별도)",
-    purpose: "광고/유입",
-    density: "미정",
-    sourceCat: "시스템·자사몰",
+    axis: "personal",
+    type: "시스템",
+    title: "플레이오토 마스터 상품 (채널 옵션 별도)",
     ownerDept: "web",
     related: ["cs"],
     owner: "박상준",
-    status: "검토",
-    progress: 20,
-    decision: "LATER",
+    action: "미정",
     target: "검토 단계",
+    progress: 20,
     nextAction: "개인사업자 판매채널 확대 여부와 연결해 판단",
     blocker: "마스터 상품이어도 채널별 옵션은 별도 조절 필요",
-    desc: "마스터 상품 등록은 통합 작업 장점이 있으나 각 채널별 옵션은 별도 조절해야 함."
+    memo: "한 군데서 통합 작업한다는 장점은 있으나 채널별 옵션 조정이 필요."
+  },
+  {
+    id: "report-alarm-cycle",
+    axis: "both",
+    type: "AX/자동화",
+    title: "지시사항 보고·알림 자동화",
+    ownerDept: "dev",
+    related: ["web", "cs", "design"],
+    owner: "미정",
+    action: "미정",
+    target: "검토",
+    progress: 0,
+    nextAction: "어떤 보고가 누락되는지 먼저 목록화",
+    blocker: "사람마다 보고 방식이 달라 차장이 일일이 체크하는 구조",
+    memo: "정해진 시기에 자동 알림/전달, 체크만 해도 보고가 되는 구조 후보."
   }
 ];
 
-const STORAGE_KEY = "hanasm.v3.decisions";
+const STORAGE_KEY = "hanasm.v3.workmap";
 let state = {};
-let currentView = "all";
-let selectedId = PROJECTS[0]?.id || null;
+let selectedId = BASE_ITEMS[0].id;
+let view = "axis";
+let quickFilter = "all";
 
 function loadState() {
   try { state = JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}"); }
   catch (e) { state = {}; }
 }
-
 function saveState() {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
 }
-
-function getProject(id) {
-  const base = PROJECTS.find(p => p.id === id);
-  if (!base) return null;
-  return { ...base, ...(state[id] || {}) };
+function itemById(id) {
+  const base = BASE_ITEMS.find(item => item.id === id);
+  return base ? { ...base, ...(state[id] || {}) } : null;
 }
-
-function allProjects() {
-  return PROJECTS.map(p => getProject(p.id));
+function items() {
+  return BASE_ITEMS.map(item => itemById(item.id));
 }
-
-function setProjectValue(id, key, value) {
-  state[id] = { ...(state[id] || {}), [key]: value };
+function setItem(id, field, value) {
+  state[id] = { ...(state[id] || {}), [field]: value };
   saveState();
   render();
 }
-
-function labelDept(id) {
-  return DEPT_NAME[id] || id;
-}
-
-function decisionClass(decision) {
-  if (decision === "GO") return "go";
-  if (decision === "HOLD") return "hold";
-  if (decision === "LATER") return "later";
-  return "hold";
-}
-
-function statusClass(status) {
-  return status === "스톱" ? "stop" : "";
-}
-
-function isDecisionNeeded(project) {
-  return project.decision !== "GO" || project.density === "미정" || project.density === "보류";
-}
-
-function filteredProjects() {
-  const q = document.getElementById("searchInput")?.value.trim().toLowerCase() || "";
-  const purpose = document.getElementById("purposeFilter")?.value || "전체 목적";
-  const density = document.getElementById("densityFilter")?.value || "전체 밀도";
-  const dept = document.getElementById("deptFilter")?.value || "전체 부서";
-  return allProjects().filter(p => {
-    const hay = [p.name, p.owner, p.sourceCat, p.desc, p.nextAction, p.blocker, labelDept(p.ownerDept), ...p.related.map(labelDept)].join(" ").toLowerCase();
-    if (q && !hay.includes(q)) return false;
-    if (purpose !== "전체 목적" && p.purpose !== purpose) return false;
-    if (density !== "전체 밀도" && p.density !== density) return false;
-    if (dept !== "전체 부서" && p.ownerDept !== dept && !p.related.includes(dept)) return false;
-    return true;
-  });
-}
-
-function optionHtml(options, selected) {
-  return options.map(opt => `<option value="${escapeHtml(opt)}"${opt === selected ? " selected" : ""}>${escapeHtml(opt)}</option>`).join("");
-}
-
-function escapeHtml(value) {
+function deptName(id) { return DEPTS[id] || id; }
+function axisName(id) { return AXES[id]?.label || id; }
+function esc(value) {
   return String(value ?? "")
     .replaceAll("&", "&amp;")
     .replaceAll("<", "&lt;")
@@ -735,265 +752,306 @@ function escapeHtml(value) {
     .replaceAll('"', "&quot;")
     .replaceAll("'", "&#039;");
 }
-
-function renderStats(projects = allProjects()) {
-  const total = projects.length;
-  const undecided = projects.filter(p => p.density === "미정").length;
-  const need = projects.filter(isDecisionNeeded).length;
-  const go = projects.filter(p => p.decision === "GO").length;
-  document.getElementById("topStats").innerHTML = [
-    `<span class="stat">전체 ${total}</span>`,
-    `<span class="stat">GO ${go}</span>`,
-    `<span class="stat">결정 필요 ${need}</span>`,
-    `<span class="stat">밀도 미정 ${undecided}</span>`
+function options(list, selected, labels = {}) {
+  return list.map(value => `<option value="${esc(value)}"${value === selected ? " selected" : ""}>${esc(labels[value] || value)}</option>`).join("");
+}
+function filteredItems() {
+  const q = document.getElementById("search")?.value.trim().toLowerCase() || "";
+  const axis = document.getElementById("axisFilter")?.value || "전체 사업축";
+  const type = document.getElementById("typeFilter")?.value || "전체 유형";
+  const dept = document.getElementById("deptFilter")?.value || "전체 부서";
+  const action = document.getElementById("actionFilter")?.value || "전체 판단";
+  return items().filter(item => {
+    const hay = [
+      item.title, item.type, item.owner, item.nextAction, item.blocker, item.memo,
+      axisName(item.axis), deptName(item.ownerDept), ...item.related.map(deptName)
+    ].join(" ").toLowerCase();
+    if (q && !hay.includes(q)) return false;
+    if (axis !== "전체 사업축" && item.axis !== axis) return false;
+    if (type !== "전체 유형" && item.type !== type) return false;
+    if (dept !== "전체 부서" && item.ownerDept !== dept && !item.related.includes(dept)) return false;
+    if (action !== "전체 판단" && item.action !== action) return false;
+    if (quickFilter !== "all" && item.action !== quickFilter) return false;
+    return true;
+  });
+}
+function renderFilters() {
+  const axis = document.getElementById("axisFilter");
+  if (axis.dataset.ready) return;
+  axis.innerHTML = options(["전체 사업축", ...Object.keys(AXES)], "전체 사업축", {
+    personal: "개인사업자",
+    corp: "법인사업자",
+    both: "공통 기반"
+  });
+  document.getElementById("typeFilter").innerHTML = options(["전체 유형", ...TYPES], "전체 유형");
+  const deptIds = [...new Set(BASE_ITEMS.flatMap(item => [item.ownerDept, ...item.related]))];
+  document.getElementById("deptFilter").innerHTML = options(["전체 부서", ...deptIds], "전체 부서",
+    Object.fromEntries(deptIds.map(id => [id, deptName(id)])));
+  document.getElementById("actionFilter").innerHTML = options(["전체 판단", ...ACTIONS], "전체 판단");
+  axis.dataset.ready = "1";
+}
+function renderStats(list = items()) {
+  const first = list.filter(item => item.action === "먼저").length;
+  const undecided = list.filter(item => item.action === "미정").length;
+  const hold = list.filter(item => item.action === "보류").length;
+  const remove = list.filter(item => item.action === "제거").length;
+  document.getElementById("stats").innerHTML = [
+    `<span class="stat">전체 ${list.length}</span>`,
+    `<span class="stat">먼저 ${first}</span>`,
+    `<span class="stat">미정 ${undecided}</span>`,
+    `<span class="stat">보류 ${hold}</span>`,
+    `<span class="stat">제거 ${remove}</span>`
   ].join("");
 }
-
-function renderFilters() {
-  const purpose = document.getElementById("purposeFilter");
-  const density = document.getElementById("densityFilter");
-  const dept = document.getElementById("deptFilter");
-  if (!purpose.dataset.ready) {
-    purpose.innerHTML = optionHtml(["전체 목적", ...PURPOSES], "전체 목적");
-    density.innerHTML = optionHtml(["전체 밀도", ...DENSITIES], "전체 밀도");
-    const deptIds = [...new Set(PROJECTS.flatMap(p => [p.ownerDept, ...p.related]))];
-    dept.innerHTML = optionHtml(["전체 부서", ...deptIds], "전체 부서")
-      .replaceAll(/<option value="([^"]+)">\1<\/option>/g, (m, id) => `<option value="${id}">${escapeHtml(labelDept(id))}</option>`);
-    purpose.dataset.ready = "1";
-  }
+function badgeType(type) {
+  if (type === "현재 업무") return "type-current";
+  if (type === "AX/자동화") return "type-ax";
+  if (type === "신규 프로젝트") return "type-new";
+  if (type === "시스템") return "type-system";
+  return "";
 }
-
-function projectCard(project) {
-  const need = isDecisionNeeded(project);
-  const selected = project.id === selectedId ? " selected" : "";
-  const cls = need ? " need" : project.decision === "HOLD" ? " hold" : "";
-  const related = project.related.length ? project.related.map(labelDept).join(", ") : "없음";
+function card(item) {
+  const selected = item.id === selectedId ? " selected" : "";
+  const related = item.related.length ? item.related.map(deptName).join(", ") : "없음";
+  const need = item.action === "미정" ? `<span class="badge need">판단 필요</span>` : "";
   return `
-    <article class="project-card${selected}${cls}" data-id="${escapeHtml(project.id)}">
+    <article class="card${selected}" data-id="${esc(item.id)}" data-action="${esc(item.action)}">
       <div class="card-top">
-        <h3 class="card-title">${escapeHtml(project.name)}</h3>
-        <span class="badge ${decisionClass(project.decision)}">${escapeHtml(project.decision)}</span>
+        <h4>${esc(item.title)}</h4>
+        <span class="badge ${item.action === "제거" ? "remove" : ""}">${esc(item.action)}</span>
       </div>
       <div class="badge-row">
-        <span class="badge">${escapeHtml(project.purpose)}</span>
-        <span class="badge">${escapeHtml(project.density)}</span>
-        <span class="badge ${statusClass(project.status)}">${escapeHtml(project.status)}</span>
+        <span class="badge ${badgeType(item.type)}">${esc(item.type)}</span>
+        <span class="badge">${esc(axisName(item.axis))}</span>
+        ${need}
       </div>
       <div class="meta">
-        <div>주관: ${escapeHtml(labelDept(project.ownerDept))} · ${escapeHtml(project.owner)}</div>
-        <div>유관: ${escapeHtml(related)}</div>
-        <div>목표: ${escapeHtml(project.target || "미정")}</div>
+        <div>주관: ${esc(deptName(item.ownerDept))} · ${esc(item.owner)}</div>
+        <div>유관: ${esc(related)}</div>
+        <div>목표: ${esc(item.target || "미정")}</div>
       </div>
-      <div class="progress"><span style="width:${Number(project.progress) || 0}%"></span></div>
+      <div class="progress"><span style="width:${Number(item.progress) || 0}%"></span></div>
       <div class="card-controls">
-        <select data-id="${escapeHtml(project.id)}" data-field="purpose">${optionHtml(PURPOSES, project.purpose)}</select>
-        <select data-id="${escapeHtml(project.id)}" data-field="density">${optionHtml(DENSITIES, project.density)}</select>
-        <select data-id="${escapeHtml(project.id)}" data-field="decision">${optionHtml(DECISIONS, project.decision)}</select>
-        <button type="button" class="action-btn" data-select="${escapeHtml(project.id)}">상세</button>
+        <select data-id="${esc(item.id)}" data-field="action">${options(ACTIONS, item.action)}</select>
+        <select data-id="${esc(item.id)}" data-field="axis">${options(Object.keys(AXES), item.axis, { personal: "개인사업자", corp: "법인사업자", both: "공통 기반" })}</select>
       </div>
     </article>
   `;
 }
-
+function groupedCards(list, groups, className) {
+  return groups.map(group => {
+    const groupItems = list.filter(item => group.match(item));
+    return `
+      <section class="${className}">
+        <div class="${className === "lane" ? "lane-head" : "dept-head"}">
+          <span>${esc(group.label)}</span><span>${groupItems.length}</span>
+        </div>
+        <div class="${className === "lane" ? "lane-body" : "dept-body"}">${groupItems.map(card).join("") || `<div class="empty">없음</div>`}</div>
+      </section>
+    `;
+  }).join("");
+}
 function renderBoard() {
-  const projects = filteredProjects();
+  const list = filteredItems();
   const board = document.getElementById("board");
-  document.getElementById("boardCount").textContent = `${projects.length}개 표시`;
-  const headings = {
-    all: "전체 펼침",
-    density: "투입 밀도",
-    purpose: "목적 묶음",
-    decision: "대표 결정"
-  };
-  document.getElementById("boardHeading").textContent = headings[currentView] || "전체 펼침";
+  const title = document.getElementById("boardTitle");
+  document.getElementById("boardCount").textContent = `${list.length}개 표시`;
 
-  if (currentView === "density") {
+  if (view === "dept") {
+    title.textContent = "부서 관계";
+    board.className = "dept-board";
+    const deptIds = [...new Set(BASE_ITEMS.flatMap(item => [item.ownerDept, ...item.related]))];
+    board.innerHTML = groupedCards(list, deptIds.map(id => ({
+      label: deptName(id),
+      match: item => item.ownerDept === id || item.related.includes(id)
+    })), "dept-box");
+    return;
+  }
+
+  if (view === "action") {
+    title.textContent = "판단 상태";
     board.className = "lane-board";
-    board.innerHTML = DENSITIES.map(d => {
-      const items = projects.filter(p => p.density === d);
-      return `<section class="lane"><div class="lane-head"><span>${escapeHtml(d)}</span><span>${items.length}</span></div><div class="lane-body">${items.map(projectCard).join("") || emptyLane()}</div></section>`;
-    }).join("");
+    board.innerHTML = groupedCards(list, ACTIONS.map(action => ({
+      label: action,
+      match: item => item.action === action
+    })), "lane");
     return;
   }
 
-  if (currentView === "purpose") {
-    board.className = "purpose-board";
-    board.innerHTML = PURPOSES.map(purpose => {
-      const items = projects.filter(p => p.purpose === purpose);
-      return `<section class="purpose-group"><div class="purpose-head"><span>${escapeHtml(purpose)}</span><span>${items.length}</span></div><div class="purpose-body">${items.map(projectCard).join("") || emptyLane()}</div></section>`;
-    }).join("");
-    return;
-  }
-
-  if (currentView === "decision") {
-    const groups = ["결정필요", "GO", "HOLD", "LATER"];
+  if (view === "decision") {
+    title.textContent = "결정 내역";
     board.className = "lane-board";
-    board.innerHTML = groups.map(group => {
-      const items = group === "결정필요" ? projects.filter(isDecisionNeeded) : projects.filter(p => p.decision === group);
-      return `<section class="lane"><div class="lane-head"><span>${escapeHtml(group)}</span><span>${items.length}</span></div><div class="lane-body">${items.map(projectCard).join("") || emptyLane()}</div></section>`;
-    }).join("");
+    const groups = ["먼저", "진행", "대기", "보류", "제거", "통합"];
+    board.innerHTML = groupedCards(list, groups.map(action => ({
+      label: action,
+      match: item => item.action === action
+    })), "lane");
     return;
   }
 
-  board.className = "project-grid";
-  board.innerHTML = projects.map(projectCard).join("") || emptyLane();
+  title.textContent = "사업축 전개";
+  board.className = "axis-board";
+  const personal = list.filter(item => item.axis === "personal" || item.axis === "both");
+  const corp = list.filter(item => item.axis === "corp" || item.axis === "both");
+  board.innerHTML = `
+    <section class="axis personal">
+      <div class="axis-head"><div><h3>개인사업자</h3><p>${AXES.personal.sub}</p></div><strong>${personal.length}</strong></div>
+      <div class="axis-body">${renderAxisSections(personal)}</div>
+    </section>
+    <section class="axis corp">
+      <div class="axis-head"><div><h3>법인사업자</h3><p>${AXES.corp.sub}</p></div><strong>${corp.length}</strong></div>
+      <div class="axis-body">${renderAxisSections(corp)}</div>
+    </section>
+  `;
 }
-
-function emptyLane() {
-  return `<div class="small-note">표시할 프로젝트 없음</div>`;
+function renderAxisSections(list) {
+  return TYPES.map(type => {
+    const group = list.filter(item => item.type === type);
+    if (!group.length) return "";
+    return `<div class="section-title">${esc(type)}</div>${group.map(card).join("")}`;
+  }).join("") || `<div class="empty">없음</div>`;
 }
-
 function renderDetail() {
-  const pane = document.getElementById("detailPane");
-  const project = getProject(selectedId);
-  if (!project) {
-    pane.innerHTML = `<div class="detail-empty">프로젝트를 선택하세요.</div>`;
+  const pane = document.getElementById("detail");
+  const item = itemById(selectedId);
+  if (!item) {
+    pane.innerHTML = `<div class="detail-empty">항목을 선택하세요.</div>`;
     return;
   }
-  const related = project.related.length
-    ? project.related.map(id => `<span class="dept-chip">${escapeHtml(labelDept(id))}</span>`).join("")
+  const related = item.related.length
+    ? item.related.map(id => `<span class="chip">${esc(deptName(id))}</span>`).join(`<span class="arrow">→</span>`)
     : `<span class="small-note">유관 부서 없음</span>`;
-
   pane.innerHTML = `
-    <h2>${escapeHtml(project.name)}</h2>
+    <h2>${esc(item.title)}</h2>
     <div class="badge-row">
-      <span class="badge">${escapeHtml(project.sourceCat)}</span>
-      <span class="badge ${decisionClass(project.decision)}">${escapeHtml(project.decision)}</span>
-      <span class="badge">${escapeHtml(project.density)}</span>
+      <span class="badge ${badgeType(item.type)}">${esc(item.type)}</span>
+      <span class="badge">${esc(axisName(item.axis))}</span>
+      <span class="badge">${esc(item.action)}</span>
     </div>
 
     <section class="detail-section">
-      <h3>판단 필드</h3>
-      <div class="field-grid">
-        <div class="field">
-          <label>목적 묶음</label>
-          <select data-detail="${escapeHtml(project.id)}" data-field="purpose">${optionHtml(PURPOSES, project.purpose)}</select>
-        </div>
-        <div class="field">
-          <label>투입 밀도</label>
-          <select data-detail="${escapeHtml(project.id)}" data-field="density">${optionHtml(DENSITIES, project.density)}</select>
-        </div>
-        <div class="field">
-          <label>대표 결정</label>
-          <select data-detail="${escapeHtml(project.id)}" data-field="decision">${optionHtml(DECISIONS, project.decision)}</select>
-        </div>
+      <h3>부서 관계</h3>
+      <div class="relation-flow">
+        <span class="chip">사업축: ${esc(axisName(item.axis))}</span>
+        <span class="arrow">→</span>
+        <span class="chip">주관: ${esc(deptName(item.ownerDept))}</span>
+        ${item.related.length ? `<span class="arrow">→</span>${related}` : ""}
       </div>
     </section>
 
     <section class="detail-section">
-      <h3>관계</h3>
-      <div class="relation">
-        <div class="relation-row"><div class="relation-label">주관</div><div><span class="dept-chip">${escapeHtml(labelDept(project.ownerDept))}</span></div></div>
-        <div class="relation-row"><div class="relation-label">유관</div><div class="chip-list">${related}</div></div>
-        <div class="relation-row"><div class="relation-label">담당</div><div>${escapeHtml(project.owner || "미정")}</div></div>
-      </div>
-    </section>
-
-    <section class="detail-section">
-      <h3>결정 메모</h3>
+      <h3>회의 판단</h3>
       <div class="field-grid">
         <div class="field">
-          <label>다음 액션</label>
-          <textarea data-detail="${escapeHtml(project.id)}" data-field="nextAction">${escapeHtml(project.nextAction || "")}</textarea>
+          <label>판단 상태</label>
+          <select data-detail="${esc(item.id)}" data-field="action">${options(ACTIONS, item.action)}</select>
         </div>
         <div class="field">
-          <label>막힘 / 확인 필요</label>
-          <textarea data-detail="${escapeHtml(project.id)}" data-field="blocker">${escapeHtml(project.blocker || "")}</textarea>
+          <label>사업축</label>
+          <select data-detail="${esc(item.id)}" data-field="axis">${options(Object.keys(AXES), item.axis, { personal: "개인사업자", corp: "법인사업자", both: "공통 기반" })}</select>
         </div>
         <div class="field">
           <label>목표 시점</label>
-          <input data-detail="${escapeHtml(project.id)}" data-field="target" value="${escapeHtml(project.target || "")}" />
+          <input data-detail="${esc(item.id)}" data-field="target" value="${esc(item.target)}" />
+        </div>
+      </div>
+    </section>
+
+    <section class="detail-section">
+      <h3>액션 / 막힘</h3>
+      <div class="field-grid">
+        <div class="field">
+          <label>다음 액션</label>
+          <textarea data-detail="${esc(item.id)}" data-field="nextAction">${esc(item.nextAction)}</textarea>
+        </div>
+        <div class="field">
+          <label>막힘 / 확인 필요</label>
+          <textarea data-detail="${esc(item.id)}" data-field="blocker">${esc(item.blocker)}</textarea>
         </div>
       </div>
     </section>
 
     <section class="detail-section">
       <h3>원문 메모</h3>
-      <p class="small-note">${escapeHtml(project.desc)}</p>
+      <p class="small-note">${esc(item.memo)}</p>
     </section>
   `;
 }
-
 function renderExport() {
-  const pane = document.getElementById("detailPane");
+  const pane = document.getElementById("detail");
   const tpl = document.getElementById("exportTemplate").content.cloneNode(true);
   pane.innerHTML = "";
   pane.appendChild(tpl);
-  const exportData = allProjects().map(p => ({
-    id: p.id,
-    name: p.name,
-    purpose: p.purpose,
-    density: p.density,
-    decision: p.decision,
-    ownerDept: labelDept(p.ownerDept),
-    related: p.related.map(labelDept),
-    owner: p.owner,
-    target: p.target,
-    nextAction: p.nextAction,
-    blocker: p.blocker
+  const data = items().map(item => ({
+    title: item.title,
+    axis: axisName(item.axis),
+    type: item.type,
+    action: item.action,
+    ownerDept: deptName(item.ownerDept),
+    related: item.related.map(deptName),
+    owner: item.owner,
+    target: item.target,
+    nextAction: item.nextAction,
+    blocker: item.blocker
   }));
-  document.getElementById("exportText").value = JSON.stringify(exportData, null, 2);
+  document.getElementById("exportText").value = JSON.stringify(data, null, 2);
 }
-
 function render() {
   renderFilters();
-  const projects = filteredProjects();
-  renderStats(projects);
+  const list = filteredItems();
+  renderStats(list);
   renderBoard();
   renderDetail();
-  bindDynamicEvents();
+  bindDynamic();
 }
-
-function bindDynamicEvents() {
-  document.querySelectorAll(".project-card").forEach(card => {
-    card.addEventListener("click", e => {
-      if (e.target.closest("select") || e.target.closest("button")) return;
-      selectedId = card.dataset.id;
+function bindDynamic() {
+  document.querySelectorAll(".card").forEach(el => {
+    el.addEventListener("click", event => {
+      if (event.target.closest("select")) return;
+      selectedId = el.dataset.id;
       render();
     });
   });
-  document.querySelectorAll("[data-select]").forEach(btn => {
-    btn.addEventListener("click", () => {
-      selectedId = btn.dataset.select;
-      render();
-    });
+  document.querySelectorAll("select[data-id]").forEach(el => {
+    el.addEventListener("change", () => setItem(el.dataset.id, el.dataset.field, el.value));
   });
-  document.querySelectorAll("select[data-id]").forEach(select => {
-    select.addEventListener("change", () => setProjectValue(select.dataset.id, select.dataset.field, select.value));
-  });
-  document.querySelectorAll("[data-detail]").forEach(input => {
-    const handler = () => setProjectValue(input.dataset.detail, input.dataset.field, input.value);
-    input.addEventListener(input.tagName === "TEXTAREA" || input.tagName === "INPUT" ? "change" : "change", handler);
+  document.querySelectorAll("[data-detail]").forEach(el => {
+    el.addEventListener("change", () => setItem(el.dataset.detail, el.dataset.field, el.value));
   });
 }
-
-function bindStaticEvents() {
+function bindStatic() {
   document.querySelectorAll("#viewButtons button").forEach(btn => {
     btn.addEventListener("click", () => {
-      currentView = btn.dataset.view;
+      view = btn.dataset.view;
       document.querySelectorAll("#viewButtons button").forEach(b => b.classList.toggle("active", b === btn));
       render();
     });
   });
-  ["searchInput", "purposeFilter", "densityFilter", "deptFilter"].forEach(id => {
-    document.getElementById(id).addEventListener(id === "searchInput" ? "input" : "change", render);
+  document.querySelectorAll("#quickFilters button").forEach(btn => {
+    btn.addEventListener("click", () => {
+      quickFilter = btn.dataset.filter;
+      document.querySelectorAll("#quickFilters button").forEach(b => b.classList.toggle("active", b === btn));
+      render();
+    });
   });
-  document.getElementById("resetFilters").addEventListener("click", () => {
-    document.getElementById("searchInput").value = "";
-    document.getElementById("purposeFilter").value = "전체 목적";
-    document.getElementById("densityFilter").value = "전체 밀도";
+  ["search", "axisFilter", "typeFilter", "deptFilter", "actionFilter"].forEach(id => {
+    const el = document.getElementById(id);
+    el.addEventListener(id === "search" ? "input" : "change", render);
+  });
+  document.getElementById("resetBtn").addEventListener("click", () => {
+    document.getElementById("search").value = "";
+    document.getElementById("axisFilter").value = "전체 사업축";
+    document.getElementById("typeFilter").value = "전체 유형";
     document.getElementById("deptFilter").value = "전체 부서";
-    render();
-  });
-  document.getElementById("clearSelection").addEventListener("click", () => {
-    selectedId = null;
+    document.getElementById("actionFilter").value = "전체 판단";
+    quickFilter = "all";
+    document.querySelectorAll("#quickFilters button").forEach(b => b.classList.toggle("active", b.dataset.filter === "all"));
     render();
   });
   document.getElementById("exportBtn").addEventListener("click", renderExport);
 }
-
 loadState();
-bindStaticEvents();
+bindStatic();
 render();
 </script>
 </body>
