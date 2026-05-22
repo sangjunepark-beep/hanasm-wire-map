@@ -204,24 +204,89 @@ svg.wires path.flow {
 .node:hover .frame { box-shadow: 0 0 12px var(--c1, var(--blue-2)); }
 .node.prelit .frame { box-shadow: 0 0 10px var(--c1, var(--blue-2)); }
 /* 프로젝트 카드 클릭 시 직접/유관 시각 분리 */
-.node.prelit-owner .frame { box-shadow: 0 0 16px #60a5fa, 0 0 4px #60a5fa inset; outline: 2px solid #60a5fa; outline-offset: 2px; }
-.node.prelit-rel .frame { box-shadow: 0 0 8px rgba(148,163,184,0.6); outline: 1.5px dashed #94a3b8; outline-offset: 2px; }
-.node.prelit-rel { opacity: 0.88; }
-body.proj-focus .node:not(.prelit-owner):not(.prelit-rel) { opacity: 0.18; transition: opacity 0.18s; }
+.node.prelit-owner .frame {
+  outline: 3px solid #60a5fa; outline-offset: 3px;
+  box-shadow: 0 0 24px #60a5fa, 0 0 8px #60a5fa inset;
+}
+.node.prelit-rel .frame {
+  outline: 2px dashed #cbd5e1; outline-offset: 3px;
+  box-shadow: 0 0 14px rgba(203,213,225,0.7);
+}
+.node.prelit-rel { opacity: 0.92; }
+body.proj-focus .node:not(.prelit-owner):not(.prelit-rel) { opacity: 0.14; transition: opacity 0.18s; }
 body.proj-focus .node.prelit-owner,
 body.proj-focus .node.prelit-rel { opacity: 1; transition: opacity 0.18s; }
+/* 노드 위 라벨 배지 (::before) */
+.node.prelit-owner::before,
+.node.prelit-rel::before {
+  position: absolute;
+  top: -28px; left: 50%;
+  transform: translateX(-50%);
+  padding: 3px 12px;
+  font-size: 10.5px; font-weight: 800;
+  letter-spacing: 0.10em;
+  white-space: nowrap;
+  z-index: 200; pointer-events: none;
+  clip-path: polygon(4px 0, 100% 0, 100% calc(100% - 4px), calc(100% - 4px) 100%, 0 100%, 0 4px);
+  animation: badgePop 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.node.prelit-owner::before {
+  content: '직접관련';
+  background: #60a5fa; color: #fff;
+  box-shadow: 0 4px 12px rgba(96,165,250,0.55);
+}
+.node.prelit-rel::before {
+  content: '일부관련';
+  background: #cbd5e1; color: #0f172a;
+  box-shadow: 0 4px 10px rgba(203,213,225,0.45);
+}
+/* 노드 뒷면 펄스 하이라이트 (::after) */
+.node.prelit-owner::after,
+.node.prelit-rel::after {
+  content: '';
+  position: absolute; inset: -16px;
+  z-index: -1; pointer-events: none;
+  border-radius: 6px;
+  clip-path: polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px);
+}
+.node.prelit-owner::after {
+  background: radial-gradient(ellipse at center, rgba(96,165,250,0.45) 0%, rgba(96,165,250,0) 70%);
+  animation: ownerPulse 1.3s ease-in-out infinite;
+}
+.node.prelit-rel::after {
+  background: radial-gradient(ellipse at center, rgba(203,213,225,0.35) 0%, rgba(203,213,225,0) 70%);
+  animation: relPulse 1.6s ease-in-out infinite;
+}
+@keyframes badgePop {
+  0%   { transform: translateX(-50%) translateY(6px) scale(0.7); opacity: 0; }
+  60%  { transform: translateX(-50%) translateY(-3px) scale(1.08); opacity: 1; }
+  100% { transform: translateX(-50%) translateY(0) scale(1); opacity: 1; }
+}
+@keyframes ownerPulse {
+  0%, 100% { transform: scale(1);    opacity: 0.55; }
+  50%      { transform: scale(1.22); opacity: 1; }
+}
+@keyframes relPulse {
+  0%, 100% { transform: scale(1);    opacity: 0.40; }
+  50%      { transform: scale(1.15); opacity: 0.75; }
+}
 svg.wires path.preview-wire {
-  opacity: 0.85 !important;
+  opacity: 1 !important;
   stroke: #60a5fa !important;
-  stroke-width: 2.8 !important;
+  stroke-width: 3.4 !important;
+  filter: drop-shadow(0 0 6px #60a5fa);
 }
 svg.wires path.preview-wire-rel {
-  opacity: 0.55 !important;
-  stroke: #94a3b8 !important;
-  stroke-width: 1.6 !important;
-  stroke-dasharray: 4 3 !important;
+  opacity: 0.7 !important;
+  stroke: #cbd5e1 !important;
+  stroke-width: 2.0 !important;
+  stroke-dasharray: 5 4 !important;
+  animation: wireDash 1.2s linear infinite;
 }
-body.proj-focus svg.wires path:not(.preview-wire):not(.preview-wire-rel) { opacity: 0.08; transition: opacity 0.18s; }
+@keyframes wireDash {
+  to { stroke-dashoffset: -18; }
+}
+body.proj-focus svg.wires path:not(.preview-wire):not(.preview-wire-rel) { opacity: 0.06; transition: opacity 0.18s; }
 
 .dot {
   width: 8px; height: 8px; flex-shrink: 0;
