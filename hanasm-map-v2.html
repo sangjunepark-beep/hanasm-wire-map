@@ -792,6 +792,18 @@ body.edit-mode .node .frame { outline: 2px dashed rgba(251,191,36,0.6); outline-
 }
 .proj-panel .pp-add:hover { background: #93c5fd; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(96,165,250,0.45); }
 .proj-panel .pp-add:active { transform: translateY(0); }
+.proj-panel .pp-sync {
+  background: transparent; color: #93c5fd; border: 1px solid rgba(96,165,250,0.55);
+  font-size: 10.5px; font-weight: 700; letter-spacing: 0.04em;
+  padding: 5px 10px; cursor: pointer; outline: none;
+  clip-path: polygon(3px 0, 100% 0, 100% calc(100% - 3px), calc(100% - 3px) 100%, 0 100%, 0 3px);
+  transition: all 0.15s;
+}
+.proj-panel .pp-sync:hover { background: rgba(96,165,250,0.12); color: #fff; }
+.proj-panel .pp-sync.syncing { opacity: 0.5; pointer-events: none; }
+.proj-panel .pp-sync.ok { background: rgba(52,211,153,0.18); color: #34d399; border-color: #34d399; }
+.proj-panel .pp-sync.err { background: rgba(248,113,113,0.18); color: #f87171; border-color: #f87171; }
+/* PAT 입력 모달은 기존 .proj-modal 재활용 → 별도 스타일 X */
 /* 모달 */
 .proj-modal-bg {
   position: fixed; inset: 0; background: rgba(0,0,0,0.65);
@@ -2374,6 +2386,7 @@ window.addEventListener('resize', () => { fitView(); drawAllWires(); });
   <div class="pp-head">
     <div class="pp-title">신규 프로젝트 판단 보드</div>
     <div class="pp-actions">
+      <button type="button" class="pp-sync" id="ppSync" title="GitHub와 동기화 (다른 PC와 공유)">⟳ 동기화</button>
       <button type="button" class="pp-add" id="ppAdd" title="프로젝트 새로 추가">＋ 추가</button>
       <span class="pp-x" id="ppClose">✕</span>
     </div>
@@ -2978,6 +2991,102 @@ function renderDeptProjects(deptId) {
     }
   });
 }
+
+// ===== GitHub 다중 PC 동기화 =====
+const SYNC_REPO_OWNER = 'sangjunepark-beep';
+const SYNC_REPO_NAME = 'hanasm-wire-map';
+const SYNC_FILE_PATH = 'data/user-state.json';
+const SYNC_RAW_URL = `https://raw.githubusercontent.com/${SYNC_REPO_OWNER}/${SYNC_REPO_NAME}/main/${SYNC_FILE_PATH}`;
+const SYNC_API_URL = `https://api.github.com/repos/${SYNC_REPO_OWNER}/${SYNC_REPO_NAME}/contents/${SYNC_FILE_PATH}`;
+let LAST_SYNC_SHA = '';
+function getStoredPAT() { try { return localStorage.getItem('hanasm.gh.pat') || ''; } catch(e){ return ''; } }
+function setStoredPAT(v) { try { localStorage.setItem('hanasm.gh.pat', v || ''); } catch(e){} }
+function flashSyncBtn(cls, ms) {
+  const b = document.getElementById('ppSync'); if (!b) return;
+  b.classList.remove('ok','err','syncing');
+  if (cls) b.classList.add(cls);
+  if (ms) setTimeout(() => b.classList.remove('ok','err'), ms);
+}
+async function syncFetchFromGitHub(silent) {
+  try {
+    const url = SYNC_RAW_URL + '?t=' + Date.now();
+    const r = await fetch(url, { cache: 'no-store' });
+    if (!r.ok) throw new Error('fetch ' + r.status);
+    const data = await r.json();
+    // 서버 데이터로 localStorage 덮어쓰기
+    if (data.userProjects) { USER_PROJECTS = data.userProjects; persistUserProjects(); }
+    if (data.overrides) { PROJECT_OVERRIDES = data.overrides; localStorage.setItem('hanasm.projectOverrides.v3', JSON.stringify(PROJECT_OVERRIDES)); }
+    if (data.actions) { PROJECT_STATE = data.actions; localStorage.setItem('hanasm.projectState.v3', JSON.stringify(PROJECT_STATE)); }
+    if (data.decisions) { DECISIONS = data.decisions; localStorage.setItem('hanasm.decisions', JSON.stringify(DECISIONS)); }
+    if (typeof renderProjects === 'function') renderProjects();
+    if (!silent) flashSyncBtn('ok', 1500);
+    return true;
+  } catch (e) {
+    if (!silent) flashSyncBtn('err', 2500);
+    console.warn('sync fetch fail:', e);
+    return false;
+  }
+}
+async function syncPushToGitHub() {
+  let pat = getStoredPAT();
+  if (!pat) {
+    pat = prompt('GitHub Personal Access Token (PAT) 입력\n(repo 권한 필요, 본 PC 브라우저에만 저장됨)');
+    if (!pat) return;
+    setStoredPAT(pat.trim());
+    pat = pat.trim();
+  }
+  flashSyncBtn('syncing');
+  // 1) 현재 파일 SHA 가져오기
+  let sha = '';
+  try {
+    const r = await fetch(SYNC_API_URL, { headers: { 'Authorization': 'token ' + pat, 'Accept': 'application/vnd.github+json' } });
+    if (r.ok) { const j = await r.json(); sha = j.sha; }
+  } catch(e) {}
+  // 2) PUT
+  const body = {
+    version: 1,
+    updatedAt: new Date().toISOString(),
+    updatedBy: 'web',
+    userProjects: USER_PROJECTS || {},
+    overrides: PROJECT_OVERRIDES || {},
+    actions: PROJECT_STATE || {},
+    decisions: (typeof DECISIONS !== 'undefined' ? DECISIONS : {})
+  };
+  const contentB64 = btoa(unescape(encodeURIComponent(JSON.stringify(body, null, 2))));
+  const payload = {
+    message: 'sync user-state ' + new Date().toLocaleString('ko-KR'),
+    content: contentB64,
+    branch: 'main'
+  };
+  if (sha) payload.sha = sha;
+  try {
+    const r = await fetch(SYNC_API_URL, {
+      method: 'PUT',
+      headers: { 'Authorization': 'token ' + pat, 'Accept': 'application/vnd.github+json', 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    if (!r.ok) throw new Error('push ' + r.status);
+    flashSyncBtn('ok', 2000);
+  } catch (e) {
+    flashSyncBtn('err', 3000);
+    if (String(e).includes('401') || String(e).includes('403')) {
+      if (confirm('인증 실패. PAT를 다시 입력하시겠습니까?')) { setStoredPAT(''); syncPushToGitHub(); }
+    } else {
+      alert('GitHub 저장 실패: ' + e.message);
+    }
+  }
+}
+// 동기화 버튼: 클릭=push, Shift+클릭=PAT 재설정, Ctrl/Cmd+클릭=fetch
+window.addEventListener('DOMContentLoaded', () => {
+  const btn = document.getElementById('ppSync');
+  if (btn) btn.addEventListener('click', (e) => {
+    if (e.shiftKey) { setStoredPAT(''); alert('저장된 PAT 삭제. 다음 동기화 시 다시 입력하세요.'); return; }
+    if (e.ctrlKey || e.metaKey) { syncFetchFromGitHub(false); return; }
+    syncPushToGitHub();
+  });
+});
+// 페이지 로드 시 자동 fetch (silent)
+setTimeout(() => syncFetchFromGitHub(true), 800);
 
 // ===== + 프로젝트 추가 모달 =====
 function openProjModal() {
