@@ -203,10 +203,25 @@ svg.wires path.flow {
 .node:hover { z-index: 50; }
 .node:hover .frame { box-shadow: 0 0 12px var(--c1, var(--blue-2)); }
 .node.prelit .frame { box-shadow: 0 0 10px var(--c1, var(--blue-2)); }
+/* 프로젝트 카드 클릭 시 직접/유관 시각 분리 */
+.node.prelit-owner .frame { box-shadow: 0 0 16px #60a5fa, 0 0 4px #60a5fa inset; outline: 2px solid #60a5fa; outline-offset: 2px; }
+.node.prelit-rel .frame { box-shadow: 0 0 8px rgba(148,163,184,0.6); outline: 1.5px dashed #94a3b8; outline-offset: 2px; }
+.node.prelit-rel { opacity: 0.88; }
+body.proj-focus .node:not(.prelit-owner):not(.prelit-rel) { opacity: 0.18; transition: opacity 0.18s; }
+body.proj-focus .node.prelit-owner,
+body.proj-focus .node.prelit-rel { opacity: 1; transition: opacity 0.18s; }
 svg.wires path.preview-wire {
-  opacity: 0.75 !important;
-  stroke-width: 2.6 !important;
+  opacity: 0.85 !important;
+  stroke: #60a5fa !important;
+  stroke-width: 2.8 !important;
 }
+svg.wires path.preview-wire-rel {
+  opacity: 0.55 !important;
+  stroke: #94a3b8 !important;
+  stroke-width: 1.6 !important;
+  stroke-dasharray: 4 3 !important;
+}
+body.proj-focus svg.wires path:not(.preview-wire):not(.preview-wire-rel) { opacity: 0.08; transition: opacity 0.18s; }
 
 .dot {
   width: 8px; height: 8px; flex-shrink: 0;
@@ -2216,20 +2231,40 @@ function summarizeProjects(all) {
   return counts;
 }
 function focusProjectRelation(ownerDept, related=[]) {
-  document.querySelectorAll('.node.prelit').forEach(n => n.classList.remove('prelit'));
-  document.querySelectorAll('svg.wires path.preview-wire').forEach(p => p.classList.remove('preview-wire'));
-  const ids = [ownerDept, ...(related || [])].filter(Boolean);
-  ids.forEach(id => {
-    if (POS[id]) POS[id].el.classList.add('prelit');
+  // 직접/유관 시각 분리: prelit-owner(파랑), prelit-rel(그레이 점선), 나머지 dim
+  document.querySelectorAll('.node.prelit, .node.prelit-owner, .node.prelit-rel').forEach(n => {
+    n.classList.remove('prelit','prelit-owner','prelit-rel');
   });
-  ids.forEach(a => {
-    ids.forEach(b => {
-      if (a === b) return;
-      document.querySelectorAll(`svg.wires path[data-from="${a}"][data-to="${b}"], svg.wires path[data-from="${b}"][data-to="${a}"]`)
+  document.querySelectorAll('svg.wires path.preview-wire, svg.wires path.preview-wire-rel').forEach(p => {
+    p.classList.remove('preview-wire','preview-wire-rel');
+  });
+  if (!ownerDept && (!related || related.length === 0)) {
+    document.body.classList.remove('proj-focus');
+    return;
+  }
+  document.body.classList.add('proj-focus');
+  // 직접(주관)
+  if (ownerDept && POS[ownerDept]) POS[ownerDept].el.classList.add('prelit-owner');
+  // 유관
+  (related || []).forEach(id => { if (POS[id]) POS[id].el.classList.add('prelit-rel'); });
+  // 와이어: owner ↔ related 는 preview-wire(파랑), related ↔ related 는 preview-wire-rel(점선 회색)
+  const rels = (related || []).filter(Boolean);
+  if (ownerDept) {
+    rels.forEach(r => {
+      document.querySelectorAll(`svg.wires path[data-from="${ownerDept}"][data-to="${r}"], svg.wires path[data-from="${r}"][data-to="${ownerDept}"]`)
         .forEach(p => p.classList.add('preview-wire'));
     });
-  });
+  }
+  rels.forEach(a => rels.forEach(b => {
+    if (a === b) return;
+    document.querySelectorAll(`svg.wires path[data-from="${a}"][data-to="${b}"], svg.wires path[data-from="${b}"][data-to="${a}"]`)
+      .forEach(p => p.classList.add('preview-wire-rel'));
+  }));
 }
+// 빈 곳 클릭 시 focus 해제
+document.getElementById('stage').addEventListener('click', (e) => {
+  if (e.target.id === 'stage' || e.target.id === 'world') focusProjectRelation(null, []);
+});
 function renderProjects() {
   const body = document.getElementById('ppBody');
   if (!body) return;
@@ -2290,9 +2325,6 @@ function renderProjects() {
                + '<select class="pi-action pi-action-select ' + action.cls + '" data-action-key="' + k + '" aria-label="프로젝트 처리 선택">'
                + optionHtml(PROJECT_ACTIONS, action.key)
                + '</select>'
-               + '<select class="pi-dec pi-dec-select ' + decMeta.cls + '" data-key="' + k + '" aria-label="프로젝트 결정 선택">'
-               + optionHtml(PROJECT_DECISIONS, decMeta.key)
-               + '</select>'
                + (when ? '<span class="pi-when">📅 ' + when + '</span>' : '')
                + '</div>';
     const relRow = (ownerDeptName || relatedHtml)
@@ -2349,16 +2381,7 @@ function renderProjects() {
       renderProjects();
     });
   });
-  document.querySelectorAll('.pi-dec-select').forEach(sel => {
-    sel.addEventListener('click', (e) => e.stopPropagation());
-    sel.addEventListener('change', (e) => {
-      e.stopPropagation();
-      const key = sel.dataset.key;
-      DECISIONS[key] = Object.assign({}, DECISIONS[key] || {}, { decision: sel.value });
-      localStorage.setItem('hanasm.decisions', JSON.stringify(DECISIONS));
-      renderProjects();
-    });
-  });
+  // pi-dec(결정) 드롭다운 제거됨 (2026-05-22) - action 1개로 통합
 }
 // 부서 노드 확대 시 그 부서가 주관·유관인 PROJECTS 항목 표시
 function renderDeptProjects(deptId) {
@@ -2410,7 +2433,6 @@ function renderDeptProjects(deptId) {
       + '<div class="dpc-name">' + item.name + '</div>'
       + '<div class="dpc-foot">'
       +   '<span class="pi-action ' + action.cls + '" data-action-key="' + k + '">' + action.label + '</span>'
-      +   '<span class="dpc-dec">' + decisionMeta(dec).label + '</span>'
       +   (item.startWhen ? '<span class="dpc-when">📅 ' + item.startWhen + '</span>' : '')
       +   '<span class="dpc-prog">' + (item.progress || 0) + '%</span>'
       + '</div>'
@@ -2610,4 +2632,3 @@ document.getElementById('ppClose').addEventListener('click', () => {
 
 </body>
 </html>
-                                                    
