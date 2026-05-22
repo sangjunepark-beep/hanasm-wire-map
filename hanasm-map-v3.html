@@ -886,14 +886,14 @@ body.edit-mode .node .frame { outline: 2px dashed rgba(251,191,36,0.6); outline-
 </div>
 
 <div class="legend">
-  <div class="row"><span class="sw" style="--c:#22d3ee"></span> CEO</div>
+  <div class="row"><span class="sw" style="--c:#22d3ee"></span> 대표</div>
   <div class="row"><span class="sw" style="--c:#60a5fa"></span> 개인사업자 · 스마트스토어</div>
   <div class="row"><span class="sw" style="--c:#a855f7"></span> 법인사업자 · 자사몰·오픈마켓</div>
   <div class="row"><span class="sw" style="--c:#c4b5fd"></span> 부서</div>
 </div>
 
 <div class="controls">
-  <button id="btnFit">RESET</button>
+  <button id="btnFit">초기화</button>
 </div>
 
 <div class="chip-bar" id="chipBar">
@@ -902,7 +902,7 @@ body.edit-mode .node .frame { outline: 2px dashed rgba(251,191,36,0.6); outline-
   <button class="chip" data-cat="dept"    style="--c:#a5b4fc">부서</button>
   <button class="chip" data-cat="system"  style="--c:#22d3ee">시스템</button>
   <button class="chip" data-cat="talk"    style="--c:#f472b6">상담</button>
-  <button class="chip" data-cat="sns"     style="--c:#ec4899">SNS</button>
+  <button class="chip" data-cat="sns"     style="--c:#ec4899">소셜</button>
 </div>
 
 
@@ -927,7 +927,7 @@ const TASKS = {
     { name:"네이버 광고 운영·입찰 조정", status:"정기", prio:"h" },
     { name:"SEO 개선 / 검색 노출 최적화", status:"정기", prio:"h" },
     { name:"데이터 분석 · 매출 전략", status:"정기", prio:"h" },
-    { name:"AI · 자동화 도입 검토", status:"정기", prio:"m" },
+    { name:"인공지능 자동화 도입 검토", status:"정기", prio:"m" },
     { name:"상품 · 상세페이지 기획", status:"정기", prio:"h" },
     { name:"개발팀 커뮤니케이션", status:"상시", prio:"m" },
     { name:"팀 업무 분장 · 관리", status:"상시", prio:"m" },
@@ -987,7 +987,7 @@ const TASKS = {
     { name:"네이버 블로그 포스팅", status:"정기", prio:"h" },
     { name:"인스타그램 게시글", status:"정기", prio:"h" },
     { name:"인스타그램 인사이트 확인", status:"정기", prio:"m" },
-    { name:"AI 이미지·영상 제작", status:"정기", prio:"h" },
+    { name:"인공지능 이미지·영상 제작", status:"정기", prio:"h" },
     { name:"인스타그램 릴스 제작·업로드", status:"정기", prio:"h" },
     { name:"유튜브 쇼츠 업로드 (릴스 동일)", status:"정기", prio:"m" },
     { name:"시공사례 블로그/인스타 포스팅", status:"정기", prio:"m" },
@@ -1183,17 +1183,17 @@ const TASKS = {
 
 // ============ DATA ============
 const DATA = {
-  ceo: { id:"ceo", name:"김한열", sub:"CEO · 보고체계 최상위", desc:"하나사인몰 대표 · 전사 의사결정" },
-  hanasm: { id:"hanasm", name:"하나사인몰", sub:"COMPANY · 본체", desc:"회사 본체 · 개인/법인 사업자 통합 운영" },
-  personal: { id:"personal", name:"개인사업자", sub:"PERSONAL", desc:"네이버 스마트스토어 채널 3개를 운영하는 개인사업자 단위" },
-  corp: { id:"corp", name:"법인사업자", sub:"CORP · MAIN", desc:"자사몰 + 오픈마켓 다채널 운영. 회사 메인 사업자" },
-  erp: { id:"erp", name:"ERP", sub:"erp.hanasm.kr · CORE",
+  ceo: { id:"ceo", name:"김한열", sub:"대표 · 보고체계 최상위", desc:"하나사인몰 대표 · 전사 의사결정" },
+  hanasm: { id:"hanasm", name:"하나사인몰", sub:"회사 본체", desc:"회사 본체 · 개인/법인 사업자 통합 운영" },
+  personal: { id:"personal", name:"개인사업자", sub:"개인사업자", desc:"네이버 스마트스토어 채널 3개를 운영하는 개인사업자 단위" },
+  corp: { id:"corp", name:"법인사업자", sub:"법인사업자 · 메인", desc:"자사몰 + 오픈마켓 다채널 운영. 회사 메인 사업자" },
+  erp: { id:"erp", name:"ERP", sub:"erp.hanasm.kr · 핵심 시스템",
          brand:"#22d3ee",
          desc:"■ 시스템\n자체 개발 ERP (개발팀 산하)\n핵심 백본\n■ 도메인\nerp.hanasm.kr\n■ IP\n112.172.7.61\n내부 211 / 212\n■ 백업\n센터 서버 백업\n■ 외부 연동\nIDC hanasignmall.kr (49.247.31.206)\nElastic (49.247.40.116)\n상품정보 비교\n■ 장애 처리\n206 장애 시 116 자동 작동" },
-  playauto: { id:"playauto", name:"플레이오토", sub:"주문수집 SYS · API → ERP",
+  playauto: { id:"playauto", name:"플레이오토", sub:"주문수집 시스템 · API → ERP",
               brand:"#fb923c",
               desc:"■ 역할\n주문 통합 수집\n오픈마켓 · 스마트스토어 · 자사몰\n■ 연동\nAPI → ERP 공정 매칭\n■ 공정 4단계\n1. 품목 매칭\n2. 디자인\n3. 제작\n4. 출고\n■ 결과\n상품제작 진행상황 URL" },
-  ecount:   { id:"ecount", name:"이카운트", sub:"견적·세금계산서 SYS",
+  ecount:   { id:"ecount", name:"이카운트", sub:"견적·세금계산서 시스템",
               brand:"#34d399",
               desc:"■ 견적서 발행\nCS팀\n■ 세금계산서 발행\n이하나 대리\n■ 부서 연결\nCS · 경영지원 유기적 연결" },
   call:     { id:"call",  name:"전화상담", sub:"CS · 1644-7523", brand:"#60a5fa", desc:"고객 전화 상담 1644-7523 (CS팀 본업)" },
@@ -1210,42 +1210,42 @@ const DATA = {
               desc:"■ 모델\n평판 UV 프린터\n제작실 출력장비 ④\n■ 스펙\n잉크: UV\n크기: 1200 × 2400mm\n■ 가능 소재\n포맥스 · 아크릴 투명리무버 · 투명무점착 (주차스티커)\nPVC (캘)\nUV PET · 가죽 · 천 · 타일 · 철판\n골드 · 실버 헤어라인 · 거울 PET\n반사지 · 야광지 홀로그램" },
     nas:      { id:"nas",   name:"NAS", sub:"중요 데이터 저장소", brand:"#22d3ee",
               desc:"■ 서버\n사내 NAS\n192.168.0.200 / 201\n■ 역할\nERP 서버 백업\n디자인팀 시안 DB\n웹팀 DB · 문서 일체\n■ 출력기 핫폴더 (4종)\nEPSON\nHP 라텍스\nEXTREME\n평판 UV\n■ 운영\nDocker (개발팀)" },
-  ig:       { id:"ig",    name:"인스타그램",   sub:"SNS · 임정민 주임", brand:"#E1306C", desc:"인스타 게시글 · 릴스 · AI 이미지/영상" },
-  nblog:    { id:"nblog", name:"네이버 블로그", sub:"SNS · 임정민 주임", brand:"#03C75A", desc:"네이버 블로그 포스팅 · 검색 노출 확인" },
-  yt:       { id:"yt",    name:"유튜브",       sub:"SNS · 임정민 주임", brand:"#FF0000", desc:"유튜브 쇼츠 (인스타 릴스 동일 영상)" },
-  claude20: { id:"claude20", name:"Claude Max 20×", sub:"AI · 팀 공용",
+  ig:       { id:"ig",    name:"인스타그램",   sub:"소셜 · 임정민 주임", brand:"#E1306C", desc:"인스타 게시글 · 릴스 · 인공지능 이미지/영상" },
+  nblog:    { id:"nblog", name:"네이버 블로그", sub:"소셜 · 임정민 주임", brand:"#03C75A", desc:"네이버 블로그 포스팅 · 검색 노출 확인" },
+  yt:       { id:"yt",    name:"유튜브",       sub:"소셜 · 임정민 주임", brand:"#FF0000", desc:"유튜브 쇼츠 (인스타 릴스 동일 영상)" },
+  claude20: { id:"claude20", name:"Claude Max 20×", sub:"인공지능 · 팀 공용",
               brand:"#d97706",
               desc:"클로드 맥스 20X · 팀별 공용 (개발팀 제외 전사)" },
-  claude5:  { id:"claude5", name:"Claude Max 5×", sub:"AI · 개발 전용",
+  claude5:  { id:"claude5", name:"Claude Max 5×", sub:"인공지능 · 개발 전용",
               brand:"#a855f7",
               desc:"클로드 맥스 5X · 개발팀 별도 사용" },
-  gpt:      { id:"gpt", name:"GPT Plus", sub:"AI · 전사 1계정",
+  gpt:      { id:"gpt", name:"GPT Plus", sub:"인공지능 · 전사 1계정",
               brand:"#10b981",
               desc:"GPT Plus 1개 계정 · 전사 공용" },
 
   personalChannels: [
-    { id:"ss-hana",   name:"하나몰",       sub:"SMARTSTORE", brand:"#60a5fa", desc:"네이버 스마트스토어 · 하나몰 (메인) · ADBOOST 단독 진행", adBadge:{logo:"naver",label:"검색광고"}, ad:["네이버 검색광고","ADBOOST"] },
-    { id:"ss-baron",  name:"더바른사인",   sub:"SMARTSTORE", brand:"#60a5fa", desc:"네이버 스마트스토어 · 더바른사인", adBadge:{logo:"naver",label:"검색광고"}, ad:["네이버 검색광고"] },
-    { id:"ss-rocket", name:"로켓출력공장", sub:"SMARTSTORE", brand:"#60a5fa", desc:"네이버 스마트스토어 · 신규 · 시트/페트/포맥스/폼보드/DTF", adBadge:{logo:"naver",label:"검색광고"}, ad:["네이버 검색광고"] }
+    { id:"ss-hana",   name:"하나몰",       sub:"스마트스토어", brand:"#60a5fa", desc:"네이버 스마트스토어 · 하나몰 (메인) · ADBOOST 단독 진행", adBadge:{logo:"naver",label:"검색광고"}, ad:["네이버 검색광고","ADBOOST"] },
+    { id:"ss-baron",  name:"더바른사인",   sub:"스마트스토어", brand:"#60a5fa", desc:"네이버 스마트스토어 · 더바른사인", adBadge:{logo:"naver",label:"검색광고"}, ad:["네이버 검색광고"] },
+    { id:"ss-rocket", name:"로켓출력공장", sub:"스마트스토어", brand:"#60a5fa", desc:"네이버 스마트스토어 · 신규 · 시트/페트/포맥스/폼보드/DTF", adBadge:{logo:"naver",label:"검색광고"}, ad:["네이버 검색광고"] }
   ],
   corpChannels: [
     { id:"godo",      name:"Hanasignmall.com", sub:"자사몰 · 고도몰",     brand:"#a855f7", desc:"자사몰 1 · 고도몰 (외부 솔루션) · 파워링크 점진 이전 예정", adBadge:{logo:"naver",label:"파워링크광고"}, ad:["네이버 파워링크"] },
     { id:"self-mall", name:"Hanasignmall.kr",  sub:"자사몰 · 신규몰 (개발팀)", brand:"#c084fc", desc:"자사몰 2 · 자체개발몰 (신규몰) · 고도몰 파워링크 순차 연결 예정", adBadge:[{logo:"npay",label:"주문형/결제형"},{logo:"gads",label:"구글애즈"}], ad:["구글애즈","네이버 검색광고 일부","예정: 고도몰 파워링크 이전"] },
-    { id:"coupang",   name:"쿠팡",         sub:"오픈마켓", brand:"#f472b6", desc:"쿠팡 · 자체 AI 광고 진행 · 보류 업무 다수 누적 (7건)", ad:["쿠팡 자체 AI 광고"] },
+    { id:"coupang",   name:"쿠팡",         sub:"오픈마켓", brand:"#f472b6", desc:"쿠팡 · 자체 인공지능 광고 진행 · 보류 업무 다수 누적 (7건)", ad:["쿠팡 자체 인공지능 광고"] },
     { id:"11st",      name:"11번가",       sub:"오픈마켓", brand:"#ec4899", desc:"11번가 · 광고 X · 판매기간 연장 관리", ad:["광고 미집행"] },
-    { id:"auction",   name:"옥션",         sub:"ESM",      brand:"#fbbf24", desc:"옥션 (ESM) · ESM 자체 AI 광고 + 주력제품 별도", ad:["ESM 자체 AI 광고","지정 주력제품 별도 광고"] },
-    { id:"gmarket",   name:"G마켓",        sub:"ESM",      brand:"#22d3ee", desc:"G마켓 (ESM) · ESM 자체 AI 광고 + 주력제품 별도", ad:["ESM 자체 AI 광고","지정 주력제품 별도 광고"] }
+    { id:"auction",   name:"옥션",         sub:"ESM",      brand:"#fbbf24", desc:"옥션 (ESM) · ESM 자체 인공지능 광고 + 주력제품 별도", ad:["ESM 자체 인공지능 광고","지정 주력제품 별도 광고"] },
+    { id:"gmarket",   name:"G마켓",        sub:"ESM",      brand:"#22d3ee", desc:"G마켓 (ESM) · ESM 자체 인공지능 광고 + 주력제품 별도", ad:["ESM 자체 인공지능 광고","지정 주력제품 별도 광고"] }
   ],
   departments: [
     { id:"web", name:"웹팀", color:"#60a5fa", color2:"#a855f7",
-      desc:"개인·법인 전 사업자 운영 (5명) · 상품/디자인/SNS",
+      desc:"개인·법인 전 사업자 운영 (5명) · 상품/디자인/소셜",
       links:["personal","corp"],
       members:[
         { name:"박상준", role:"차장", title:"웹팀 총괄", tasks: TASKS.parksj },
         { name:"황국인", role:"과장", title:"디자인 (상세·랜딩·배너)", tasks: TASKS.hwangki },
         { name:"김은혜", role:"주임", title:"디자인 (상세·랜딩·배너)", tasks: TASKS.kimeh },
         { name:"홍재이", role:"주임", title:"상품관리 (개인·법인)", tasks: TASKS.hongjy },
-        { name:"임정민", role:"주임", title:"SNS (인스타·블로그·유튜브)", tasks: TASKS.limjm }
+        { name:"임정민", role:"주임", title:"소셜 (인스타·블로그·유튜브)", tasks: TASKS.limjm }
       ]},
     { id:"cs", name:"CS팀", color:"#a855f7", color2:"#22d3ee",
       desc:"모든 몰(개인·법인)과 통화 · 전 채널 주문 수집 (9시·13시) → 업체현황시트 · ERP",
@@ -1345,7 +1345,7 @@ function placeNode(node, x, y, cls) {
       } else if (ab.logo === 'npay') {
         logoHtml = '<img src="npay.png" width="36" height="16" alt="네이버페이" style="display:block;">';
       } else if (ab.logo === 'gads') {
-        logoHtml = '<img src="gads.png" width="48" height="9" alt="Google Ads" style="display:block;">';
+        logoHtml = '<img src="gads.png" width="48" height="9" alt="구글 광고" style="display:block;">';
       }
       b.innerHTML = logoHtml + '<span class="ab-lbl">' + ab.label + '</span>';
       div.appendChild(b);
@@ -1359,7 +1359,7 @@ function placeNode(node, x, y, cls) {
 
   const exp = document.createElement('div'); exp.className = 'expanded';
   if (node.desc) {
-    const lbl = document.createElement('div'); lbl.className = 'label'; lbl.textContent = 'INFO';
+    const lbl = document.createElement('div'); lbl.className = 'label'; lbl.textContent = '정보';
     exp.appendChild(lbl);
     const dscWrap = document.createElement('div'); dscWrap.className = 'desc';
     node.desc.split('\n').forEach(line => {
@@ -1409,7 +1409,7 @@ function placeNode(node, x, y, cls) {
   }
   if (node.members) {
     const lbl = document.createElement('div'); lbl.className = 'label';
-    lbl.textContent = `MEMBERS · ${node.members.length}`;
+    lbl.textContent = `구성원 · ${node.members.length}`;
     exp.appendChild(lbl);
     const grid = document.createElement('div'); grid.className = 'member-grid';
     node.members.forEach(m => {
@@ -1476,7 +1476,7 @@ placeNode(DATA.call, CX - 160, 80, 'sys sys-call');
   placeNode(DATA.chat, CX + 160, 80, 'sys sys-chat');
   placeNode(DATA.playauto, CX - 160, 380, 'sys sys-playauto');
 placeNode(DATA.ecount,   CX + 160, 380, 'sys sys-ecount');
-// SNS 3종 → 웹팀 위쪽 (X=435 근처)
+// 소셜 3종 → 웹팀 위쪽 (X=435 근처)
 placeNode(DATA.ig,    180, 80,  'sys sys-ig');
 placeNode(DATA.nblog, 350, 80,  'sys sys-nblog');
 placeNode(DATA.yt,    520, 80,  'sys sys-yt');
@@ -1645,7 +1645,7 @@ function drawAllWires() {
   drawWire('dev', 'web',     '#22d3ee', NORMAL, 'dept');
   drawWire('dev', 'self-mall','#22d3ee', NORMAL, 'system');
   // 약한 연결 - 부서.links 자동 (외부영업→웹팀 제거: 2026-05-22)
-  // 웹팀 → SNS 3종 (임정민 주임)
+  // 웹팀 → 소셜 3종 (임정민 주임)
   drawWire('web', 'ig',    '#E1306C', NORMAL, 'sns');
   drawWire('web', 'nblog', '#03C75A', NORMAL, 'sns');
   drawWire('web', 'yt',    '#FF0000', NORMAL, 'sns');
@@ -1765,7 +1765,7 @@ function setStage(id, stage) {
   const isCallOrSales = (id === 'call' || id === 'sales');
 
   if (isDept) {
-    // 부서 클릭 → 직접 연결된 노드만 + 사업자 산하 채널/CEO
+    // 부서 클릭 → 직접 연결된 노드만 + 사업자 산하 채널/대표
     wires.querySelectorAll('path').forEach(p => {
       if (p.dataset.from === id || p.dataset.to === id) {
         connected.add(p.dataset.from); connected.add(p.dataset.to);
@@ -2113,10 +2113,10 @@ const PROJECTS = {
   ad:      { name:'광고', items:[
     { name:'네이버 검색광고 에이전트 빌드', prio:'h', progress:50, status:'active',
       ownerDept:'web', related:[], decision:'go', startWhen:'진행 중',
-      desc:'현재 대표 일일보고용 별도 운용 중. 주간 데이터까지 합쳐서 빼고 있음. AI 통계·판단·입찰조정까지는 미완성 → 그 단계가 되어야 완전한 에이전트 수준.', owner:'박상준' }
+      desc:'현재 대표 일일보고용 별도 운용 중. 주간 데이터까지 합쳐서 빼고 있음. 인공지능 통계·판단·입찰조정까지는 미완성 → 그 단계가 되어야 완전한 에이전트 수준.', owner:'박상준' }
   ]},
-  ai:      { name:'AI·자동화', items:[
-    { name:'AI 챗봇 / RAG 앵커DB (전상품 DB화)', prio:'h', progress:30, status:'active',
+  ai:      { name:'인공지능·자동화', items:[
+    { name:'인공지능 챗봇 / RAG 앵커DB (전상품 DB화)', prio:'h', progress:30, status:'active',
       ownerDept:'web', related:['design','cs'], decision:'go', startWhen:'진행 중',
       desc:'하나사인몰 전상품 DB화 작업. 모든 상품 데이터 엑셀 정리 중. 게시판·입간판 카테고리 완료 → 대표 보고. 현재 주차스티커 정리 중. 완료된 것부터 노드데이터로 만들어 외주 챗봇 DB로 투입.', owner:'박상준' }
   ]},
@@ -2262,8 +2262,8 @@ function renderProjects() {
     const ovr = (DECISIONS[k] || {});
     const dec = ovr.decision || it.decision || 'go';
     const when = ovr.startWhen || it.startWhen || '';
-    const DEC_LABEL = { go: '🟢 GO', hold: '🟡 HOLD', later: '🔵 LATER' };
-    const decLabel = DEC_LABEL[dec] || '🟢 GO';
+    const DEC_LABEL = { go: '진행', hold: '보류', later: '이후' };
+    const decLabel = DEC_LABEL[dec] || '진행';
     const action = getAction(e.cat, it);
     const ownerDeptName = (DEPT_NAME[it.ownerDept] || '');
     const relatedHtml = (it.related && it.related.length) ? it.related.map(d => '<span class="pi-rel">' + (DEPT_NAME[d] || d) + '</span>').join('') : '';
@@ -2382,7 +2382,7 @@ function renderDeptProjects(deptId) {
   lbl.className = 'label';
   lbl.textContent = '신규 프로젝트 · ' + items.length;
   sec.appendChild(lbl);
-  const DEC_LABEL = { go: '🟢 GO', hold: '🟡 HOLD', later: '🔵 LATER' };
+  const DEC_LABEL = { go: '진행', hold: '보류', later: '이후' };
   items.forEach(({ cat, item }) => {
     const k = cat + '::' + item.name;
     const ovr = (DECISIONS[k] || {});
