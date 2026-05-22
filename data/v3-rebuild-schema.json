@@ -1,0 +1,96 @@
+{
+  "version": "v3-rebuild-schema-001",
+  "purpose": "V3 UI must be rebuilt from V2 baseline without summarizing or deleting source data.",
+  "rules": {
+    "do_not_summarize_project_desc": true,
+    "do_not_replace_v2_mall_hierarchy": true,
+    "do_not_replace_v2_department_relation_logic": true,
+    "v3_must_read_source_data": true,
+    "v2_remains_baseline": true
+  },
+  "source_files": {
+    "baseline_html": "hanasm-map-v2.html",
+    "v3_safe_recovery": "hanasm-map-v3.html"
+  },
+  "data_blocks_to_extract_from_v2": {
+    "projects": {
+      "source_name": "PROJECTS",
+      "must_keep_fields": [
+        "name",
+        "prio",
+        "progress",
+        "status",
+        "ownerDept",
+        "related",
+        "decision",
+        "startWhen",
+        "desc",
+        "owner"
+      ],
+      "note": "desc must remain full original HTML/text, including tables such as MDF price table."
+    },
+    "department_names": {
+      "source_name": "DEPT_NAME",
+      "expected_ids": ["web", "cs", "design", "dev", "fin", "sales", "product", "factory2"]
+    },
+    "department_relation_overrides": {
+      "source_name": "PROJECT_OVERRIDES",
+      "storage": "localStorage: hanasm.projectOverrides.v3"
+    },
+    "project_state": {
+      "source_name": "PROJECT_STATE",
+      "storage": "localStorage: hanasm.projectState.v3"
+    },
+    "project_order": {
+      "source_name": "hanasm.projects.flat",
+      "storage": "localStorage: hanasm.projects.flat"
+    },
+    "user_added_projects": {
+      "source_name": "USER_PROJECTS",
+      "storage": "localStorage and data/user-state.json sync"
+    }
+  },
+  "v3_ui_requirements": {
+    "decision_order_view": {
+      "goal": "Select and reorder multiple projects without leaving the screen.",
+      "must_show": [
+        "order number",
+        "project name",
+        "full expandable desc",
+        "category",
+        "ownerDept",
+        "related departments",
+        "owner person",
+        "progress",
+        "decision/action",
+        "startWhen"
+      ],
+      "layout_rule": "Do not create a wide dense table. Use vertical cards or compact stacked cards for readability."
+    },
+    "mall_relation_view": {
+      "goal": "Show only the selected project's organic relation, not the full map.",
+      "must_preserve_v2_hierarchy": [
+        "대표",
+        "하나사인몰",
+        "개인사업자",
+        "법인사업자",
+        "개인사업자 몰/채널",
+        "법인사업자 몰/채널",
+        "부서",
+        "시스템"
+      ],
+      "display_rule": "Dim or hide unrelated nodes. Do not show everything at once."
+    },
+    "hold_merge_view": {
+      "goal": "Show why something is held and what it can be merged with.",
+      "must_show": [
+        "held projects",
+        "stopped projects",
+        "merge candidates by category + ownerDept",
+        "reason fields when available",
+        "next action"
+      ],
+      "note": "If no hold reason exists in source data, show 'reason not recorded' rather than inventing one."
+    }
+  }
+}
