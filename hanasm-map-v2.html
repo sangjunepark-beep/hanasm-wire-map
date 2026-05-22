@@ -231,12 +231,12 @@ body.proj-focus .node.prelit-rel { opacity: 1; transition: opacity 0.18s; }
   animation: badgePop 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 .node.prelit-owner::before {
-  content: '직접관련';
+  content: '주관';
   background: #60a5fa; color: #fff;
   box-shadow: 0 4px 12px rgba(96,165,250,0.55);
 }
 .node.prelit-rel::before {
-  content: '일부관련';
+  content: '유관';
   background: #cbd5e1; color: #0f172a;
   box-shadow: 0 4px 10px rgba(203,213,225,0.45);
 }
@@ -856,26 +856,61 @@ body.edit-mode .node .frame { outline: 2px dashed rgba(251,191,36,0.6); outline-
   font-size: 10px; color: #c5c9e0; font-weight: 600; letter-spacing: 0.03em;
 }
 .pi-rel-row { display: flex; align-items: center; flex-wrap: wrap; gap: 5px; margin: 4px 0; font-size: 9.5px; }
-/* 부서 칩 (편집 가능) — 3단 순환: none → rel → owner */
-.dept-chips { display: flex; flex-wrap: wrap; gap: 4px; padding: 6px 0 4px; border-top: 1px dashed rgba(167,139,250,0.14); margin-top: 4px; }
-.dept-chip {
-  padding: 3px 9px; font-size: 10px; font-weight: 700; letter-spacing: 0.04em;
-  background: transparent; color: rgba(255,255,255,0.32);
-  border: 1px solid rgba(255,255,255,0.14);
+/* 주관/유관 편집 영역 */
+.dept-edit { display: flex; flex-direction: column; gap: 5px; padding: 6px 0 4px; border-top: 1px dashed rgba(167,139,250,0.14); margin-top: 4px; }
+.de-row { display: flex; align-items: center; flex-wrap: wrap; gap: 5px; }
+.de-label {
+  font-size: 9.5px; font-weight: 800; letter-spacing: 0.12em;
+  color: rgba(255,255,255,0.55);
+  min-width: 28px;
+}
+.de-label.owner { color: #60a5fa; }
+.de-label.rel { color: #cbd5e1; }
+/* 주관 select */
+.de-owner-sel {
+  appearance: none; -webkit-appearance: none;
+  padding: 3px 22px 3px 10px; font-size: 10.5px; font-weight: 700;
+  background: #60a5fa url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='8' height='5' viewBox='0 0 8 5'><path fill='%23fff' d='M0 0h8L4 5z'/></svg>") no-repeat right 7px center;
+  color: #fff; border: 1px solid #60a5fa;
+  clip-path: polygon(3px 0, 100% 0, 100% calc(100% - 3px), calc(100% - 3px) 100%, 0 100%, 0 3px);
+  cursor: pointer; outline: none;
+}
+.de-owner-sel.empty {
+  background: transparent; color: rgba(255,255,255,0.55);
+  border-color: rgba(255,255,255,0.20);
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='8' height='5' viewBox='0 0 8 5'><path fill='%23999' d='M0 0h8L4 5z'/></svg>");
+}
+.de-owner-sel option { background: #101426; color: #f3f4fb; }
+/* 유관 칩 */
+.de-rel-chip {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 3px 4px 3px 9px; font-size: 10px; font-weight: 700;
+  background: rgba(203,213,225,0.18); color: #f1f5f9;
+  border: 1px solid #cbd5e1;
+  clip-path: polygon(3px 0, 100% 0, 100% calc(100% - 3px), calc(100% - 3px) 100%, 0 100%, 0 3px);
+}
+.de-rel-x {
+  cursor: pointer; padding: 0 4px;
+  color: rgba(255,255,255,0.7); font-size: 11px; line-height: 1;
+}
+.de-rel-x:hover { color: #fff; }
+/* 유관 추가 버튼 (+) */
+.de-rel-add-wrap { position: relative; display: inline-flex; align-items: center; }
+.de-rel-add-btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 22px; height: 22px; padding: 0;
+  background: transparent; color: rgba(255,255,255,0.55);
+  border: 1px dashed rgba(255,255,255,0.30);
+  font-size: 14px; font-weight: 800;
   cursor: pointer; user-select: none;
   clip-path: polygon(3px 0, 100% 0, 100% calc(100% - 3px), calc(100% - 3px) 100%, 0 100%, 0 3px);
-  transition: all 0.14s;
 }
-.dept-chip:hover { background: rgba(255,255,255,0.08); color: #fff; }
-.dept-chip.is-rel {
-  background: rgba(203,213,225,0.22); color: #f1f5f9;
-  border-color: #cbd5e1;
+.de-rel-add-btn:hover { color: #fff; border-color: #cbd5e1; background: rgba(255,255,255,0.04); }
+.de-rel-add-sel {
+  position: absolute; inset: 0;
+  opacity: 0; cursor: pointer;
 }
-.dept-chip.is-owner {
-  background: #60a5fa; color: #fff;
-  border-color: #60a5fa;
-  box-shadow: 0 2px 8px rgba(96,165,250,0.45);
-}
+.de-rel-add-sel option { background: #101426; color: #f3f4fb; }
 .pi-owner-dept {
   font-weight: 800; padding: 2px 7px; color: #fff;
   background: var(--cat-c, #a855f7);
@@ -2299,37 +2334,41 @@ function getDeptState(cat, item, deptId) {
   if ((eff.related || []).includes(deptId)) return 'rel';
   return 'none';
 }
-function cycleDeptState(cat, itemName, deptId) {
-  // none → rel → owner → none
-  const k = cat + '::' + itemName;
-  const ovr = Object.assign({}, PROJECT_OVERRIDES[k] || {});
-  // 현재 상태 계산
-  const items = (PROJECTS[cat] && PROJECTS[cat].items) || [];
-  const item = items.find(x => x.name === itemName); if (!item) return;
-  const eff = getEffective(cat, item);
-  const curOwner = eff.ownerDept;
-  const curRel = (eff.related || []).slice();
-  let nextState;
-  if (curOwner === deptId) nextState = 'none';
-  else if (curRel.includes(deptId)) nextState = 'owner';
-  else nextState = 'rel';
-  let newOwner = curOwner;
-  let newRel = curRel.slice();
-  if (nextState === 'none') {
-    if (newOwner === deptId) newOwner = null;
-    newRel = newRel.filter(d => d !== deptId);
-  } else if (nextState === 'rel') {
-    if (newOwner === deptId) newOwner = null;
-    if (!newRel.includes(deptId)) newRel.push(deptId);
-  } else if (nextState === 'owner') {
-    // 직접관련은 카드당 1개 - 기존 owner는 자동 해제
-    newOwner = deptId;
-    newRel = newRel.filter(d => d !== deptId);
-  }
-  ovr.ownerDept = newOwner || '';
-  ovr.related = newRel;
-  PROJECT_OVERRIDES[k] = ovr;
+function _persistOverrides() {
   try { localStorage.setItem('hanasm.projectOverrides.v3', JSON.stringify(PROJECT_OVERRIDES)); } catch(e) {}
+}
+function _readOvr(cat, itemName) {
+  const k = cat + '::' + itemName;
+  const items = (PROJECTS[cat] && PROJECTS[cat].items) || [];
+  const item = items.find(x => x.name === itemName);
+  const eff = item ? getEffective(cat, item) : { ownerDept: '', related: [] };
+  return { k, eff, ovr: Object.assign({}, PROJECT_OVERRIDES[k] || {}) };
+}
+function setOwner(cat, itemName, deptId) {
+  // 주관 변경 — 1개만. 새 주관이 기존 유관에 있으면 유관에서 제거.
+  const { k, eff, ovr } = _readOvr(cat, itemName);
+  ovr.ownerDept = deptId || '';
+  ovr.related = (eff.related || []).filter(d => d !== deptId);
+  PROJECT_OVERRIDES[k] = ovr;
+  _persistOverrides();
+}
+function addRel(cat, itemName, deptId) {
+  const { k, eff, ovr } = _readOvr(cat, itemName);
+  // 주관이면 add 안 함
+  if (eff.ownerDept === deptId) return;
+  const rel = (eff.related || []).slice();
+  if (!rel.includes(deptId)) rel.push(deptId);
+  ovr.ownerDept = eff.ownerDept;
+  ovr.related = rel;
+  PROJECT_OVERRIDES[k] = ovr;
+  _persistOverrides();
+}
+function removeRel(cat, itemName, deptId) {
+  const { k, eff, ovr } = _readOvr(cat, itemName);
+  ovr.ownerDept = eff.ownerDept;
+  ovr.related = (eff.related || []).filter(d => d !== deptId);
+  PROJECT_OVERRIDES[k] = ovr;
+  _persistOverrides();
 }
 function projectKey(cat, name) { return cat + '::' + name; }
 function getProjectState(cat, item) {
@@ -2455,13 +2494,32 @@ function renderProjects() {
     const action = getAction(e.cat, it);
     const eff = getEffective(e.cat, it);
     const ownerDeptName = (DEPT_NAME[eff.ownerDept] || '');
-    // 부서 칩 (8개) - 클릭 시 3단 순환 토글
-    const chipsHtml = '<div class="dept-chips" data-chips-key="' + k + '">' 
-      + ALL_DEPT_IDS.map(did => {
-          const st2 = getDeptState(e.cat, it, did);
-          const cls = st2 === 'owner' ? 'is-owner' : (st2 === 'rel' ? 'is-rel' : '');
-          return '<span class="dept-chip ' + cls + '" data-dept="' + did + '" data-name="' + it.name + '" data-cat="' + e.cat + '">' + DEPT_NAME[did] + '</span>';
-        }).join('')
+    // 주관 select (1개)
+    const ownerSelOpts = '<option value="">(없음)</option>' + ALL_DEPT_IDS.map(did => 
+      '<option value="' + did + '"' + (eff.ownerDept === did ? ' selected' : '') + '>' + DEPT_NAME[did] + '</option>'
+    ).join('');
+    const ownerSelCls = eff.ownerDept ? 'de-owner-sel' : 'de-owner-sel empty';
+    // 유관 칩
+    const relList = (eff.related || []);
+    const relChipsHtml = relList.map(did => 
+      '<span class="de-rel-chip" data-dept="' + did + '">' + DEPT_NAME[did] + '<span class="de-rel-x" data-dept="' + did + '" data-cat="' + e.cat + '" data-name="' + it.name + '">×</span></span>'
+    ).join('');
+    // 유관 추가 - 이미 owner거나 rel인 부서는 옵션에서 제외
+    const usedSet = new Set([eff.ownerDept, ...relList].filter(Boolean));
+    const addOpts = '<option value="" disabled selected>+</option>' + ALL_DEPT_IDS.filter(d => !usedSet.has(d)).map(did => 
+      '<option value="' + did + '">' + DEPT_NAME[did] + '</option>'
+    ).join('');
+    const addBtnDisabled = (ALL_DEPT_IDS.filter(d => !usedSet.has(d)).length === 0);
+    const chipsHtml = '<div class="dept-edit" data-dedit-key="' + k + '">'
+      + '<div class="de-row">'
+      +   '<span class="de-label owner">주관</span>'
+      +   '<select class="' + ownerSelCls + '" data-cat="' + e.cat + '" data-name="' + it.name + '">' + ownerSelOpts + '</select>'
+      + '</div>'
+      + '<div class="de-row">'
+      +   '<span class="de-label rel">유관</span>'
+      +   relChipsHtml
+      +   (addBtnDisabled ? '' : '<span class="de-rel-add-wrap"><button type="button" class="de-rel-add-btn" tabindex="-1">+</button><select class="de-rel-add-sel" data-cat="' + e.cat + '" data-name="' + it.name + '">' + addOpts + '</select></span>')
+      + '</div>'
       + '</div>';
     const meta = '<div class="pi-meta">'
                + '<select class="pi-action pi-action-select ' + action.cls + '" data-action-key="' + k + '" aria-label="프로젝트 처리 선택">'
@@ -2501,19 +2559,35 @@ function renderProjects() {
       if (e.target.closest('.pi-handle')) return;
       if (e.target.closest('.pi-dec')) return;
       if (e.target.closest('.pi-action')) return;
-      if (e.target.closest('.dept-chip')) return;  // 칩 클릭은 카드 클릭 무시
+      if (e.target.closest('.dept-edit')) return;  // 주관/유관 편집 영역은 카드 클릭 무시
       focusProjectRelation(el.dataset.owner, (el.dataset.related || '').split(',').filter(Boolean));
       el.classList.toggle('open');
     });
   });
-  // 부서 칩 클릭 - 3단 순환 토글 후 재렌더
-  document.querySelectorAll('.dept-chip').forEach(chip => {
-    chip.addEventListener('click', (e) => {
+  // 주관 select change
+  document.querySelectorAll('.de-owner-sel').forEach(sel => {
+    sel.addEventListener('click', (e) => e.stopPropagation());
+    sel.addEventListener('change', (e) => {
       e.stopPropagation();
-      const cat = chip.dataset.cat;
-      const name = chip.dataset.name;
-      const dept = chip.dataset.dept;
-      cycleDeptState(cat, name, dept);
+      setOwner(sel.dataset.cat, sel.dataset.name, sel.value || '');
+      renderProjects();
+    });
+  });
+  // 유관 ✕ 클릭 (제거)
+  document.querySelectorAll('.de-rel-x').forEach(x => {
+    x.addEventListener('click', (e) => {
+      e.stopPropagation();
+      removeRel(x.dataset.cat, x.dataset.name, x.dataset.dept);
+      renderProjects();
+    });
+  });
+  // 유관 추가 (+) select change
+  document.querySelectorAll('.de-rel-add-sel').forEach(sel => {
+    sel.addEventListener('click', (e) => e.stopPropagation());
+    sel.addEventListener('change', (e) => {
+      e.stopPropagation();
+      if (!sel.value) return;
+      addRel(sel.dataset.cat, sel.dataset.name, sel.value);
       renderProjects();
     });
   });
