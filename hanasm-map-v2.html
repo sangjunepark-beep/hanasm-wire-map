@@ -2265,6 +2265,11 @@ function showTasks(deptId, memberName) {
       { key:'정기',   cls:'s-routine', label:'정기' },
       { key:'상시',   cls:'s-active',  label:'상시' }
     ];
+    // 알려진 status 외 그룹(예: 슬림·1차가공, 강화유리·가공조립 등)은 끝에 자동 추가
+    const known = new Set(order.map(o => o.key));
+    Object.keys(groups).forEach(k => {
+      if (!known.has(k) && groups[k].length) order.push({ key: k, cls: 's-routine', label: k });
+    });
     order.forEach(({key, cls, label}) => {
       if (groups[key] && groups[key].length) {
         html += `<div class="task-group ${cls}"><h4>${label} <span class="cnt">${groups[key].length}</span></h4>`;
