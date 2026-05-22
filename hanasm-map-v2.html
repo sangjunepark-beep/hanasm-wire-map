@@ -1093,7 +1093,8 @@ body.edit-mode .node .frame { outline: 2px dashed rgba(251,191,36,0.6); outline-
 }
 .proj-item .pi-handle:hover { background: #60a5fa; color: #0b1220 !important; transform: scale(1.05); }
 .proj-item .pi-handle:active { cursor: grabbing; }
-.proj-item .pi-desc { display: none; padding: 10px 10px 8px; font-size: 11px; color: #c5c9e0; font-weight: 500; line-height: 1.55; border-top: 1px dashed rgba(96,165,250,0.28); margin-top: 4px; white-space: normal; background: rgba(96,165,250,0.04); }
+.proj-item .pi-desc { display: none; padding: 10px 10px 8px; font-size: 11px; color: #c5c9e0; font-weight: 500; line-height: 1.6; border-top: 1px dashed rgba(96,165,250,0.28); margin-top: 4px; white-space: normal; background: rgba(96,165,250,0.04); }
+.proj-item .pi-desc br + br { content: ''; display: block; margin-top: 5px; }
 .proj-item .pi-desc-label { display: inline-block; font-size: 9.5px; font-weight: 800; letter-spacing: 0.14em; color: #60a5fa; text-transform: uppercase; padding: 2px 8px; margin-bottom: 6px; background: rgba(96,165,250,0.12); border-left: 2px solid #60a5fa; clip-path: polygon(2px 0, 100% 0, 100% calc(100% - 2px), calc(100% - 2px) 100%, 0 100%, 0 2px); }
 /* 상세내용 안 가격표 (MDF게시판 등) */
 .pi-desc .price-tbl { width: 100%; border-collapse: collapse; margin-top: 6px; font-size: 10.5px; }
@@ -2573,6 +2574,14 @@ function getAllItems(cat) {
   const user = (USER_PROJECTS[cat] || []);
   return base.concat(user);
 }
+function formatDesc(raw) {
+  // desc 단락 분리: 마침표+공백 → <br><br>로 변환
+  // 단, 이미 <br>/<table>/<b> 등 HTML이 들어가 있으면 그대로 (가격표 등)
+  if (!raw) return '';
+  if (raw.indexOf('<br') >= 0 || raw.indexOf('<table') >= 0 || raw.indexOf('<p') >= 0) return raw;
+  // '. ' 다음에 한글/영문 대문자 시작이면 단락 분리. 숫자(1.5 같은) 보호.
+  return raw.replace(/\. (?=[가-힣A-Za-z○●▶→·])/g, '.<br><br>');
+}
 try { PROJECT_STATE = JSON.parse(localStorage.getItem('hanasm.projectState.v3') || '{}'); } catch(e) {}
 try { PROJECT_ACTION_FILTER = localStorage.getItem('hanasm.projectActionFilter.v3') || 'all'; } catch(e) {}
 try { PROJECT_OVERRIDES = JSON.parse(localStorage.getItem('hanasm.projectOverrides.v3') || '{}'); } catch(e) {}
@@ -2764,7 +2773,7 @@ function renderProjects() {
     const it = e.item;
     const label = it.prio === 'h' ? '상' : it.prio === 'm' ? '중' : '하';
     const catName = PROJECTS[e.cat].name;
-    const descHtml = it.desc ? '<div class="pi-desc"><div class="pi-desc-label">상세내용</div>' + (it.owner ? '<span class="pi-owner">' + it.owner + '</span>' : '') + it.desc + '</div>' : '';
+    const descHtml = it.desc ? '<div class="pi-desc"><div class="pi-desc-label">상세내용</div>' + (it.owner ? '<span class="pi-owner">' + it.owner + '</span>' : '') + formatDesc(it.desc) + '</div>' : '';
     const k = keyOf(e.cat, it.name);
     const pct = (typeof it.progress === 'number') ? it.progress : null;
     const st = it.status || 'active';
@@ -2936,7 +2945,7 @@ function renderDeptProjects(deptId) {
     const isOwner = efDp.ownerDept === deptId;
     const card = document.createElement('div');
     card.className = 'dept-proj-card dec-' + dec + ' ' + action.cls + (isOwner ? ' is-owner' : ' is-related');
-    const descBlock = item.desc ? '<div class="dpc-desc">' + item.desc + '</div>' : '';
+    const descBlock = item.desc ? '<div class="dpc-desc">' + formatDesc(item.desc) + '</div>' : '';
     card.innerHTML =
       '<div class="dpc-h"><span class="dpc-role">' + (isOwner ? '주관' : '유관') + '</span>'
       + '<span class="dpc-cat ' + cat + '">' + PROJECTS[cat].name + '</span></div>'
