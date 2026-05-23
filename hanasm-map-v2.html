@@ -1115,6 +1115,61 @@ body.edit-mode .node .frame { outline: 2px dashed rgba(251,191,36,0.6); outline-
 .rmb-C { color:#60a5fa; border-color:rgba(96,165,250,0.55); background:rgba(96,165,250,0.10); }
 .rmb-D { color:#c084fc; border-color:rgba(192,132,252,0.55); background:rgba(192,132,252,0.10); }
 .rmb-E { color:#94a3b8; border-color:rgba(148,163,184,0.45); background:rgba(148,163,184,0.06); }
+/* ⑥ 결정 상태 라인 (진행/보류/중단) — 미니바 아래 */
+.dept-act-bar {
+  display: flex; gap: 4px; justify-content: center; flex-wrap: wrap;
+  margin-top: 4px; padding: 0 2px;
+}
+.node.dimmed .dept-act-bar { opacity: 0.25; }
+.dab {
+  font-size: 9px; font-weight: 800; letter-spacing: 0.04em;
+  padding: 2px 6px;
+  background: rgba(5,6,20,0.65);
+  border: 1px solid;
+  clip-path: polygon(2px 0, 100% 0, 100% calc(100% - 2px), calc(100% - 2px) 100%, 0 100%, 0 2px);
+  line-height: 1.1;
+}
+.dab-first { color:#fbbf24; border-color:rgba(251,191,36,0.65); background:rgba(251,191,36,0.14); box-shadow: 0 0 6px rgba(251,191,36,0.20); }
+.dab-run   { color:#34d399; border-color:rgba(52,211,153,0.55); background:rgba(52,211,153,0.10); }
+.dab-hold  { color:#fbbf24; border-color:rgba(251,191,36,0.50); background:rgba(251,191,36,0.08); }
+.dab-stop  { color:#94a3b8; border-color:rgba(148,163,184,0.50); background:rgba(148,163,184,0.06); }
+/* ② A등급 자동 투어 버튼 + 투어 중 카드 강조 */
+.project-revfilter .rf-tour {
+  font-size: 10px; padding: 5px 11px;
+  background: rgba(251,191,36,0.10);
+  border: 1px solid rgba(251,191,36,0.50);
+  color: #fbbf24; font-weight: 900; letter-spacing: 0.08em;
+}
+.project-revfilter .rf-tour:hover {
+  background: rgba(251,191,36,0.22);
+  color: #fff;
+}
+.project-revfilter .rf-tour.on {
+  background: #fbbf24; color: #050614;
+  border-color: #fbbf24;
+  animation: tour-pulse 1.2s ease-in-out infinite;
+}
+@keyframes tour-pulse {
+  0%, 100% { box-shadow: 0 0 10px rgba(251,191,36,0.45); }
+  50%      { box-shadow: 0 0 20px rgba(251,191,36,0.80); }
+}
+.proj-item.touring {
+  outline: 2px solid #fbbf24;
+  box-shadow: 0 0 24px rgba(251,191,36,0.50);
+  background: rgba(251,191,36,0.08) !important;
+  position: relative;
+  z-index: 3;
+}
+.proj-item.touring::after {
+  content: '▶ 시연 중';
+  position: absolute;
+  top: -10px; right: 10px;
+  background: #fbbf24; color: #050614;
+  font-size: 9px; font-weight: 900;
+  padding: 3px 9px; letter-spacing: 0.12em;
+  clip-path: polygon(3px 0, 100% 0, 100% calc(100% - 3px), calc(100% - 3px) 100%, 0 100%, 0 3px);
+  pointer-events: none;
+}
 
 .dept-projects-section { margin-top: 10px; padding-top: 8px; border-top: 1px dashed rgba(96,165,250,0.30); }
 .dept-projects-section .label { font-size: 10px; font-weight: 800; letter-spacing: 0.14em; color: #60a5fa; margin-bottom: 6px; position: sticky; top: 0; background: rgba(8,9,28,0.95); padding: 4px 0; z-index: 5; }
@@ -2662,11 +2717,69 @@ const PROJECTS = {
 const PCATS = ['ad','ai','product','system','offline'];
 const DEPT_NAME = { web:'웹팀', cs:'CS팀', design:'디자인팀', dev:'개발팀', fin:'경영지원', sales:'외부영업', product:'제작실', factory2:'2공장' };
 
-// ③ 부서 노드 위 매출등급 미니바 — 각 부서가 주관하는 프로젝트를 A~E별로 카운트
+// ② A등급 자동 투어 (매출 우선 시연 모드) — 5.5초/카드 자동 순회
+window.TOUR_RUNNING = false;
+window.TOUR_INDEX = 0;
+window.TOUR_TIMER = null;
+window.TOUR_LIST = [];
+function startRevTour() {
+  if (window.TOUR_RUNNING) { stopRevTour(); return; }
+  const panel = document.getElementById('projPanel');
+  if (panel) panel.classList.add('show');
+  // 강제: A등급 필터 + 등급순 정렬
+  PROJECT_REV_FILTER = 'A';
+  PROJECT_SORT_MODE = 'rev';
+  try {
+    localStorage.setItem('hanasm.projectRevFilter.v3', 'A');
+    localStorage.setItem('hanasm.projectSortMode.v3', 'rev');
+  } catch(e) {}
+  renderProjects();
+  setTimeout(() => {
+    const cards = document.querySelectorAll('.proj-list.flat .proj-item.rev-A');
+    window.TOUR_LIST = [...cards].map(c => c.dataset.key);
+    if (!window.TOUR_LIST.length) return;
+    window.TOUR_RUNNING = true;
+    window.TOUR_INDEX = 0;
+    renderProjects();
+    setTimeout(() => tourGoTo(0), 220);
+  }, 240);
+}
+function tourGoTo(idx) {
+  if (!window.TOUR_RUNNING) return;
+  document.querySelectorAll('.proj-item.touring').forEach(c => c.classList.remove('touring'));
+  if (idx >= window.TOUR_LIST.length) { stopRevTour(); return; }
+  window.TOUR_INDEX = idx;
+  const key = window.TOUR_LIST[idx];
+  const card = document.querySelector('.proj-item[data-key="' + key.replace(/"/g, '\\"') + '"]');
+  if (!card) { tourGoTo(idx + 1); return; }
+  card.classList.add('touring');
+  card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  const owner = card.dataset.owner;
+  const related = (card.dataset.related || '').split(',').filter(Boolean);
+  focusProjectRelation(owner, related);  // 카메라 fit 포함
+  clearTimeout(window.TOUR_TIMER);
+  window.TOUR_TIMER = setTimeout(() => tourGoTo(idx + 1), 5500);
+}
+function stopRevTour() {
+  window.TOUR_RUNNING = false;
+  clearTimeout(window.TOUR_TIMER);
+  document.querySelectorAll('.proj-item.touring').forEach(c => c.classList.remove('touring'));
+  focusProjectRelation(null, []);
+  renderProjects();
+}
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && window.TOUR_RUNNING) stopRevTour();
+});
+
+// ③ 부서 노드 위 매출등급 미니바 + ⑥ 결정 상태 라인 (진행/보류/중단)
 function renderDeptRevBars() {
   const ALL_DEPTS = ['web','cs','design','dev','fin','sales','product','factory2'];
-  const deptRev = {};
-  ALL_DEPTS.forEach(d => deptRev[d] = {A:0,B:0,C:0,D:0,E:0});
+  const deptRev = {};      // 등급별
+  const deptAct = {};      // 액션(진행/보류/중단)별
+  ALL_DEPTS.forEach(d => {
+    deptRev[d] = {A:0,B:0,C:0,D:0,E:0};
+    deptAct[d] = {run:0, first:0, hold:0, stop:0, merge:0};
+  });
   PCATS.forEach(cat => {
     const list = (typeof getAllItems === 'function') ? getAllItems(cat) : ((PROJECTS[cat] && PROJECTS[cat].items) || []);
     list.forEach(it => {
@@ -2675,6 +2788,8 @@ function renderDeptRevBars() {
       if (!dept || !deptRev[dept]) return;
       const tier = it.revTier || 'E';
       deptRev[dept][tier]++;
+      const action = (typeof getAction === 'function') ? getAction(cat, it).key : 'run';
+      if (deptAct[dept][action] !== undefined) deptAct[dept][action]++;
     });
   });
   ALL_DEPTS.forEach(deptId => {
@@ -2697,6 +2812,26 @@ function renderDeptRevBars() {
       .filter(t => c[t] > 0)
       .map(t => '<span class="rmb rmb-' + t + '" title="' + t + ' 등급 ' + c[t] + '건">' + t + ' ' + c[t] + '</span>')
       .join('');
+
+    // ⑥ 결정 상태 라인 (진행/보류/중단) — 미니바 바로 아래
+    let act = node.querySelector('.dept-act-bar');
+    if (!act) {
+      act = document.createElement('div');
+      act.className = 'dept-act-bar';
+      bar.insertAdjacentElement('afterend', act);
+    }
+    const a = deptAct[deptId];
+    const running = (a.run || 0) + (a.first || 0);
+    const held = a.hold || 0;
+    const stopped = a.stop || 0;
+    const parts = [];
+    if (a.first) parts.push('<span class="dab dab-first" title="우선 ' + a.first + '건">⚡ ' + a.first + '</span>');
+    if (running) parts.push('<span class="dab dab-run" title="진행 ' + running + '건">● ' + running + '</span>');
+    if (held)    parts.push('<span class="dab dab-hold" title="보류 ' + held + '건">⏸ ' + held + '</span>');
+    if (stopped) parts.push('<span class="dab dab-stop" title="중단 ' + stopped + '건">⊘ ' + stopped + '</span>');
+    if (!parts.length) { act.style.display = 'none'; return; }
+    act.style.display = 'flex';
+    act.innerHTML = parts.join('');
   });
 }
 let DECISIONS = {};
@@ -2950,6 +3085,10 @@ function renderProjects() {
   const sortActive = PROJECT_SORT_MODE === 'rev' ? ' active' : '';
   const sortLabel = PROJECT_SORT_MODE === 'rev' ? '등급순' : '수동순';
   html += '<button type="button" class="rf-sort' + sortActive + '" data-sort-toggle title="매출등급 자동 정렬 ↔ 수동 드래그 정렬">⇅ ' + sortLabel + '</button>';
+  // ② A등급 자동 투어 버튼
+  const tourOn = (window.TOUR_RUNNING === true) ? ' on' : '';
+  const tourTxt = (window.TOUR_RUNNING === true) ? '⏸ 정지' : '▶ A투어';
+  html += '<button type="button" class="rf-tour' + tourOn + '" data-tour-toggle title="A등급(직접매출) ' + (revCounts.A || 0) + '건 자동 시연 — ESC로 종료">' + tourTxt + '</button>';
   html += '</div>';
 
   html += '<div class="project-filter">';
@@ -3127,6 +3266,13 @@ function renderProjects() {
       PROJECT_SORT_MODE = (PROJECT_SORT_MODE === 'rev') ? 'manual' : 'rev';
       try { localStorage.setItem('hanasm.projectSortMode.v3', PROJECT_SORT_MODE); } catch(err) {}
       renderProjects();
+    });
+  });
+  // ② A등급 자동 투어
+  document.querySelectorAll('[data-tour-toggle]').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      startRevTour();
     });
   });
   document.querySelectorAll('.pi-action-select').forEach(sel => {
