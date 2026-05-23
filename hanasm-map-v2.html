@@ -974,13 +974,12 @@ body.edit-mode .node .frame { outline: 2px dashed rgba(251,191,36,0.6); outline-
 .pm-save { background: #60a5fa; color: #0b1220; border-color: #93c5fd; }
 .pm-save:hover { background: #93c5fd; box-shadow: 0 4px 12px rgba(96,165,250,0.45); }
 .proj-panel .pp-body { flex: 1; overflow-y: auto; padding: 12px 14px 18px; }
-/* 화면 하단 고정 회의 메모 — 평소 접힘, 클릭으로 펼침 */
+/* 회의 메모 — 좌하단 모서리, legend 옆에 두고 위로 슬라이드 펼침 */
 .floating-memo {
   position: fixed;
   bottom: 0;
-  left: 50%;
-  transform: translateX(-50%);
-  width: min(620px, calc(100vw - 40px));
+  left: 250px;
+  width: 380px;
   z-index: 115;
   background: rgba(8,9,28,0.94);
   border: 1px solid rgba(34,211,238,0.40);
@@ -993,7 +992,7 @@ body.edit-mode .node .frame { outline: 2px dashed rgba(251,191,36,0.6); outline-
   box-shadow: 0 -8px 28px rgba(0,0,0,0.55);
   font-family: inherit;
 }
-.floating-memo.expanded { max-height: 240px; }
+.floating-memo.expanded { max-height: 220px; }
 .fm-head {
   display: flex; align-items: center; gap: 10px;
   padding: 9px 16px;
@@ -1047,9 +1046,12 @@ body.edit-mode .node .frame { outline: 2px dashed rgba(251,191,36,0.6); outline-
   background: rgba(5,6,20,0.92);
   border-color: rgba(34,211,238,0.55);
 }
-/* 모바일/좁은 화면 */
+/* 좁은 화면 — legend가 차지하는 공간 더 좁게, 메모도 폭 축소 */
+@media (max-width: 1100px) {
+  .floating-memo { left: 18px; width: 320px; }
+}
 @media (max-width: 720px) {
-  .floating-memo { width: calc(100vw - 20px); }
+  .floating-memo { left: 10px; right: 10px; width: auto; }
 }
 .proj-panel .pp-body::-webkit-scrollbar { width: 8px; }
 .proj-panel .pp-body::-webkit-scrollbar-track { background: rgba(96,165,250,0.06); }
@@ -2842,16 +2844,15 @@ window.addEventListener('resize', () => { fitView(); drawAllWires(); });
   <div class="pp-body" id="ppBody"></div>
 </aside>
 
-<!-- 화면 하단 고정 회의 메모 위젯 -->
+<!-- 회의 메모 — 좌하단 모서리, 위로 슬라이드 펼침 -->
 <div class="floating-memo" id="floatingMemo">
   <div class="fm-head" id="fmHead">
     <span class="fm-icon">📝</span>
     <span class="fm-label">회의 메모</span>
     <span class="fm-cnt" id="memoCnt">0자</span>
-    <span class="fm-help">자동 저장 · JSON 포함</span>
     <span class="fm-toggle" id="fmToggle">▲</span>
   </div>
-  <textarea id="memoText" placeholder="회의 진행 메모 · 결정 근거 · 후속 액션…"></textarea>
+  <textarea id="memoText" placeholder="회의 진행 메모 · 결정 근거 · 후속 액션 — 자동 저장됨"></textarea>
 </div>
 <div class="proj-modal-bg" id="projModalBg">
   <div class="proj-modal" id="projModal">
