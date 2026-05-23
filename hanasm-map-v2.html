@@ -974,6 +974,50 @@ body.edit-mode .node .frame { outline: 2px dashed rgba(251,191,36,0.6); outline-
 .pm-save { background: #60a5fa; color: #0b1220; border-color: #93c5fd; }
 .pm-save:hover { background: #93c5fd; box-shadow: 0 4px 12px rgba(96,165,250,0.45); }
 .proj-panel .pp-body { flex: 1; overflow-y: auto; padding: 12px 14px 18px; }
+/* 회의 메모 — 보드 하단 고정, 자동 저장 */
+.proj-panel .pp-memo {
+  flex: 0 0 auto;
+  border-top: 1px solid rgba(34,211,238,0.30);
+  background: rgba(5,6,20,0.85);
+  padding: 8px 14px 12px;
+}
+.proj-panel .pm-memo-head {
+  display: flex; align-items: center; gap: 8px;
+  margin-bottom: 5px;
+}
+.proj-panel .pm-memo-label {
+  font-size: 10.5px; font-weight: 800;
+  letter-spacing: 0.10em; color: #67e8f9;
+}
+.proj-panel .pm-memo-cnt {
+  font-size: 9.5px; font-weight: 700;
+  color: #8a8fad; letter-spacing: 0.04em;
+}
+.proj-panel .pm-memo-help {
+  margin-left: auto;
+  font-size: 9px; font-weight: 700;
+  letter-spacing: 0.10em;
+  color: #34d399; opacity: 0.75;
+  text-transform: uppercase;
+}
+.proj-panel #memoText {
+  width: 100%;
+  min-height: 70px; max-height: 140px;
+  background: rgba(8,9,28,0.65);
+  border: 1px solid rgba(34,211,238,0.25);
+  color: #f3f4fb;
+  font-family: inherit;
+  font-size: 12px; line-height: 1.55;
+  padding: 8px 10px;
+  resize: vertical;
+  outline: none;
+  clip-path: polygon(4px 0, 100% 0, 100% calc(100% - 4px), calc(100% - 4px) 100%, 0 100%, 0 4px);
+}
+.proj-panel #memoText::placeholder { color: #6b7280; }
+.proj-panel #memoText:focus {
+  background: rgba(8,9,28,0.85);
+  border-color: rgba(34,211,238,0.55);
+}
 .proj-panel .pp-body::-webkit-scrollbar { width: 8px; }
 .proj-panel .pp-body::-webkit-scrollbar-track { background: rgba(96,165,250,0.06); }
 .proj-panel .pp-body::-webkit-scrollbar-thumb { background: rgba(96,165,250,0.55); border-radius: 0; }
@@ -2763,6 +2807,14 @@ window.addEventListener('resize', () => { fitView(); drawAllWires(); });
     </div>
   </div>
   <div class="pp-body" id="ppBody"></div>
+  <div class="pp-memo" id="ppMemo">
+    <div class="pm-memo-head">
+      <span class="pm-memo-label">📝 회의 메모</span>
+      <span class="pm-memo-cnt" id="memoCnt">0자</span>
+      <span class="pm-memo-help" title="자동 저장 · 결정 로그 JSON에도 포함됨">자동 저장</span>
+    </div>
+    <textarea id="memoText" placeholder="회의 진행 메모 · 결정 근거 · 후속 액션…"></textarea>
+  </div>
 </aside>
 <div class="proj-modal-bg" id="projModalBg">
   <div class="proj-modal" id="projModal">
@@ -3328,7 +3380,13 @@ function openLogModal() {
 }
 function exportLogJson() {
   const log = loadDecisionLog();
-  const blob = new Blob([JSON.stringify(log, null, 2)], { type: 'application/json;charset=utf-8' });
+  const memo = loadMeetingMemo();
+  const payload = {
+    exportedAt: new Date().toISOString(),
+    meetingMemo: memo,
+    decisionLog: log
+  };
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json;charset=utf-8' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
@@ -3339,6 +3397,27 @@ function exportLogJson() {
   a.remove();
   URL.revokeObjectURL(url);
 }
+// 회의 메모 — 자동 저장 (300ms debounce)
+const MEMO_KEY = 'hanasm.meetingMemo.v3';
+function loadMeetingMemo() {
+  try { return localStorage.getItem(MEMO_KEY) || ''; } catch(e) { return ''; }
+}
+function saveMeetingMemo(v) {
+  try { localStorage.setItem(MEMO_KEY, v); } catch(e) {}
+}
+(function bindMemo(){
+  const ta = document.getElementById('memoText');
+  const cnt = document.getElementById('memoCnt');
+  if (!ta) return;
+  ta.value = loadMeetingMemo();
+  if (cnt) cnt.textContent = (ta.value.length) + '자';
+  let _memoTimer = null;
+  ta.addEventListener('input', () => {
+    if (cnt) cnt.textContent = (ta.value.length) + '자';
+    clearTimeout(_memoTimer);
+    _memoTimer = setTimeout(() => saveMeetingMemo(ta.value), 300);
+  });
+})();
 function clearLog() {
   if (!confirm('결정 변경 이력을 모두 삭제할까요?\n(되돌릴 수 없습니다)')) return;
   try { localStorage.removeItem('hanasm.decisionsLog.v3'); } catch(e) {}
