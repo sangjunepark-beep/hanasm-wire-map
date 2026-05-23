@@ -139,6 +139,39 @@ svg.wires path.flow {
   animation: flow 2.5s linear infinite;
 }
 @keyframes flow { to { stroke-dashoffset: -28; } }
+/* 와이어 hover detection용 invisible path */
+svg.wires path.wire-hit { pointer-events: stroke; }
+/* 와이어 hover 시 시각 강조 */
+svg.wires path.wire-hover {
+  opacity: 1 !important;
+  stroke-width: 2.6 !important;
+  filter: drop-shadow(0 0 7px currentColor);
+}
+/* 와이어 hover tooltip */
+.wire-tooltip {
+  position: fixed;
+  background: rgba(5,6,20,0.96);
+  border: 1px solid rgba(34,211,238,0.50);
+  color: #f3f4fb;
+  font-size: 12px;
+  padding: 9px 13px;
+  z-index: 250;
+  pointer-events: none;
+  max-width: 340px;
+  line-height: 1.55;
+  display: none;
+  font-family: inherit;
+  clip-path: polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px);
+}
+.wire-tooltip.show { display: block; }
+.wire-tooltip .wt-pair {
+  font-size: 10px; font-weight: 800;
+  color: #67e8f9;
+  letter-spacing: 0.10em;
+  margin-bottom: 5px;
+  text-transform: uppercase;
+}
+.wire-tooltip .wt-rel { color: #f3f4fb; }
 
 /* NODES */
 .node {
@@ -2224,6 +2257,105 @@ function orthoPath(p1, p2, mode) {
     return `M${p1.x},${p1.y} C${p1.x},${p1.y + dy*0.35} ${p2.x},${p2.y - dy*0.55} ${p2.x},${p2.y}`;
   }
 }
+// 와이어 관계 설명 사전 (양방향 매칭) — 주요 30+개. 미정의는 자동 fallback
+const WIRE_REL = {
+  // 사업 구조
+  'ceo:hanasm': '대표 김한열이 회사 본체를 총괄 (보고체계 최상위)',
+  'hanasm:personal': '회사 본체 산하 개인사업자 — 스마트스토어 3채널 운영',
+  'hanasm:corp':     '회사 본체 산하 법인사업자 — 자사몰·오픈마켓 운영 (메인)',
+  // 부서 ↔ 사업자
+  'web:personal':  '웹팀이 개인사업자 채널 운영 — 상품·디자인·소셜',
+  'web:corp':      '웹팀이 법인사업자 채널 운영 — 상품·디자인·소셜',
+  'cs:personal':   'CS팀이 개인사업자 채널 상담·주문수집 (9시·13시)',
+  'cs:corp':       'CS팀이 법인사업자 채널 상담·주문수집',
+  'sales:corp':    '외부영업이 법인사업자 채널 견적·B2B 영업',
+  // 부서 ↔ 시스템
+  'cs:erp':         'CS팀이 ERP에 상담·주문·견적 데이터 입력',
+  'design:erp':     '디자인팀이 ERP에서 시안·확정 파일 관리',
+  'dev:erp':        '개발팀이 ERP 자체 개발·유지 (백본 시스템)',
+  'dev:self-mall':  '개발팀이 신규몰(Hanasignmall.kr) 자체 개발',
+  'dev:nas':        '개발팀이 NAS 운영 (Docker · 출력기 핫폴더)',
+  'fin:ecount':     '경영지원이 이카운트 세금계산서·정산 (이하나 대리)',
+  // 시스템 ↔ 시스템
+  'playauto:erp':   '플레이오토 API → ERP 주문 자동 수집·공정 4단계 매칭',
+  'erp:nas':        'ERP 서버 데이터를 NAS에 백업',
+  'erp:self-mall':  'ERP ↔ 신규몰(.kr) 데이터 양방향 연동',
+  // 부서 간 협업
+  'dev:web':       '개발팀-웹팀 강한 협업 — 신규몰·SEO·자동화',
+  'dev:cs':        '개발팀-CS팀 협업 — 자동화·시안 카톡 발송',
+  'dev:product':   '개발팀-제작실 — 제작실 ERP 공정 연계',
+  'cs:design':     'CS팀이 디자인팀에 발주·시안 요청',
+  'fin:web':       '경영지원-웹팀 회계·매출 정산',
+  'fin:cs':        '경영지원-CS팀 세금계산서·미수금',
+  'fin:design':    '경영지원-디자인팀 정산',
+  'fin:sales':     '경영지원-외부영업 매출 정산',
+  'sales:cs':      '외부영업-CS팀 견적·계약 협업',
+  'sales:design':  '외부영업-디자인팀 시안 협업',
+  // 제작 흐름
+  'product:cs':     '제작실-CS팀 납기 조율',
+  'product:erp':    '제작실이 ERP 공정 4단계 사용 (디자인→제작→출고)',
+  'factory2:cs':    '2공장-CS팀 납기·출고 조율',
+  'factory2:design':'2공장-디자인팀 시안 확인',
+  'factory2:erp':   '2공장이 ERP 공정 단계 입력',
+  'factory2:product':'2공장-제작실 제품 흐름',
+  // 출력기
+  'prtEpson:product':'EPSON SC-S80610L 에코솔벤 1500폭 (제작실)',
+  'prtHp:product':   'HP 라텍스 800W 친환경 무취 1500폭 (제작실)',
+  'prtExt:product':  'EXTREME 1800 R1 수성잉크 1800폭 (제작실)',
+  'prtUv:product':   '평판 UV 프린터 1200×2400 (제작실)',
+  // 상담 채널
+  'chat:cs':         '해피톡 통합 채팅상담 (네이버 톡톡·카카오·고도·신규몰)',
+  'call:cs':         '전화상담 1644-7523 (CS팀 본업)',
+  // 소셜
+  'ig:web':          '인스타그램 (소셜 · 임정민 주임)',
+  'nblog:web':       '네이버 블로그 (소셜 · 임정민 주임)',
+  'yt:web':          '유튜브 쇼츠 (소셜 · 임정민 주임)'
+};
+function getWireRel(from, to) {
+  return WIRE_REL[from + ':' + to] || WIRE_REL[to + ':' + from] || null;
+}
+function getNodeName(id) {
+  if (DATA[id] && DATA[id].name) return DATA[id].name;
+  const dept = (DATA.departments || []).find(d => d.id === id);
+  if (dept) return dept.name;
+  const personal = (DATA.personalChannels || []).find(c => c.id === id);
+  if (personal) return personal.name;
+  const corp = (DATA.corpChannels || []).find(c => c.id === id);
+  if (corp) return corp.name;
+  return id;
+}
+// 와이어 hover tooltip — 단일 element 재사용
+const wireTooltip = (() => {
+  let el = document.getElementById('wireTooltip');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'wireTooltip';
+    el.className = 'wire-tooltip';
+    document.body.appendChild(el);
+  }
+  return el;
+})();
+function showWireTooltip(fromId, toId, x, y) {
+  const fromName = getNodeName(fromId);
+  const toName = getNodeName(toId);
+  const rel = getWireRel(fromId, toId) || (fromName + ' ↔ ' + toName + ' 연결');
+  wireTooltip.innerHTML =
+    '<div class="wt-pair">' + fromName + ' ↔ ' + toName + '</div>'
+    + '<div class="wt-rel">' + rel + '</div>';
+  wireTooltip.classList.add('show');
+  moveWireTooltip(x, y);
+}
+function moveWireTooltip(x, y) {
+  const vw = window.innerWidth, vh = window.innerHeight;
+  let left = x + 14, top = y + 14;
+  const rect = wireTooltip.getBoundingClientRect();
+  if (left + rect.width > vw - 8) left = x - rect.width - 14;
+  if (top + rect.height > vh - 8) top = y - rect.height - 14;
+  wireTooltip.style.left = Math.max(8, left) + 'px';
+  wireTooltip.style.top  = Math.max(8, top) + 'px';
+}
+function hideWireTooltip() { wireTooltip.classList.remove('show'); }
+
 function drawWire(fromId, toId, color, opts={}, cat=null) {
   const a = POS[fromId], b = POS[toId];
   if (!a || !b) return;
@@ -2231,8 +2363,10 @@ function drawWire(fromId, toId, color, opts={}, cat=null) {
   const mode = Math.abs(dy) > Math.abs(dx) * 1.2 ? 'V' : 'H';
   const fSide = mode === 'V' ? (dy > 0 ? 'bot' : 'top') : (dx > 0 ? 'right' : 'left');
   const tSide = mode === 'V' ? (dy > 0 ? 'top' : 'bot') : (dx > 0 ? 'left' : 'right');
+  const dAttr = orthoPath(edge(fromId, fSide), edge(toId, tSide), mode);
+  // 보이는 path
   const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-  path.setAttribute('d', orthoPath(edge(fromId, fSide), edge(toId, tSide), mode));
+  path.setAttribute('d', dAttr);
   path.setAttribute('stroke', color);
   path.style.color = color;
   if (opts.flow) path.classList.add('flow');
@@ -2243,6 +2377,23 @@ function drawWire(fromId, toId, color, opts={}, cat=null) {
   path.dataset.to = toId;
   if (cat) path.dataset.cat = cat;
   wires.appendChild(path);
+  // hover detection용 invisible 굵은 path (얇은 wire도 마우스로 잡히게)
+  const hit = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+  hit.setAttribute('d', dAttr);
+  hit.setAttribute('stroke', 'transparent');
+  hit.setAttribute('stroke-width', '14');
+  hit.setAttribute('fill', 'none');
+  hit.style.cursor = 'help';
+  hit.dataset.from = fromId;
+  hit.dataset.to = toId;
+  hit.classList.add('wire-hit');
+  hit.addEventListener('mouseenter', (e) => {
+    showWireTooltip(fromId, toId, e.clientX, e.clientY);
+    path.classList.add('wire-hover');
+  });
+  hit.addEventListener('mousemove', (e) => moveWireTooltip(e.clientX, e.clientY));
+  hit.addEventListener('mouseleave', () => { hideWireTooltip(); path.classList.remove('wire-hover'); });
+  wires.appendChild(hit);
 }
 function drawRegion(x, y, w, h, color, label) {
   const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
