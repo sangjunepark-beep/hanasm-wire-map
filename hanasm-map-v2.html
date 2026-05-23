@@ -1225,6 +1225,29 @@ body.edit-mode .node .frame { outline: 2px dashed rgba(251,191,36,0.6); outline-
 .drs-pill-C { color:#60a5fa; border-color:rgba(96,165,250,0.55); background:rgba(96,165,250,0.10); }
 .drs-pill-D { color:#c084fc; border-color:rgba(192,132,252,0.55); background:rgba(192,132,252,0.10); }
 .drs-pill-E { color:#94a3b8; border-color:rgba(148,163,184,0.45); background:rgba(148,163,184,0.06); }
+/* 부서 expanded — 주관/유관 그룹 헤더 (정렬 시각화) */
+.dpc-group-head {
+  display: flex; align-items: center; gap: 10px;
+  margin: 12px 0 6px; padding: 5px 10px;
+  font-size: 10px; font-weight: 800; letter-spacing: 0.16em; text-transform: uppercase;
+  border-left: 3px solid;
+  clip-path: polygon(3px 0, 100% 0, 100% calc(100% - 3px), calc(100% - 3px) 100%, 0 100%, 0 3px);
+}
+.dpc-group-head:first-of-type { margin-top: 4px; }
+.dpc-group-owner {
+  color: #22d3ee; border-left-color: #22d3ee;
+  background: rgba(34,211,238,0.10);
+}
+.dpc-group-related {
+  color: #94a3b8; border-left-color: rgba(148,163,184,0.5);
+  background: rgba(148,163,184,0.05);
+}
+.dpc-group-head .dgh-role { font-weight: 900; }
+.dpc-group-head .dgh-cnt  { font-size: 10.5px; font-weight: 700; opacity: 0.85; }
+.dpc-group-head .dgh-sort {
+  margin-left: auto; font-size: 9px; font-weight: 700; opacity: 0.55;
+  letter-spacing: 0.10em;
+}
 .dpc-role {
   font-size: 9px; font-weight: 800; letter-spacing: 0.12em; padding: 2px 7px;
   background: var(--dc); color: #0a0b22;
@@ -3426,7 +3449,22 @@ function renderDeptProjects(deptId) {
   });
   sumDiv.innerHTML = sumHtml;
   sec.appendChild(sumDiv);
+  // 주관/유관 카운트 — 헤더에 사용
+  const _ownerTotal = items.filter(e => getEffective(e.cat, e.item).ownerDept === deptId).length;
+  const _relTotal = items.length - _ownerTotal;
+  let _prevIsOwner = null;
   items.forEach(({ cat, item }) => {
+    const _isOwnerCard = getEffective(cat, item).ownerDept === deptId;
+    if (_prevIsOwner !== _isOwnerCard) {
+      const _h = document.createElement('div');
+      _h.className = 'dpc-group-head ' + (_isOwnerCard ? 'dpc-group-owner' : 'dpc-group-related');
+      const _cnt = _isOwnerCard ? _ownerTotal : _relTotal;
+      _h.innerHTML = '<span class="dgh-role">' + (_isOwnerCard ? '주관' : '유관') + '</span>'
+                   + '<span class="dgh-cnt">' + _cnt + '건</span>'
+                   + '<span class="dgh-sort">매출 영향도 순</span>';
+      sec.appendChild(_h);
+      _prevIsOwner = _isOwnerCard;
+    }
     const k = cat + '::' + item.name;
     const ovr = (DECISIONS[k] || {});
     const dec = ovr.decision || item.decision || 'go';
