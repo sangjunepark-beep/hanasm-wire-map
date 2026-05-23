@@ -1296,6 +1296,29 @@ body.edit-mode .node .frame { outline: 2px dashed rgba(251,191,36,0.6); outline-
   clip-path: polygon(3px 0, 100% 0, 100% calc(100% - 3px), calc(100% - 3px) 100%, 0 100%, 0 3px);
   pointer-events: none;
 }
+/* 카드 클릭으로 잠금된 상태 — 마우스 떠나도 와이어 맵 강조 유지 */
+.proj-item.locked {
+  outline: 2px solid #22d3ee;
+  box-shadow: 0 0 16px rgba(34,211,238,0.40);
+  position: relative;
+  z-index: 2;
+}
+.proj-item.locked::after {
+  content: '🔒 선택됨';
+  position: absolute;
+  top: -10px; left: 10px;
+  background: #22d3ee; color: #050614;
+  font-size: 9px; font-weight: 900;
+  padding: 3px 9px; letter-spacing: 0.10em;
+  clip-path: polygon(3px 0, 100% 0, 100% calc(100% - 3px), calc(100% - 3px) 100%, 0 100%, 0 3px);
+  pointer-events: none;
+}
+/* 투어 중인 카드가 잠긴 상태일 때는 투어 배지 우선 — locked 배지 숨김 */
+.proj-item.touring.locked::after {
+  content: '▶ 시연 중';
+  background: #fbbf24; color: #050614;
+  left: auto; right: 10px;
+}
 
 .dept-projects-section { margin-top: 10px; padding-top: 8px; border-top: 1px dashed rgba(96,165,250,0.30); }
 /* 우측 신규 프로젝트 판단 보드(projPanel)가 열려있으면, 부서 expanded의 신규 프로젝트 섹션은 숨김 — 중복 방지, 보드 우선 */
@@ -2931,6 +2954,11 @@ window.TOUR_TIMER = null;
 window.TOUR_LIST = [];
 function startRevTour() {
   if (window.TOUR_RUNNING) { stopRevTour(); return; }
+  // 잠금된 카드 있으면 투어 시작 시 해제 (시각 충돌 방지)
+  if (window.LOCKED_PROJ_KEY) {
+    window.LOCKED_PROJ_KEY = null;
+    document.querySelectorAll('.proj-item.locked').forEach(c => c.classList.remove('locked'));
+  }
   const panel = document.getElementById('projPanel');
   if (panel) panel.classList.add('show');
   // 강제: A등급 필터 + 등급순 정렬
@@ -3471,7 +3499,14 @@ function focusProjectRelation(ownerDept, related=[], opts={}) {
 }
 // 빈 곳 클릭 시 focus 해제
 document.getElementById('stage').addEventListener('click', (e) => {
-  if (e.target.id === 'stage' || e.target.id === 'world') focusProjectRelation(null, []);
+  if (e.target.id === 'stage' || e.target.id === 'world') {
+    // 빈 곳 클릭 = 카드 잠금도 같이 해제
+    if (window.LOCKED_PROJ_KEY) {
+      window.LOCKED_PROJ_KEY = null;
+      document.querySelectorAll('.proj-item.locked').forEach(c => c.classList.remove('locked'));
+    }
+    focusProjectRelation(null, []);
+  }
 });
 function renderProjects() {
   const body = document.getElementById('ppBody');
@@ -3621,16 +3656,47 @@ function renderProjects() {
       }
     });
   }
-  // hover 미리보기 상태
+  // hover 미리보기 + 클릭 잠금 상태
   if (typeof window.__projHoverTimer === 'undefined') window.__projHoverTimer = null;
+  if (typeof window.LOCKED_PROJ_KEY === 'undefined') window.LOCKED_PROJ_KEY = null;
   let _lastHoverEl = null;
+  // 잠긴 카드 강조 복원 (hover 떠난 후 호출)
+  function _restoreLockedHighlight() {
+    if (!window.LOCKED_PROJ_KEY) {
+      focusProjectRelation(null, [], { skipZoom: true });
+      return;
+    }
+    const lockedEl = document.querySelector('.proj-item[data-key="' + window.LOCKED_PROJ_KEY.replace(/"/g, '\\"') + '"]');
+    if (lockedEl) {
+      const lOwner = lockedEl.dataset.owner;
+      const lRelated = (lockedEl.dataset.related || '').split(',').filter(Boolean);
+      focusProjectRelation(lOwner, lRelated, { skipZoom: true });
+    } else {
+      window.LOCKED_PROJ_KEY = null;
+      focusProjectRelation(null, [], { skipZoom: true });
+    }
+  }
   document.querySelectorAll('.proj-item').forEach(el => {
+    // 렌더 시점에 잠긴 카드면 locked 클래스 부여 (재렌더링 후에도 시각 유지)
+    if (window.LOCKED_PROJ_KEY === el.dataset.key) el.classList.add('locked');
     el.addEventListener('click', (e) => {
       if (e.target.closest('.pi-handle')) return;
       if (e.target.closest('.pi-dec')) return;
       if (e.target.closest('.pi-action')) return;
       if (e.target.closest('.dept-edit')) return;  // 주관/유관 편집 영역은 카드 클릭 무시
-      focusProjectRelation(el.dataset.owner, (el.dataset.related || '').split(',').filter(Boolean));
+      // 클릭 = 잠금 토글
+      if (window.LOCKED_PROJ_KEY === el.dataset.key) {
+        // 같은 카드 다시 클릭 → 잠금 해제
+        window.LOCKED_PROJ_KEY = null;
+        el.classList.remove('locked');
+        focusProjectRelation(null, []);
+      } else {
+        // 새 카드 잠금
+        document.querySelectorAll('.proj-item.locked').forEach(c => c.classList.remove('locked'));
+        window.LOCKED_PROJ_KEY = el.dataset.key;
+        el.classList.add('locked');
+        focusProjectRelation(el.dataset.owner, (el.dataset.related || '').split(',').filter(Boolean));
+      }
       el.classList.toggle('open');
     });
     // ① 카드 hover → 맵 부서 노드 미리 강조 (카메라 이동 X)
@@ -3645,8 +3711,9 @@ function renderProjects() {
       // 120ms debounce — 인접 카드로 빠르게 이동 시 깜빡임 방지
       window.__projHoverTimer = setTimeout(() => {
         if (_lastHoverEl === el) {
-          focusProjectRelation(null, [], { skipZoom: true });
           _lastHoverEl = null;
+          // 잠긴 카드 있으면 그 카드 강조 복원, 없으면 해제
+          _restoreLockedHighlight();
         }
       }, 120);
     });
