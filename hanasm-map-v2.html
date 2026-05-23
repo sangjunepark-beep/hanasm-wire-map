@@ -1298,6 +1298,8 @@ body.edit-mode .node .frame { outline: 2px dashed rgba(251,191,36,0.6); outline-
 }
 
 .dept-projects-section { margin-top: 10px; padding-top: 8px; border-top: 1px dashed rgba(96,165,250,0.30); }
+/* 우측 신규 프로젝트 판단 보드(projPanel)가 열려있으면, 부서 expanded의 신규 프로젝트 섹션은 숨김 — 중복 방지, 보드 우선 */
+body:has(.proj-panel.show) .node .dept-projects-section { display: none !important; }
 .dept-projects-section .label { font-size: 10px; font-weight: 800; letter-spacing: 0.14em; color: #60a5fa; margin-bottom: 6px; position: sticky; top: 0; background: rgba(8,9,28,0.95); padding: 4px 0; z-index: 5; }
 .dept-proj-card {
   margin-bottom: 6px; padding: 6px 9px;
