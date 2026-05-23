@@ -731,6 +731,31 @@ body.proj-focus svg.wires path:not(.preview-wire):not(.preview-wire-rel) { opaci
   clip-path: polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px);
 }
 .proj-toggle:hover { background: rgba(167,139,250,0.18); color: #fff; }
+/* ⑤ 회의 모드 토글 */
+.meeting-toggle {
+  position: fixed; top: 16px; right: 280px; z-index: 110;
+  background: rgba(8,9,28,0.8);
+  border: 1px solid rgba(167,139,250,0.40);
+  color: #c084fc;
+  padding: 8px 14px; font-size: 11px;
+  font-family: inherit; font-weight: 700; cursor: pointer;
+  letter-spacing: 0.12em; text-transform: uppercase;
+  clip-path: polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px);
+}
+.meeting-toggle:hover { background: rgba(167,139,250,0.18); color: #fff; }
+body.meeting-mode .meeting-toggle {
+  background: rgba(251,191,36,0.20);
+  border-color: #fbbf24;
+  color: #fbbf24;
+  box-shadow: 0 0 14px rgba(251,191,36,0.45);
+}
+/* 회의 모드 — 보고용 UI 정리 (topbar, legend, controls, edit/undo 숨김. projToggle/meetingToggle 유지) */
+body.meeting-mode .topbar,
+body.meeting-mode .legend,
+body.meeting-mode .controls,
+body.meeting-mode #editToggle,
+body.meeting-mode #undoBtn { display: none !important; }
+body.meeting-mode { background: #000 !important; }
 .chip-bar {
   position: fixed; bottom: 132px; left: 18px; z-index: 105;
   display: flex; gap: 6px; flex-wrap: wrap; max-width: 60vw;
@@ -2604,6 +2629,7 @@ window.addEventListener('resize', () => { fitView(); drawAllWires(); });
 <button class="proj-toggle" id="undoBtn" style="right: 290px; display: none;">↶ 되돌리기 <span id="undoCnt" style="opacity:0.7;">0</span></button>
 <button class="proj-toggle" id="editToggle" style="right: 175px;">✎ 편집</button>
 <button class="proj-toggle" id="projToggle">≡ 신규 프로젝트</button>
+<button class="meeting-toggle" id="meetingToggle" title="회의 모드 — 단축키 P / 해제 ESC">⛶ 회의 모드</button>
 <aside class="proj-panel" id="projPanel">
   <div class="pp-head">
     <div class="pp-title">신규 프로젝트 판단 보드</div>
@@ -2838,6 +2864,37 @@ function stopRevTour() {
 document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape' && window.TOUR_RUNNING) stopRevTour();
 });
+
+// ⑤ 회의 모드 (Presentation Mode) — 단축키 P, ESC로 해제, 풀스크린 같이 토글
+function toggleMeetingMode(force) {
+  const on = (typeof force === 'boolean') ? force : !document.body.classList.contains('meeting-mode');
+  document.body.classList.toggle('meeting-mode', on);
+  const btn = document.getElementById('meetingToggle');
+  if (btn) btn.innerHTML = on ? '✕ 회의모드 해제' : '⛶ 회의 모드';
+  try {
+    if (on && !document.fullscreenElement && document.documentElement.requestFullscreen) {
+      document.documentElement.requestFullscreen().catch(() => {});
+    } else if (!on && document.fullscreenElement && document.exitFullscreen) {
+      document.exitFullscreen().catch(() => {});
+    }
+  } catch(e) {}
+}
+document.addEventListener('keydown', (e) => {
+  // input/textarea 입력 중에는 단축키 무시
+  const tag = (e.target && e.target.tagName) || '';
+  if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+  if ((e.key === 'p' || e.key === 'P') && !e.ctrlKey && !e.metaKey && !e.altKey) {
+    e.preventDefault();
+    toggleMeetingMode();
+  }
+  if (e.key === 'Escape' && document.body.classList.contains('meeting-mode')) {
+    toggleMeetingMode(false);
+  }
+});
+(function bindMeetingBtn(){
+  const _mBtn = document.getElementById('meetingToggle');
+  if (_mBtn) _mBtn.addEventListener('click', () => toggleMeetingMode());
+})();
 
 // ③ 부서 노드 위 매출등급 미니바 + ⑥ 결정 상태 라인 (진행/보류/중단)
 function renderDeptRevBars() {
