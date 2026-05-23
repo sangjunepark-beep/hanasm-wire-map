@@ -872,6 +872,15 @@ body.edit-mode .node .frame { outline: 2px dashed rgba(251,191,36,0.6); outline-
 }
 .proj-item.flat-item { counter-increment: pi; flex-direction: column; gap: 6px; }
 .pi-tag { display: inline-block; font-size: 9.5px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; padding: 3px 9px; margin-bottom: 4px; background: rgba(255,255,255,0.03); color: #94a3b8; border-left: 2px solid var(--cat-c, #a855f7); clip-path: polygon(2px 0, 100% 0, 100% calc(100% - 2px), calc(100% - 2px) 100%, 0 100%, 0 2px); align-self: flex-start; }
+/* 매출등급 배지 (revTier A~E) — 대표 보고 모드 */
+.pi-tag-row { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-bottom: 4px; }
+.pi-tag-row .pi-tag { margin-bottom: 0; }
+.pi-rev { display: inline-block; font-size: 10px; font-weight: 800; letter-spacing: 0.08em; padding: 3px 9px; background: rgba(0,0,0,0.30); border: 1px solid; clip-path: polygon(2px 0, 100% 0, 100% calc(100% - 2px), calc(100% - 2px) 100%, 0 100%, 0 2px); }
+.pi-rev-A { color: #fbbf24; border-color: rgba(251,191,36,0.55); background: rgba(251,191,36,0.10); box-shadow: 0 0 8px rgba(251,191,36,0.18); }
+.pi-rev-B { color: #34d399; border-color: rgba(52,211,153,0.50); background: rgba(52,211,153,0.08); }
+.pi-rev-C { color: #60a5fa; border-color: rgba(96,165,250,0.50); background: rgba(96,165,250,0.08); }
+.pi-rev-D { color: #c084fc; border-color: rgba(192,132,252,0.50); background: rgba(192,132,252,0.08); }
+.pi-rev-E { color: #94a3b8; border-color: rgba(148,163,184,0.40); background: rgba(148,163,184,0.06); }
 .pi-num { display: inline-flex; align-items: center; justify-content: center; min-width: 22px; height: 22px; padding: 0 4px; background: rgba(255,255,255,0.06); color: #cbd5e1; font-size: 10px; font-weight: 800; letter-spacing: 0; clip-path: polygon(3px 0, 100% 0, 100% calc(100% - 3px), calc(100% - 3px) 100%, 0 100%, 0 3px); }
 .pi-num::before { content: counter(pi); }
 .proj-item.flat-item .pi-row { 
@@ -2872,8 +2881,13 @@ function renderProjects() {
                + (when ? '<span class="pi-when">📅 ' + when + '</span>' : '')
                + '</div>';
     const relRow = chipsHtml;
-    htmlList += '<div class="proj-item flat-item ' + e.cat + ' st-' + st + ' dec-' + dec + ' ' + action.cls + '" data-key="' + k + '" data-cat="' + e.cat + '" data-owner="' + (eff.ownerDept || '') + '" data-related="' + ((eff.related || []).join(',')) + '" data-name="' + it.name + '">'
-          + '<div class="pi-tag-row"><span class="pi-tag">' + catName + '</span></div>'
+    // 매출등급 (revTier A~E) — 미지정 시 E(장기기반) fallback
+    const REV_LABELS = { A:'직접매출', B:'전환개선', C:'CS전환', D:'운영', E:'장기' };
+    const tier = it.revTier || 'E';
+    const tierLabel = REV_LABELS[tier] || '장기';
+    const revBadge = '<span class="pi-rev pi-rev-' + tier + '" title="매출 영향도 ' + tier + ' 등급">' + tier + ' ' + tierLabel + '</span>';
+    htmlList += '<div class="proj-item flat-item ' + e.cat + ' st-' + st + ' dec-' + dec + ' ' + action.cls + ' rev-' + tier + '" data-key="' + k + '" data-cat="' + e.cat + '" data-owner="' + (eff.ownerDept || '') + '" data-related="' + ((eff.related || []).join(',')) + '" data-name="' + it.name + '" data-rev="' + tier + '">'
+          + '<div class="pi-tag-row"><span class="pi-tag">' + catName + '</span>' + revBadge + '</div>'
           + '<div class="pi-row">'
           +   '<span class="pi-handle" title="드래그로 순서 변경">≡</span>'
           +   '<span class="pi-num"></span>'
