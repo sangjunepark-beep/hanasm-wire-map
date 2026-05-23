@@ -1062,6 +1062,40 @@ body.edit-mode .node .frame { outline: 2px dashed rgba(251,191,36,0.6); outline-
 .project-filter button.active {
   color: #fff; border-color: #60a5fa; background: rgba(96,165,250,0.18);
 }
+/* 매출등급 필터 + 정렬 토글 (대표 보고용) */
+.project-revfilter {
+  display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 8px;
+  padding-bottom: 8px; border-bottom: 1px dashed rgba(167,139,250,0.18);
+}
+.project-revfilter button {
+  font-family: inherit; cursor: pointer; padding: 5px 9px;
+  background: rgba(8,9,28,0.62); border: 1px solid rgba(167,139,250,0.18);
+  color: #94a3b8; font-size: 10px; font-weight: 800; letter-spacing: 0.06em;
+  display: inline-flex; align-items: center; gap: 5px;
+  clip-path: polygon(3px 0, 100% 0, 100% calc(100% - 3px), calc(100% - 3px) 100%, 0 100%, 0 3px);
+  transition: all 0.15s ease;
+}
+.project-revfilter button:hover { color: #fff; border-color: rgba(255,255,255,0.3); }
+.project-revfilter .rf-cnt { opacity: 0.6; font-size: 9.5px; font-weight: 700; }
+.project-revfilter .rf-all.active   { color:#fff; border-color:#fff;        background: rgba(255,255,255,0.10); }
+.project-revfilter .rf-A.active     { color:#fbbf24; border-color:#fbbf24;  background: rgba(251,191,36,0.18); box-shadow: 0 0 10px rgba(251,191,36,0.22); }
+.project-revfilter .rf-B.active     { color:#34d399; border-color:#34d399;  background: rgba(52,211,153,0.18); }
+.project-revfilter .rf-C.active     { color:#60a5fa; border-color:#60a5fa;  background: rgba(96,165,250,0.18); }
+.project-revfilter .rf-D.active     { color:#c084fc; border-color:#c084fc;  background: rgba(192,132,252,0.18); }
+.project-revfilter .rf-E.active     { color:#cbd5e1; border-color:#cbd5e1;  background: rgba(203,213,225,0.10); }
+.project-revfilter .rf-sort {
+  margin-left: auto;
+  font-size: 10px; padding: 5px 10px;
+  background: rgba(34,211,238,0.06);
+  border: 1px solid rgba(34,211,238,0.25);
+  color: #67e8f9;
+}
+.project-revfilter .rf-sort.active {
+  background: rgba(34,211,238,0.18);
+  border-color: #22d3ee;
+  color: #fff;
+  box-shadow: 0 0 8px rgba(34,211,238,0.22);
+}
 
 .dept-projects-section { margin-top: 10px; padding-top: 8px; border-top: 1px dashed rgba(96,165,250,0.30); }
 .dept-projects-section .label { font-size: 10px; font-weight: 800; letter-spacing: 0.14em; color: #60a5fa; margin-bottom: 6px; position: sticky; top: 0; background: rgba(8,9,28,0.95); padding: 4px 0; z-index: 5; }
@@ -2646,6 +2680,24 @@ function formatDesc(raw) {
 }
 try { PROJECT_STATE = JSON.parse(localStorage.getItem('hanasm.projectState.v3') || '{}'); } catch(e) {}
 try { PROJECT_ACTION_FILTER = localStorage.getItem('hanasm.projectActionFilter.v3') || 'all'; } catch(e) {}
+// 매출등급(A~E) 필터 + 정렬 모드 — 대표 보고용
+let PROJECT_REV_FILTER = 'all';
+try { PROJECT_REV_FILTER = localStorage.getItem('hanasm.projectRevFilter.v3') || 'all'; } catch(e) {}
+let PROJECT_SORT_MODE = 'rev';  // 'rev' = 매출등급 순 / 'manual' = 사용자 수동 정렬
+try { PROJECT_SORT_MODE = localStorage.getItem('hanasm.projectSortMode.v3') || 'rev'; } catch(e) {}
+const REV_RANK = { A:5, B:4, C:3, D:2, E:1 };
+const PRIO_RANK = { h:3, m:2, l:1 };
+function sortByRev(arr) {
+  return arr.slice().sort((a, b) => {
+    const ra = REV_RANK[a.item.revTier || 'E'];
+    const rb = REV_RANK[b.item.revTier || 'E'];
+    if (ra !== rb) return rb - ra;
+    const pa = PRIO_RANK[a.item.prio || 'l'];
+    const pb = PRIO_RANK[b.item.prio || 'l'];
+    if (pa !== pb) return pb - pa;
+    return (b.item.progress || 0) - (a.item.progress || 0);
+  });
+}
 try { PROJECT_OVERRIDES = JSON.parse(localStorage.getItem('hanasm.projectOverrides.v3') || '{}'); } catch(e) {}
 const ALL_DEPT_IDS = ['web','cs','design','dev','fin','sales','product','factory2'];
 function getEffective(cat, item) {
@@ -2813,6 +2865,14 @@ function renderProjects() {
   // 저장에 없는 새 항목은 뒤로
   map.forEach(v => ordered.push(v));
 
+  // 매출등급 자동 정렬 (사용자가 '수동순' 선택 시에만 저장 순서 사용)
+  let arranged = ordered;
+  if (PROJECT_SORT_MODE === 'rev') arranged = sortByRev(ordered);
+
+  // 매출등급별 카운트
+  const revCounts = { A:0, B:0, C:0, D:0, E:0 };
+  all.forEach(e => { revCounts[e.item.revTier || 'E']++; });
+
   const summary = summarizeProjects(all);
   const filters = [{ key:'all', label:'전체' }, ...PROJECT_ACTIONS];
   let html = '<div class="project-summary">'
@@ -2820,15 +2880,31 @@ function renderProjects() {
            + '<div class="sum">우선 ' + summary.first + '</div>'
            + '<div class="sum">보류/중단 ' + (summary.hold + summary.stop) + '</div>'
            + '</div>';
+
+  // 매출등급 필터 + 정렬 모드 토글 (대표 보고용)
+  html += '<div class="project-revfilter">';
+  ['all','A','B','C','D','E'].forEach(k => {
+    const cnt = (k === 'all') ? all.length : (revCounts[k] || 0);
+    const lbl = (k === 'all') ? '전체' : k;
+    const active = PROJECT_REV_FILTER === k ? ' active' : '';
+    html += '<button type="button" class="rf rf-' + k + active + '" data-rev-filter="' + k + '" title="매출 영향도 ' + lbl + '">' + lbl + ' <span class="rf-cnt">' + cnt + '</span></button>';
+  });
+  const sortActive = PROJECT_SORT_MODE === 'rev' ? ' active' : '';
+  const sortLabel = PROJECT_SORT_MODE === 'rev' ? '등급순' : '수동순';
+  html += '<button type="button" class="rf-sort' + sortActive + '" data-sort-toggle title="매출등급 자동 정렬 ↔ 수동 드래그 정렬">⇅ ' + sortLabel + '</button>';
+  html += '</div>';
+
   html += '<div class="project-filter">';
   filters.forEach(f => {
     html += '<button type="button" class="' + (PROJECT_ACTION_FILTER === f.key ? 'active' : '') + '" data-action-filter="' + f.key + '">' + f.label + '</button>';
   });
   html += '</div>';
 
-  const visible = PROJECT_ACTION_FILTER === 'all'
-    ? ordered
-    : ordered.filter(e => getAction(e.cat, e.item).key === PROJECT_ACTION_FILTER);
+  const visible = arranged.filter(e => {
+    if (PROJECT_ACTION_FILTER !== 'all' && getAction(e.cat, e.item).key !== PROJECT_ACTION_FILTER) return false;
+    if (PROJECT_REV_FILTER !== 'all' && (e.item.revTier || 'E') !== PROJECT_REV_FILTER) return false;
+    return true;
+  });
 
   let htmlList = '<div class="proj-list flat" data-list="flat">';
   visible.forEach(e => {
@@ -2954,6 +3030,24 @@ function renderProjects() {
       e.stopPropagation();
       PROJECT_ACTION_FILTER = btn.dataset.actionFilter || 'all';
       localStorage.setItem('hanasm.projectActionFilter.v3', PROJECT_ACTION_FILTER);
+      renderProjects();
+    });
+  });
+  // 매출등급 필터
+  document.querySelectorAll('[data-rev-filter]').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      PROJECT_REV_FILTER = btn.dataset.revFilter || 'all';
+      try { localStorage.setItem('hanasm.projectRevFilter.v3', PROJECT_REV_FILTER); } catch(err) {}
+      renderProjects();
+    });
+  });
+  // 정렬 모드 토글 (매출등급순 ↔ 수동)
+  document.querySelectorAll('[data-sort-toggle]').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      PROJECT_SORT_MODE = (PROJECT_SORT_MODE === 'rev') ? 'manual' : 'rev';
+      try { localStorage.setItem('hanasm.projectSortMode.v3', PROJECT_SORT_MODE); } catch(err) {}
       renderProjects();
     });
   });
