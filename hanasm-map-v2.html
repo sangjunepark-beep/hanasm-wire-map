@@ -990,7 +990,7 @@ body.edit-mode .node .frame { outline: 2px dashed rgba(251,191,36,0.6); outline-
   transition: max-height 0.22s cubic-bezier(.2,.7,.2,1);
   font-family: inherit;
 }
-.floating-memo.expanded { max-height: 130px; }
+.floating-memo.expanded { max-height: 95px; }
 .fm-head {
   display: flex; align-items: center; gap: 10px;
   padding: 9px 16px;
@@ -3110,20 +3110,9 @@ function toggleMeetingMode(force) {
       document.exitFullscreen().catch(() => {});
     }
   } catch(e) {}
-  // ④ 회의 모드 진입 시 인트로 줌 자동 시퀀스 (3초 안 종료)
-  if (on) setTimeout(playIntroZoom, 450);
+  // ④ 인트로 줌 제거됨 — 클로즈업 후 줌아웃 동작이 어색하다는 피드백 (2026-05-24)
 }
-// ④ 인트로 줌: 전체 → CEO 줌인 → 전체
-function playIntroZoom() {
-  if (typeof fitView !== 'function') return;
-  fitView();
-  setTimeout(() => {
-    if (typeof cameraTo === 'function') cameraTo('ceo');
-  }, 700);
-  setTimeout(() => {
-    fitView();
-  }, 2100);
-}
+function playIntroZoom() { /* disabled */ }
 document.addEventListener('keydown', (e) => {
   // input/textarea 입력 중에는 단축키 무시
   const tag = (e.target && e.target.tagName) || '';
