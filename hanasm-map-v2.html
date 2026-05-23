@@ -2377,23 +2377,8 @@ function drawWire(fromId, toId, color, opts={}, cat=null) {
   path.dataset.to = toId;
   if (cat) path.dataset.cat = cat;
   wires.appendChild(path);
-  // hover detection용 invisible 굵은 path (얇은 wire도 마우스로 잡히게)
-  const hit = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-  hit.setAttribute('d', dAttr);
-  hit.setAttribute('stroke', 'transparent');
-  hit.setAttribute('stroke-width', '14');
-  hit.setAttribute('fill', 'none');
-  hit.style.cursor = 'help';
-  hit.dataset.from = fromId;
-  hit.dataset.to = toId;
-  hit.classList.add('wire-hit');
-  hit.addEventListener('mouseenter', (e) => {
-    showWireTooltip(fromId, toId, e.clientX, e.clientY);
-    path.classList.add('wire-hover');
-  });
-  hit.addEventListener('mousemove', (e) => moveWireTooltip(e.clientX, e.clientY));
-  hit.addEventListener('mouseleave', () => { hideWireTooltip(); path.classList.remove('wire-hover'); });
-  wires.appendChild(hit);
+  // 와이어 hover tooltip 기능은 사전 정의 보강 필요 — 일단 비활성화 (2026-05-24)
+  // WIRE_REL 사전·헬퍼·CSS는 그대로 유지. 재활성화 시 hit path 생성 코드만 복구.
 }
 function drawRegion(x, y, w, h, color, label) {
   const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
