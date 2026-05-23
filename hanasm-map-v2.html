@@ -818,6 +818,39 @@ body.meeting-mode { background: #000 !important; }
 .lm-arrow { color: #fbbf24; padding: 0 5px; font-weight: 900; }
 .lm-after { color: #fbbf24; font-size: 11.5px; font-weight: 800; }
 .lm-empty { color: #6b7280; text-align: center; padding: 32px 16px; font-size: 12px; line-height: 1.7; }
+/* ⑧ 카드 우클릭 컨텍스트 메뉴 */
+.ctx-menu {
+  display: none;
+  position: fixed; z-index: 250;
+  background: rgba(5,6,20,0.97);
+  border: 1px solid rgba(167,139,250,0.40);
+  min-width: 180px;
+  clip-path: polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px);
+  padding: 5px 0;
+  box-shadow: 0 8px 28px rgba(0,0,0,0.72);
+  font-family: inherit;
+}
+.ctx-menu.show { display: block; }
+.ctx-head {
+  padding: 6px 14px 9px;
+  margin-bottom: 4px;
+  border-bottom: 1px solid rgba(167,139,250,0.18);
+  font-size: 11px; font-weight: 800; color: #c084fc;
+  letter-spacing: 0.04em;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  max-width: 240px;
+}
+.ctx-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 7px 14px;
+  font-size: 11.5px; font-weight: 700;
+  cursor: pointer;
+  color: #c5c9e0;
+  transition: background 0.10s ease;
+}
+.ctx-item:hover { background: rgba(167,139,250,0.20); color: #fff; }
+.ctx-icon { width: 16px; text-align: center; opacity: 0.85; font-size: 12px; }
+.ctx-divider { height: 1px; background: rgba(167,139,250,0.15); margin: 4px 0; }
 .chip-bar {
   position: fixed; bottom: 132px; left: 18px; z-index: 105;
   display: flex; gap: 6px; flex-wrap: wrap; max-width: 60vw;
@@ -3267,6 +3300,69 @@ function clearLog() {
     if (e.target.id === 'logModal') modal.classList.remove('show');
   });
   refreshLogBtn();
+})();
+
+// ⑧ 카드 우클릭 컨텍스트 메뉴 (이벤트 위임 — 카드가 매번 재생성되어도 동작)
+(function bindCtxMenu(){
+  const menu = document.createElement('div');
+  menu.className = 'ctx-menu';
+  menu.id = 'projCtxMenu';
+  document.body.appendChild(menu);
+  let currentCard = null;
+  function buildMenu(card) {
+    const items = [
+      { key:'first', label:'우선',   icon:'⚡' },
+      { key:'run',   label:'진행',   icon:'●' },
+      { key:'hold',  label:'보류',   icon:'⏸' },
+      { key:'stop',  label:'중단',   icon:'⊘' },
+      { key:'merge', label:'통합',   icon:'⇄' },
+    ];
+    let html = '<div class="ctx-head">' + (card.dataset.name || '프로젝트') + '</div>';
+    items.forEach(it => {
+      html += '<div class="ctx-item" data-act="' + it.key + '"><span class="ctx-icon">' + it.icon + '</span>' + it.label + '</div>';
+    });
+    html += '<div class="ctx-divider"></div>';
+    html += '<div class="ctx-item" data-act="map"><span class="ctx-icon">🎯</span>와이어 맵에서 보기</div>';
+    menu.innerHTML = html;
+  }
+  function show(card, x, y) {
+    currentCard = card;
+    buildMenu(card);
+    menu.style.left = Math.min(x, window.innerWidth - 200) + 'px';
+    menu.style.top = Math.min(y, window.innerHeight - 270) + 'px';
+    menu.classList.add('show');
+  }
+  function hide() { menu.classList.remove('show'); currentCard = null; }
+  menu.addEventListener('click', (e) => {
+    const item = e.target.closest('.ctx-item');
+    if (!item || !currentCard) return;
+    const act = item.dataset.act;
+    const k = currentCard.dataset.key;
+    if (act === 'map') {
+      const owner = currentCard.dataset.owner;
+      const related = (currentCard.dataset.related || '').split(',').filter(Boolean);
+      if (typeof focusProjectRelation === 'function') focusProjectRelation(owner, related);
+    } else if (['first','run','hold','stop','merge'].indexOf(act) >= 0) {
+      setProjectAction(k, act);
+      if (typeof renderProjects === 'function') renderProjects();
+    }
+    hide();
+  });
+  document.addEventListener('click', (e) => {
+    if (!e.target.closest('#projCtxMenu')) hide();
+  });
+  document.addEventListener('contextmenu', (e) => {
+    const card = e.target.closest('.proj-item, .dept-proj-card');
+    if (!card) { hide(); return; }
+    // dept-proj-card도 동일 동작 — dataset.key 없으면 cat/name으로 구성
+    if (!card.dataset.key) {
+      // dept-proj-card는 key가 없으므로 가까운 요소에서 cat/name 추론은 어려움 — 일단 .proj-item만 지원
+      // 추후 확장
+      return;
+    }
+    e.preventDefault();
+    show(card, e.clientX, e.clientY);
+  });
 })();
 function optionHtml(list, selected) {
   return list.map(x => '<option value="' + x.key + '"' + (x.key === selected ? ' selected' : '') + '>' + x.label + '</option>').join('');
