@@ -1111,7 +1111,9 @@ body.edit-mode .node .frame { outline: 2px dashed rgba(251,191,36,0.6); outline-
   border: 1px solid;
   clip-path: polygon(2px 0, 100% 0, 100% calc(100% - 2px), calc(100% - 2px) 100%, 0 100%, 0 2px);
   min-width: 14px; text-align: center; line-height: 1.1;
+  cursor: pointer; transition: transform 0.12s ease, filter 0.12s ease;
 }
+.rmb:hover { transform: translateY(-1px) scale(1.06); filter: brightness(1.25); }
 .rmb-A { color:#fbbf24; border-color:rgba(251,191,36,0.65); background:rgba(251,191,36,0.16); box-shadow: 0 0 6px rgba(251,191,36,0.20); }
 .rmb-B { color:#34d399; border-color:rgba(52,211,153,0.55); background:rgba(52,211,153,0.10); }
 .rmb-C { color:#60a5fa; border-color:rgba(96,165,250,0.55); background:rgba(96,165,250,0.10); }
@@ -1199,6 +1201,30 @@ body.edit-mode .node .frame { outline: 2px dashed rgba(251,191,36,0.6); outline-
 .dpc-rev-C { color:#60a5fa; border-color:rgba(96,165,250,0.55); background:rgba(96,165,250,0.10); }
 .dpc-rev-D { color:#c084fc; border-color:rgba(192,132,252,0.55); background:rgba(192,132,252,0.10); }
 .dpc-rev-E { color:#94a3b8; border-color:rgba(148,163,184,0.45); background:rgba(148,163,184,0.06); }
+/* ⓐ 부서 expanded — 이 부서 매출 영향 분포 요약 */
+.dpc-rev-summary {
+  display: flex; flex-wrap: wrap; gap: 5px; align-items: center;
+  padding: 7px 9px; margin-bottom: 8px;
+  background: rgba(5,6,20,0.55);
+  border: 1px solid rgba(167,139,250,0.18);
+  clip-path: polygon(5px 0, 100% 0, 100% calc(100% - 5px), calc(100% - 5px) 100%, 0 100%, 0 5px);
+}
+.dpc-rev-summary .drs-label {
+  font-size: 9.5px; font-weight: 800; letter-spacing: 0.12em;
+  color: #8a8fad; text-transform: uppercase; margin-right: 3px;
+}
+.drs-pill {
+  font-size: 10px; font-weight: 800; letter-spacing: 0.04em;
+  padding: 2px 8px;
+  background: rgba(0,0,0,0.30);
+  border: 1px solid;
+  clip-path: polygon(2px 0, 100% 0, 100% calc(100% - 2px), calc(100% - 2px) 100%, 0 100%, 0 2px);
+}
+.drs-pill-A { color:#fbbf24; border-color:rgba(251,191,36,0.65); background:rgba(251,191,36,0.16); }
+.drs-pill-B { color:#34d399; border-color:rgba(52,211,153,0.55); background:rgba(52,211,153,0.10); }
+.drs-pill-C { color:#60a5fa; border-color:rgba(96,165,250,0.55); background:rgba(96,165,250,0.10); }
+.drs-pill-D { color:#c084fc; border-color:rgba(192,132,252,0.55); background:rgba(192,132,252,0.10); }
+.drs-pill-E { color:#94a3b8; border-color:rgba(148,163,184,0.45); background:rgba(148,163,184,0.06); }
 .dpc-role {
   font-size: 9px; font-weight: 800; letter-spacing: 0.12em; padding: 2px 7px;
   background: var(--dc); color: #0a0b22;
@@ -2780,6 +2806,9 @@ function tourGoTo(idx) {
   const owner = card.dataset.owner;
   const related = (card.dataset.related || '').split(',').filter(Boolean);
   focusProjectRelation(owner, related);  // 카메라 fit 포함
+  // ⓑ 투어 버튼 라벨에 진행률 표시 (renderProjects 안 부르고 직접 갱신 → .touring 유지)
+  const tBtn = document.querySelector('[data-tour-toggle]');
+  if (tBtn) tBtn.textContent = '⏸ ' + (idx + 1) + '/' + window.TOUR_LIST.length;
   clearTimeout(window.TOUR_TIMER);
   window.TOUR_TIMER = setTimeout(() => tourGoTo(idx + 1), 5500);
 }
@@ -2834,8 +2863,22 @@ function renderDeptRevBars() {
     const REV_SHORT = { A:'직접', B:'전환', C:'CS', D:'운영', E:'장기' };
     bar.innerHTML = ['A','B','C','D','E']
       .filter(t => c[t] > 0)
-      .map(t => '<span class="rmb rmb-' + t + '" title="매출 ' + REV_SHORT[t] + ' ' + c[t] + '건">' + REV_SHORT[t] + ' ' + c[t] + '</span>')
+      .map(t => '<span class="rmb rmb-' + t + '" data-rev="' + t + '" title="' + REV_SHORT[t] + ' ' + c[t] + '건 — 클릭하면 패널에서 ' + REV_SHORT[t] + ' 등급만 필터">' + REV_SHORT[t] + ' ' + c[t] + '</span>')
       .join('');
+    // ⓒ 미니바 클릭 → 패널 열고 그 등급 필터 (이벤트 위임 대신 매 갱신 시 부착)
+    bar.querySelectorAll('.rmb').forEach(span => {
+      span.addEventListener('click', (e) => {
+        e.stopPropagation();
+        e.preventDefault();
+        const t = span.dataset.rev;
+        if (!t) return;
+        const panel = document.getElementById('projPanel');
+        if (panel) panel.classList.add('show');
+        PROJECT_REV_FILTER = t;
+        try { localStorage.setItem('hanasm.projectRevFilter.v3', t); } catch(err) {}
+        renderProjects();
+      });
+    });
 
     // ⑥ 결정 상태 라인 (진행/보류/중단) — 미니바 바로 아래
     let act = node.querySelector('.dept-act-bar');
@@ -3362,6 +3405,27 @@ function renderDeptProjects(deptId) {
   lbl.className = 'label';
   lbl.textContent = '신규 프로젝트 · ' + items.length;
   sec.appendChild(lbl);
+  // ⓐ 이 부서의 매출 영향 분포 요약 (주관+유관 합산, 주관 별도 표시)
+  const _revCnt = {A:0,B:0,C:0,D:0,E:0};
+  const _ownerCnt = {A:0,B:0,C:0,D:0,E:0};
+  items.forEach(e => {
+    const t = e.item.revTier || 'E';
+    _revCnt[t]++;
+    if (getEffective(e.cat, e.item).ownerDept === deptId) _ownerCnt[t]++;
+  });
+  const _SHORT = { A:'직접', B:'전환', C:'CS', D:'운영', E:'장기' };
+  const _FULL  = { A:'직접매출', B:'전환개선', C:'CS전환', D:'운영', E:'장기기반' };
+  const sumDiv = document.createElement('div');
+  sumDiv.className = 'dpc-rev-summary';
+  let sumHtml = '<span class="drs-label">매출 영향</span>';
+  ['A','B','C','D','E'].forEach(t => {
+    if (_revCnt[t] > 0) {
+      const ownerNote = _ownerCnt[t] ? ' (주관 ' + _ownerCnt[t] + ')' : '';
+      sumHtml += '<span class="drs-pill drs-pill-' + t + '" title="' + _FULL[t] + ' 총 ' + _revCnt[t] + '건' + ownerNote + '">' + _SHORT[t] + ' ' + _revCnt[t] + '</span>';
+    }
+  });
+  sumDiv.innerHTML = sumHtml;
+  sec.appendChild(sumDiv);
   items.forEach(({ cat, item }) => {
     const k = cat + '::' + item.name;
     const ovr = (DECISIONS[k] || {});
