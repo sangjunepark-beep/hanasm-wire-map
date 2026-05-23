@@ -1096,6 +1096,25 @@ body.edit-mode .node .frame { outline: 2px dashed rgba(251,191,36,0.6); outline-
   color: #fff;
   box-shadow: 0 0 8px rgba(34,211,238,0.22);
 }
+/* ③ 부서 노드 매출등급 미니바 */
+.rev-mini-bar {
+  display: flex; gap: 3px; justify-content: center; flex-wrap: wrap;
+  margin-top: 5px; padding: 0 2px;
+}
+.node.dimmed .rev-mini-bar { opacity: 0.25; }
+.rmb {
+  font-size: 9px; font-weight: 800; letter-spacing: 0.04em;
+  padding: 2px 6px;
+  background: rgba(5,6,20,0.55);
+  border: 1px solid;
+  clip-path: polygon(2px 0, 100% 0, 100% calc(100% - 2px), calc(100% - 2px) 100%, 0 100%, 0 2px);
+  min-width: 14px; text-align: center; line-height: 1.1;
+}
+.rmb-A { color:#fbbf24; border-color:rgba(251,191,36,0.65); background:rgba(251,191,36,0.16); box-shadow: 0 0 6px rgba(251,191,36,0.20); }
+.rmb-B { color:#34d399; border-color:rgba(52,211,153,0.55); background:rgba(52,211,153,0.10); }
+.rmb-C { color:#60a5fa; border-color:rgba(96,165,250,0.55); background:rgba(96,165,250,0.10); }
+.rmb-D { color:#c084fc; border-color:rgba(192,132,252,0.55); background:rgba(192,132,252,0.10); }
+.rmb-E { color:#94a3b8; border-color:rgba(148,163,184,0.45); background:rgba(148,163,184,0.06); }
 
 .dept-projects-section { margin-top: 10px; padding-top: 8px; border-top: 1px dashed rgba(96,165,250,0.30); }
 .dept-projects-section .label { font-size: 10px; font-weight: 800; letter-spacing: 0.14em; color: #60a5fa; margin-bottom: 6px; position: sticky; top: 0; background: rgba(8,9,28,0.95); padding: 4px 0; z-index: 5; }
@@ -2642,6 +2661,44 @@ const PROJECTS = {
 };
 const PCATS = ['ad','ai','product','system','offline'];
 const DEPT_NAME = { web:'웹팀', cs:'CS팀', design:'디자인팀', dev:'개발팀', fin:'경영지원', sales:'외부영업', product:'제작실', factory2:'2공장' };
+
+// ③ 부서 노드 위 매출등급 미니바 — 각 부서가 주관하는 프로젝트를 A~E별로 카운트
+function renderDeptRevBars() {
+  const ALL_DEPTS = ['web','cs','design','dev','fin','sales','product','factory2'];
+  const deptRev = {};
+  ALL_DEPTS.forEach(d => deptRev[d] = {A:0,B:0,C:0,D:0,E:0});
+  PCATS.forEach(cat => {
+    const list = (typeof getAllItems === 'function') ? getAllItems(cat) : ((PROJECTS[cat] && PROJECTS[cat].items) || []);
+    list.forEach(it => {
+      const eff = (typeof getEffective === 'function') ? getEffective(cat, it) : { ownerDept: it.ownerDept };
+      const dept = eff.ownerDept;
+      if (!dept || !deptRev[dept]) return;
+      const tier = it.revTier || 'E';
+      deptRev[dept][tier]++;
+    });
+  });
+  ALL_DEPTS.forEach(deptId => {
+    const pos = (typeof POS === 'object') && POS[deptId];
+    if (!pos || !pos.el) return;
+    const node = pos.el;
+    let bar = node.querySelector('.rev-mini-bar');
+    if (!bar) {
+      bar = document.createElement('div');
+      bar.className = 'rev-mini-bar';
+      const frame = node.querySelector('.frame');
+      if (frame) frame.insertAdjacentElement('afterend', bar);
+      else node.appendChild(bar);
+    }
+    const c = deptRev[deptId];
+    const total = c.A + c.B + c.C + c.D + c.E;
+    if (!total) { bar.style.display = 'none'; return; }
+    bar.style.display = 'flex';
+    bar.innerHTML = ['A','B','C','D','E']
+      .filter(t => c[t] > 0)
+      .map(t => '<span class="rmb rmb-' + t + '" title="' + t + ' 등급 ' + c[t] + '건">' + t + ' ' + c[t] + '</span>')
+      .join('');
+  });
+}
 let DECISIONS = {};
 try { DECISIONS = JSON.parse(localStorage.getItem('hanasm.decisions') || '{}'); } catch(e) {}
 const PROJECT_ACTIONS = [
@@ -2808,8 +2865,9 @@ function focusZoomTo(deptIds) {
   camY = vh / 2 - cy * camS;
   applyCam();
 }
-function focusProjectRelation(ownerDept, related=[]) {
+function focusProjectRelation(ownerDept, related=[], opts={}) {
   // 직접/유관 시각 분리: prelit-owner(파랑), prelit-rel(그레이 점선), 나머지 dim
+  // opts.skipZoom = true 면 카메라 이동 없이 강조만 (hover 미리보기용)
   document.querySelectorAll('.node.prelit, .node.prelit-owner, .node.prelit-rel').forEach(n => {
     n.classList.remove('prelit','prelit-owner','prelit-rel');
   });
@@ -2818,12 +2876,12 @@ function focusProjectRelation(ownerDept, related=[]) {
   });
   if (!ownerDept && (!related || related.length === 0)) {
     document.body.classList.remove('proj-focus');
-    fitView();  // focus 해제 시 전체 보기로 복원
+    if (!opts.skipZoom) fitView();  // focus 해제 시 전체 보기로 복원
     return;
   }
   document.body.classList.add('proj-focus');
-  // 좌측 영역에 owner+related fit
-  focusZoomTo([ownerDept, ...(related || [])].filter(Boolean));
+  // 좌측 영역에 owner+related fit (hover에서는 생략)
+  if (!opts.skipZoom) focusZoomTo([ownerDept, ...(related || [])].filter(Boolean));
   // 직접(주관)
   if (ownerDept && POS[ownerDept]) POS[ownerDept].el.classList.add('prelit-owner');
   // 유관
@@ -2988,6 +3046,9 @@ function renderProjects() {
       }
     });
   }
+  // hover 미리보기 상태
+  if (typeof window.__projHoverTimer === 'undefined') window.__projHoverTimer = null;
+  let _lastHoverEl = null;
   document.querySelectorAll('.proj-item').forEach(el => {
     el.addEventListener('click', (e) => {
       if (e.target.closest('.pi-handle')) return;
@@ -2996,6 +3057,23 @@ function renderProjects() {
       if (e.target.closest('.dept-edit')) return;  // 주관/유관 편집 영역은 카드 클릭 무시
       focusProjectRelation(el.dataset.owner, (el.dataset.related || '').split(',').filter(Boolean));
       el.classList.toggle('open');
+    });
+    // ① 카드 hover → 맵 부서 노드 미리 강조 (카메라 이동 X)
+    el.addEventListener('mouseenter', () => {
+      clearTimeout(window.__projHoverTimer);
+      _lastHoverEl = el;
+      const owner = el.dataset.owner;
+      const related = (el.dataset.related || '').split(',').filter(Boolean);
+      focusProjectRelation(owner, related, { skipZoom: true });
+    });
+    el.addEventListener('mouseleave', () => {
+      // 120ms debounce — 인접 카드로 빠르게 이동 시 깜빡임 방지
+      window.__projHoverTimer = setTimeout(() => {
+        if (_lastHoverEl === el) {
+          focusProjectRelation(null, [], { skipZoom: true });
+          _lastHoverEl = null;
+        }
+      }, 120);
     });
   });
   // 주관 select change
@@ -3060,6 +3138,8 @@ function renderProjects() {
     });
   });
   // pi-dec(결정) 드롭다운 제거됨 (2026-05-22) - action 1개로 통합
+  // ③ 매출등급 미니바를 부서 노드에 갱신 (소유 변경/decision 변경/필터 어떤 케이스든 동기화)
+  renderDeptRevBars();
 }
 // 부서 노드 확대 시 그 부서가 주관·유관인 PROJECTS 항목 표시
 function renderDeptProjects(deptId) {
