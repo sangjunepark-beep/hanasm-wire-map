@@ -1386,28 +1386,32 @@ body:has(.proj-panel.show) .node .dept-projects-section { display: none !importa
 .dept-projects-section .label { font-size: 10px; font-weight: 800; letter-spacing: 0.14em; color: #60a5fa; margin-bottom: 6px; position: sticky; top: 0; background: rgba(8,9,28,0.95); padding: 4px 0; z-index: 5; }
 .dept-proj-card {
   margin-bottom: 6px; padding: 6px 9px;
-  background: rgba(8,9,28,0.55); border: 1px solid rgba(167,139,250,0.22);
-  border-left: 3px solid var(--dc, #a855f7);
+  background: rgba(8,9,28,0.55);
+  border: 1px solid rgba(148,163,184,0.16);
+  border-left: 3px solid rgba(148,163,184,0.35);  /* 기본 회색 */
   clip-path: polygon(5px 0, 100% 0, 100% calc(100% - 5px), calc(100% - 5px) 100%, 0 100%, 0 5px);
 }
+/* 주관 = 시안 굵게, 유관 = 회색 얇게. dec-* 색은 무시 (정신없음 제거) */
+.dept-proj-card.is-owner   { border-left: 4px solid #22d3ee; }
+.dept-proj-card.is-related { border-left: 3px solid rgba(148,163,184,0.30); opacity: 0.92; }
 .dept-proj-card.dec-go    { --dc: #22d3ee; }
 .dept-proj-card.dec-hold  { --dc: #fbbf24; }
 .dept-proj-card.dec-later { --dc: #94a3b8; }
 .dept-proj-card .dpc-h { display: flex; gap: 7px; align-items: center; flex-wrap: wrap; margin-bottom: 4px; }
-/* 부서 카드 매출등급 배지 (renderDeptProjects용) */
+/* 부서 카드 매출등급 배지 — 톤 다운 (background 거의 없음, 텍스트 색만) */
 .dpc-rev {
-  font-size: 9px; font-weight: 800; letter-spacing: 0.06em;
-  padding: 2px 7px;
-  background: rgba(0,0,0,0.30);
-  border: 1px solid;
+  font-size: 9px; font-weight: 700; letter-spacing: 0.06em;
+  padding: 1px 6px;
+  background: transparent;
+  border: 1px solid rgba(255,255,255,0.08);
   clip-path: polygon(2px 0, 100% 0, 100% calc(100% - 2px), calc(100% - 2px) 100%, 0 100%, 0 2px);
   margin-left: auto;
 }
-.dpc-rev-A { color:#fbbf24; border-color:rgba(251,191,36,0.65); background:rgba(251,191,36,0.16); box-shadow: 0 0 6px rgba(251,191,36,0.18); }
-.dpc-rev-B { color:#34d399; border-color:rgba(52,211,153,0.55); background:rgba(52,211,153,0.10); }
-.dpc-rev-C { color:#60a5fa; border-color:rgba(96,165,250,0.55); background:rgba(96,165,250,0.10); }
-.dpc-rev-D { color:#c084fc; border-color:rgba(192,132,252,0.55); background:rgba(192,132,252,0.10); }
-.dpc-rev-E { color:#94a3b8; border-color:rgba(148,163,184,0.45); background:rgba(148,163,184,0.06); }
+.dpc-rev-A { color:#fbbf24; }
+.dpc-rev-B { color:#34d399; }
+.dpc-rev-C { color:#60a5fa; }
+.dpc-rev-D { color:#c084fc; }
+.dpc-rev-E { color:#94a3b8; }
 /* ⓐ 부서 expanded — 이 부서 매출 영향 분포 요약 */
 .dpc-rev-summary {
   display: flex; flex-wrap: wrap; gap: 5px; align-items: center;
@@ -1455,18 +1459,14 @@ body:has(.proj-panel.show) .node .dept-projects-section { display: none !importa
   margin-left: auto; font-size: 9px; font-weight: 700; opacity: 0.55;
   letter-spacing: 0.10em;
 }
-.dpc-role {
-  font-size: 9px; font-weight: 800; letter-spacing: 0.12em; padding: 2px 7px;
-  background: var(--dc); color: #0a0b22;
-  clip-path: polygon(2px 0, 100% 0, 100% calc(100% - 2px), calc(100% - 2px) 100%, 0 100%, 0 2px);
-}
-.dept-proj-card.is-related .dpc-role { background: rgba(148,163,184,0.30); color: #c5c9e0; }
+/* 카드 내 주관/유관 배지 — 섹션 헤더로 이미 표시되므로 숨김 (중복 제거) */
+.dpc-role { display: none; }
 .dpc-cat { font-size: 9px; font-weight: 700; color: #8a8fad; letter-spacing: 0.10em; text-transform: uppercase; }
 .dpc-name { font-size: 11px; font-weight: 700; color: #f3f4fb; line-height: 1.25; margin-bottom: 3px; }
 .dpc-foot { display: flex; gap: 8px; align-items: center; font-size: 9.5px; color: #c5c9e0; flex-wrap: wrap; }
 .dpc-dec { font-weight: 700; }
 .dpc-when { color: #c5c9e0; }
-.dpc-prog { margin-left: auto; font-weight: 800; color: var(--dc); }
+.dpc-prog { margin-left: auto; font-weight: 800; color: #c5c9e0; }
 .dept-proj-card { cursor: pointer; transition: background 0.18s; }
 .dept-proj-card:hover { background: rgba(8,9,28,0.78); }
 .dpc-desc {
