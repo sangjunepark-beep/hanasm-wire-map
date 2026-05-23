@@ -1027,22 +1027,21 @@ body.edit-mode .node .frame { outline: 2px dashed rgba(251,191,36,0.6); outline-
 .floating-memo.expanded .fm-toggle { transform: rotate(180deg); }
 .floating-memo #memoText {
   flex: 1 1 auto;
-  margin: 0 12px 12px;
-  width: calc(100% - 24px);
-  background: rgba(5,6,20,0.70);
-  border: 1px solid rgba(34,211,238,0.25);
+  margin: 0;
+  width: 100%;
+  background: rgba(5,6,20,0.55);
+  border: none;
+  border-top: 1px solid rgba(34,211,238,0.18);
   color: #f3f4fb;
   font-family: inherit;
   font-size: 12px; line-height: 1.55;
-  padding: 9px 11px;
+  padding: 7px 14px 10px;
   resize: none;
   outline: none;
-  clip-path: polygon(4px 0, 100% 0, 100% calc(100% - 4px), calc(100% - 4px) 100%, 0 100%, 0 4px);
 }
 .floating-memo #memoText::placeholder { color: #6b7280; }
 .floating-memo #memoText:focus {
-  background: rgba(5,6,20,0.92);
-  border-color: rgba(34,211,238,0.55);
+  background: rgba(5,6,20,0.80);
 }
 /* 좁은 화면 — 좌측만 모서리로, 우측은 여전히 보드 옆에서 멈춤 */
 @media (max-width: 1100px) {
