@@ -85,6 +85,8 @@ body {
 .legend { left: 18px; }
 .controls { right: 18px; display: flex; gap: 8px; align-items: center; padding: 8px 12px; }
 .legend .row { display: flex; align-items: center; gap: 10px; margin: 5px 0; color: var(--text-2); font-weight: 500; letter-spacing: 0.04em; }
+.legend .legend-divider { height: 1px; background: var(--line); margin: 7px 0 5px; }
+.legend .legend-rev-head { font-size: 9.5px; font-weight: 800; letter-spacing: 0.14em; text-transform: uppercase; color: var(--text-3); margin-bottom: 2px; }
 .legend .sw {
   width: 10px; height: 10px;
   background: var(--c, var(--text-3));
@@ -1277,6 +1279,13 @@ body.edit-mode .node .frame { outline: 2px dashed rgba(251,191,36,0.6); outline-
   <div class="row"><span class="sw" style="--c:#60a5fa"></span> 개인사업자 · 스마트스토어</div>
   <div class="row"><span class="sw" style="--c:#a855f7"></span> 법인사업자 · 자사몰·오픈마켓</div>
   <div class="row"><span class="sw" style="--c:#c4b5fd"></span> 부서</div>
+  <div class="legend-divider"></div>
+  <div class="row legend-rev-head">매출 영향도</div>
+  <div class="row"><span class="sw" style="--c:#fbbf24"></span> 직접 — 광고·가격·신상</div>
+  <div class="row"><span class="sw" style="--c:#34d399"></span> 전환 — 주문·결제·옵션</div>
+  <div class="row"><span class="sw" style="--c:#60a5fa"></span> CS — 상담·재구매</div>
+  <div class="row"><span class="sw" style="--c:#c084fc"></span> 운영 — 자동화·처리량</div>
+  <div class="row"><span class="sw" style="--c:#94a3b8"></span> 장기 — SEO·콘텐츠</div>
 </div>
 
 <div class="controls">
@@ -2808,9 +2817,10 @@ function renderDeptRevBars() {
     const total = c.A + c.B + c.C + c.D + c.E;
     if (!total) { bar.style.display = 'none'; return; }
     bar.style.display = 'flex';
+    const REV_SHORT = { A:'직접', B:'전환', C:'CS', D:'운영', E:'장기' };
     bar.innerHTML = ['A','B','C','D','E']
       .filter(t => c[t] > 0)
-      .map(t => '<span class="rmb rmb-' + t + '" title="' + t + ' 등급 ' + c[t] + '건">' + t + ' ' + c[t] + '</span>')
+      .map(t => '<span class="rmb rmb-' + t + '" title="매출 ' + REV_SHORT[t] + ' ' + c[t] + '건">' + REV_SHORT[t] + ' ' + c[t] + '</span>')
       .join('');
 
     // ⑥ 결정 상태 라인 (진행/보류/중단) — 미니바 바로 아래
@@ -3075,12 +3085,14 @@ function renderProjects() {
            + '</div>';
 
   // 매출등급 필터 + 정렬 모드 토글 (대표 보고용)
+  const REV_FILTER_LBL = { all:'전체', A:'직접', B:'전환', C:'CS', D:'운영', E:'장기' };
+  const REV_FILTER_FULL = { all:'전체', A:'직접매출', B:'전환개선', C:'CS전환', D:'운영', E:'장기기반' };
   html += '<div class="project-revfilter">';
   ['all','A','B','C','D','E'].forEach(k => {
     const cnt = (k === 'all') ? all.length : (revCounts[k] || 0);
-    const lbl = (k === 'all') ? '전체' : k;
+    const lbl = REV_FILTER_LBL[k];
     const active = PROJECT_REV_FILTER === k ? ' active' : '';
-    html += '<button type="button" class="rf rf-' + k + active + '" data-rev-filter="' + k + '" title="매출 영향도 ' + lbl + '">' + lbl + ' <span class="rf-cnt">' + cnt + '</span></button>';
+    html += '<button type="button" class="rf rf-' + k + active + '" data-rev-filter="' + k + '" title="매출 영향도 ' + REV_FILTER_FULL[k] + '">' + lbl + ' <span class="rf-cnt">' + cnt + '</span></button>';
   });
   const sortActive = PROJECT_SORT_MODE === 'rev' ? ' active' : '';
   const sortLabel = PROJECT_SORT_MODE === 'rev' ? '등급순' : '수동순';
@@ -3154,11 +3166,11 @@ function renderProjects() {
                + (when ? '<span class="pi-when">📅 ' + when + '</span>' : '')
                + '</div>';
     const relRow = chipsHtml;
-    // 매출등급 (revTier A~E) — 미지정 시 E(장기기반) fallback
-    const REV_LABELS = { A:'직접매출', B:'전환개선', C:'CS전환', D:'운영', E:'장기' };
+    // 매출등급 (revTier A~E) — 미지정 시 E(장기기반) fallback. 표시는 한국어만, 알파벳은 코드 내부용
+    const REV_LABELS = { A:'직접매출', B:'전환개선', C:'CS전환', D:'운영', E:'장기기반' };
     const tier = it.revTier || 'E';
-    const tierLabel = REV_LABELS[tier] || '장기';
-    const revBadge = '<span class="pi-rev pi-rev-' + tier + '" title="매출 영향도 ' + tier + ' 등급">' + tier + ' ' + tierLabel + '</span>';
+    const tierLabel = REV_LABELS[tier] || '장기기반';
+    const revBadge = '<span class="pi-rev pi-rev-' + tier + '" title="매출 영향도: ' + tierLabel + '">' + tierLabel + '</span>';
     htmlList += '<div class="proj-item flat-item ' + e.cat + ' st-' + st + ' dec-' + dec + ' ' + action.cls + ' rev-' + tier + '" data-key="' + k + '" data-cat="' + e.cat + '" data-owner="' + (eff.ownerDept || '') + '" data-related="' + ((eff.related || []).join(',')) + '" data-name="' + it.name + '" data-rev="' + tier + '">'
           + '<div class="pi-tag-row"><span class="pi-tag">' + catName + '</span>' + revBadge + '</div>'
           + '<div class="pi-row">'
