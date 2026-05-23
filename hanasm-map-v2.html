@@ -974,23 +974,20 @@ body.edit-mode .node .frame { outline: 2px dashed rgba(251,191,36,0.6); outline-
 .pm-save { background: #60a5fa; color: #0b1220; border-color: #93c5fd; }
 .pm-save:hover { background: #93c5fd; box-shadow: 0 4px 12px rgba(96,165,250,0.45); }
 .proj-panel .pp-body { flex: 1; overflow-y: auto; padding: 12px 14px 18px; }
-/* 회의 메모 — 좌측 legend 옆부터, 우측 프로젝트 보드(width 460 + right 18) 옆까지만. 그 자리에서 위로 슬라이드 */
+/* 회의 메모 — 좌측 legend 옆부터, 우측 프로젝트 보드 옆까지. 그 자리에서 위로만 슬라이드 (떠오르는 효과 X) */
 .floating-memo {
   position: fixed;
   bottom: 0;
-  left: 250px;     /* legend 옆 */
-  right: 490px;    /* 프로젝트 보드 옆에서 멈춤 (460 + 18 + 12 여유) */
+  left: 250px;
+  right: 490px;
   width: auto;
   z-index: 115;
   background: rgba(8,9,28,0.94);
-  border: 1px solid rgba(34,211,238,0.40);
-  border-bottom: none;
+  border-top: 1px solid rgba(34,211,238,0.30);
   display: flex; flex-direction: column;
   max-height: 38px;
   overflow: hidden;
   transition: max-height 0.22s cubic-bezier(.2,.7,.2,1);
-  clip-path: polygon(10px 0, 100% 0, 100% 100%, 0 100%, 0 10px);
-  box-shadow: 0 -8px 28px rgba(0,0,0,0.55);
   font-family: inherit;
 }
 .floating-memo.expanded { max-height: 130px; }
