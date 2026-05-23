@@ -2990,6 +2990,19 @@ function toggleMeetingMode(force) {
       document.exitFullscreen().catch(() => {});
     }
   } catch(e) {}
+  // ④ 회의 모드 진입 시 인트로 줌 자동 시퀀스 (3초 안 종료)
+  if (on) setTimeout(playIntroZoom, 450);
+}
+// ④ 인트로 줌: 전체 → CEO 줌인 → 전체
+function playIntroZoom() {
+  if (typeof fitView !== 'function') return;
+  fitView();
+  setTimeout(() => {
+    if (typeof cameraTo === 'function') cameraTo('ceo');
+  }, 700);
+  setTimeout(() => {
+    fitView();
+  }, 2100);
 }
 document.addEventListener('keydown', (e) => {
   // input/textarea 입력 중에는 단축키 무시
