@@ -974,12 +974,12 @@ body.edit-mode .node .frame { outline: 2px dashed rgba(251,191,36,0.6); outline-
 .pm-save { background: #60a5fa; color: #0b1220; border-color: #93c5fd; }
 .pm-save:hover { background: #93c5fd; box-shadow: 0 4px 12px rgba(96,165,250,0.45); }
 .proj-panel .pp-body { flex: 1; overflow-y: auto; padding: 12px 14px 18px; }
-/* 회의 메모 — 화면 하단 가로로 길게 (legend ↔ controls 사이). 그 자리에서 위로 펼침 */
+/* 회의 메모 — 좌측 legend 옆부터, 우측 프로젝트 보드(width 460 + right 18) 옆까지만. 그 자리에서 위로 슬라이드 */
 .floating-memo {
   position: fixed;
   bottom: 0;
   left: 250px;     /* legend 옆 */
-  right: 120px;    /* controls 옆 */
+  right: 490px;    /* 프로젝트 보드 옆에서 멈춤 (460 + 18 + 12 여유) */
   width: auto;
   z-index: 115;
   background: rgba(8,9,28,0.94);
@@ -1047,12 +1047,12 @@ body.edit-mode .node .frame { outline: 2px dashed rgba(251,191,36,0.6); outline-
   background: rgba(5,6,20,0.92);
   border-color: rgba(34,211,238,0.55);
 }
-/* 좁은 화면 — 양쪽 모서리까지 더 끌어옴 */
+/* 좁은 화면 — 좌측만 모서리로, 우측은 여전히 보드 옆에서 멈춤 */
 @media (max-width: 1100px) {
-  .floating-memo { left: 18px; right: 18px; }
+  .floating-memo { left: 18px; right: 490px; }
 }
 @media (max-width: 720px) {
-  .floating-memo { left: 10px; right: 10px; }
+  .floating-memo { left: 10px; right: 10px; }  /* 모바일은 보드 미사용 가정 */
 }
 .proj-panel .pp-body::-webkit-scrollbar { width: 8px; }
 .proj-panel .pp-body::-webkit-scrollbar-track { background: rgba(96,165,250,0.06); }
