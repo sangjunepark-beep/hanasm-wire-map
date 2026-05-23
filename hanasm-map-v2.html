@@ -1385,12 +1385,16 @@ body.edit-mode .node .frame { outline: 2px dashed rgba(251,191,36,0.6); outline-
 body:has(.proj-panel.show) .node .dept-projects-section { display: none !important; }
 .dept-projects-section .label { font-size: 10px; font-weight: 800; letter-spacing: 0.14em; color: #60a5fa; margin-bottom: 6px; position: sticky; top: 0; background: rgba(8,9,28,0.95); padding: 4px 0; z-index: 5; }
 .dept-proj-card {
-  margin-bottom: 6px; padding: 6px 9px;
+  margin-bottom: 3px; padding: 7px 10px;
   background: rgba(8,9,28,0.55);
-  border: 1px solid rgba(148,163,184,0.16);
+  border: 1px solid rgba(148,163,184,0.14);
+  border-bottom: 1px solid rgba(148,163,184,0.22);
   border-left: 3px solid rgba(148,163,184,0.35);  /* 기본 회색 */
   clip-path: polygon(5px 0, 100% 0, 100% calc(100% - 5px), calc(100% - 5px) 100%, 0 100%, 0 5px);
 }
+/* 지그재그 — 카드끼리 시각 분리 (한 줄씩 밝게/어둡게) */
+.dept-proj-card.zebra-a { background: rgba(8,9,28,0.62); }
+.dept-proj-card.zebra-b { background: rgba(28,32,58,0.55); }
 /* 주관 = 시안 굵게, 유관 = 회색 얇게. dec-* 색은 무시 (정신없음 제거) */
 .dept-proj-card.is-owner   { border-left: 4px solid #22d3ee; }
 .dept-proj-card.is-related { border-left: 3px solid rgba(148,163,184,0.30); opacity: 0.92; }
@@ -3948,6 +3952,7 @@ function renderDeptProjects(deptId) {
   const _ownerTotal = items.filter(e => getEffective(e.cat, e.item).ownerDept === deptId).length;
   const _relTotal = items.length - _ownerTotal;
   let _prevIsOwner = null;
+  let _zebraIdx = 0;  // 카드 zebra 인덱스 (그룹 바뀌면 reset)
   items.forEach(({ cat, item }) => {
     const _isOwnerCard = getEffective(cat, item).ownerDept === deptId;
     if (_prevIsOwner !== _isOwnerCard) {
@@ -3959,6 +3964,7 @@ function renderDeptProjects(deptId) {
                    + '<span class="dgh-sort">매출 영향도 순</span>';
       sec.appendChild(_h);
       _prevIsOwner = _isOwnerCard;
+      _zebraIdx = 0;  // 새 그룹 시작 시 zebra reset
     }
     const k = cat + '::' + item.name;
     const ovr = (DECISIONS[k] || {});
@@ -3971,7 +3977,9 @@ function renderDeptProjects(deptId) {
     const dpcTier = item.revTier || 'E';
     const dpcTierLabel = DPC_REV_LABELS[dpcTier] || '장기기반';
     const card = document.createElement('div');
-    card.className = 'dept-proj-card dec-' + dec + ' ' + action.cls + (isOwner ? ' is-owner' : ' is-related') + ' rev-' + dpcTier;
+    const zebraCls = (_zebraIdx % 2 === 0) ? 'zebra-a' : 'zebra-b';
+    _zebraIdx++;
+    card.className = 'dept-proj-card dec-' + dec + ' ' + action.cls + (isOwner ? ' is-owner' : ' is-related') + ' rev-' + dpcTier + ' ' + zebraCls;
     card.dataset.rev = dpcTier;
     const descBlock = item.desc ? '<div class="dpc-desc">' + formatDesc(item.desc) + '</div>' : '';
     card.innerHTML =
