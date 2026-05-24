@@ -3,200 +3,292 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>HANASM V3 · 매출 매트릭스 (대표 보고)</title>
+<title>HANASM V3 · 대표 보고 (4분면 우선순위)</title>
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
 :root {
   --bg-0:#050614; --bg-1:#0a0b22; --bg-2:#12142e;
-  --line:rgba(167,139,250,0.20); --line-strong:rgba(34,211,238,0.50);
+  --line:rgba(167,139,250,0.18); --line-strong:rgba(34,211,238,0.45);
   --text-1:#f3f4fb; --text-2:#c5c9e0; --text-3:#8a8fad;
   --rev-A:#fbbf24; --rev-B:#34d399; --rev-C:#60a5fa; --rev-D:#c084fc; --rev-E:#94a3b8;
-  --cat-ad:#fbbf24; --cat-ai:#c084fc; --cat-product:#34d399; --cat-system:#60a5fa; --cat-offline:#fb923c;
+  --gold:#fbbf24; --gold-strong:#f59e0b;
+  --danger:#fb7185; --info:#22d3ee; --muted:#94a3b8;
 }
 html, body {
   height: 100vh; overflow: hidden;
   background: var(--bg-0); color: var(--text-1);
-  font-family: "JetBrains Mono", "Inter", "Pretendard", "Noto Sans KR", monospace, system-ui;
-  -webkit-font-smoothing: antialiased; letter-spacing: 0.01em; font-weight: 500;
+  font-family: "Pretendard", "Noto Sans KR", "Inter", system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased; letter-spacing: 0.01em;
 }
 body {
   background:
-    radial-gradient(ellipse at 80% 80%, rgba(251,191,36,0.06), transparent 55%),
-    radial-gradient(ellipse at 20% 80%, rgba(96,165,250,0.05), transparent 55%),
-    radial-gradient(ellipse at 50% 0%, rgba(167,139,250,0.04), transparent 60%),
-    linear-gradient(180deg, #050614 0%, #07091b 50%, #050614 100%);
+    radial-gradient(ellipse at 20% 30%, rgba(251,113,133,0.06), transparent 55%),
+    radial-gradient(ellipse at 80% 90%, rgba(34,211,238,0.05), transparent 55%),
+    linear-gradient(180deg, #050614 0%, #08091f 50%, #050614 100%);
 }
 
+/* TOP BAR */
 .topbar {
   position: fixed; top: 0; left: 0; right: 0; z-index: 100;
-  height: 56px; padding: 0 20px;
-  display: flex; align-items: center; gap: 18px;
-  background: rgba(5,6,20,0.85);
+  height: 56px; padding: 0 22px;
+  display: flex; align-items: center; gap: 16px;
+  background: rgba(5,6,20,0.92);
   border-bottom: 1px solid var(--line);
 }
-.brand {
-  display: flex; align-items: center; gap: 10px;
-  font-size: 13px; font-weight: 900; letter-spacing: 0.14em;
-  background: linear-gradient(90deg, #fbbf24, #22d3ee);
-  -webkit-background-clip: text; background-clip: text; color: transparent;
-}
+.brand { display: flex; align-items: center; gap: 10px; }
 .brand .ver {
-  font-size: 10px; padding: 3px 7px; font-weight: 900;
-  background: #fbbf24; color: #050614;
-  letter-spacing: 0.08em;
+  font-size: 10.5px; padding: 3px 8px; font-weight: 900;
+  background: var(--gold); color: #050614;
+  letter-spacing: 0.10em;
   clip-path: polygon(4px 0, 100% 0, 100% calc(100% - 4px), calc(100% - 4px) 100%, 0 100%, 0 4px);
 }
-.brand h1 { font-size: 13px; font-weight: 900; }
-.search-wrap { flex: 0 1 320px; position: relative; }
+.brand h1 {
+  font-size: 14px; font-weight: 900; letter-spacing: 0.06em;
+  background: linear-gradient(90deg, var(--gold), var(--info));
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+.search-wrap { flex: 0 1 280px; position: relative; }
 #search {
   width: 100%; height: 32px;
-  background: rgba(8,9,28,0.78);
+  background: rgba(8,9,28,0.80);
   border: 1px solid var(--line);
   color: var(--text-1); font-family: inherit; font-size: 12px;
   padding: 0 12px; outline: none;
   clip-path: polygon(4px 0, 100% 0, 100% calc(100% - 4px), calc(100% - 4px) 100%, 0 100%, 0 4px);
 }
-#search:focus { border-color: rgba(34,211,238,0.55); background: rgba(8,9,28,0.95); }
+#search:focus { border-color: rgba(34,211,238,0.55); background: rgba(8,9,28,0.96); }
 #search::placeholder { color: var(--text-3); }
-.bulk-actions {
-  display: flex; gap: 6px; align-items: center;
-  margin-left: auto;
-  font-size: 11px; color: var(--text-3);
-}
+
+.bulk-actions { display: flex; gap: 6px; align-items: center; margin-left: auto; }
 .bulk-actions .bulk-cnt {
-  font-size: 10px; font-weight: 800; color: #fbbf24;
-  padding: 3px 8px;
+  font-size: 10.5px; font-weight: 800; color: var(--gold);
+  padding: 4px 9px;
   background: rgba(251,191,36,0.12);
-  border: 1px solid rgba(251,191,36,0.40);
+  border: 1px solid rgba(251,191,36,0.45);
   clip-path: polygon(3px 0, 100% 0, 100% calc(100% - 3px), calc(100% - 3px) 100%, 0 100%, 0 3px);
 }
 .bulk-actions button {
   font-family: inherit; cursor: pointer;
   padding: 5px 10px; font-size: 10.5px; font-weight: 800;
-  letter-spacing: 0.06em;
-  background: rgba(8,9,28,0.70); border: 1px solid var(--line);
+  letter-spacing: 0.04em;
+  background: rgba(8,9,28,0.80); border: 1px solid var(--line);
   color: var(--text-2);
   clip-path: polygon(3px 0, 100% 0, 100% calc(100% - 3px), calc(100% - 3px) 100%, 0 100%, 0 3px);
 }
-.bulk-actions button:hover { color: #fff; border-color: rgba(34,211,238,0.5); background: rgba(34,211,238,0.10); }
-.bulk-actions button.danger:hover { border-color: rgba(251,191,36,0.6); color: #fbbf24; background: rgba(251,191,36,0.10); }
-.bulk-actions button:disabled { opacity: 0.35; cursor: not-allowed; }
+.bulk-actions button:hover { color: #fff; border-color: var(--info); background: rgba(34,211,238,0.12); }
+.bulk-actions button.danger:hover { border-color: var(--gold); color: var(--gold); background: rgba(251,191,36,0.10); }
+.bulk-actions button:disabled { opacity: 0.32; cursor: not-allowed; }
 .v2-link {
-  font-size: 11px; font-weight: 700; letter-spacing: 0.10em; text-transform: uppercase;
-  color: #67e8f9; text-decoration: none;
-  padding: 5px 11px; border: 1px solid rgba(34,211,238,0.40);
+  font-size: 11px; font-weight: 800; letter-spacing: 0.10em; text-transform: uppercase;
+  color: var(--info); text-decoration: none;
+  padding: 5px 11px; border: 1px solid rgba(34,211,238,0.45);
   clip-path: polygon(4px 0, 100% 0, 100% calc(100% - 4px), calc(100% - 4px) 100%, 0 100%, 0 4px);
 }
 .v2-link:hover { background: rgba(34,211,238,0.15); color: #fff; }
 
-.app {
-  position: fixed; top: 56px; left: 0; right: 0; bottom: 0;
-  display: grid; grid-template-columns: 1fr 360px;
+/* HERO BAR — 4분면 의미 설명 (대표가 첫 화면에서 즉시 인식) */
+.hero {
+  position: fixed; top: 56px; left: 0; right: 0;
+  padding: 14px 22px;
+  background: rgba(8,9,28,0.60);
+  border-bottom: 1px solid var(--line);
+  display: flex; align-items: center; gap: 18px;
+  font-size: 12.5px; color: var(--text-2);
+  z-index: 90;
 }
-.matrix-pane { position: relative; padding: 32px 40px 40px 64px; overflow: hidden; }
-#matrix {
-  position: relative;
-  width: 100%; height: 100%;
-  background: linear-gradient(to right, rgba(167,139,250,0.04) 0, transparent 50%, rgba(251,191,36,0.05) 100%);
+.hero .hk { font-size: 11px; font-weight: 900; letter-spacing: 0.18em; color: var(--text-3); text-transform: uppercase; }
+.hero .hl { color: var(--text-1); }
+.hero .hl b { color: var(--danger); font-weight: 800; }
+.hero .axis { margin-left: auto; display: flex; gap: 16px; align-items: center; font-size: 10.5px; color: var(--text-3); }
+.hero .axis-chip {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 3px 8px;
+  background: rgba(255,255,255,0.04);
   border: 1px solid var(--line);
-  clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px);
+  font-weight: 700;
 }
-.quadrant { position: absolute; pointer-events: none; }
-.q-tl { top: 0; left: 0;     width: 50%; height: 50%; border-right: 1px dashed var(--line); border-bottom: 1px dashed var(--line); }
-.q-tr { top: 0; right: 0;    width: 50%; height: 50%; border-bottom: 1px dashed var(--line); }
-.q-bl { bottom: 0; left: 0;  width: 50%; height: 50%; border-right: 1px dashed var(--line); }
-.q-br { bottom: 0; right: 0; width: 50%; height: 50%;
-  background: radial-gradient(circle at 80% 80%, rgba(251,77,77,0.10), transparent 65%);
+.hero .axis-chip .dot {
+  width: 8px; height: 8px; background: var(--c);
+  display: inline-block;
 }
-.q-label {
-  position: absolute;
-  font-size: 11px; font-weight: 900; letter-spacing: 0.18em;
-  color: var(--text-3); text-transform: uppercase;
-  padding: 6px 11px;
-  background: rgba(5,6,20,0.6);
+
+/* APP — 4컬럼 + 우측 디테일 */
+.app {
+  position: fixed; top: 110px; left: 0; right: 0; bottom: 0;
+  display: grid; grid-template-columns: repeat(4, 1fr) 360px;
+  gap: 10px; padding: 12px 14px 14px;
+  overflow: hidden;
+}
+.col {
+  background: rgba(8,9,28,0.55);
+  border: 1px solid var(--line);
+  display: flex; flex-direction: column;
+  overflow: hidden;
+  clip-path: polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px);
+  position: relative;
+}
+.col.col-blocked {
+  background: linear-gradient(180deg, rgba(251,113,133,0.10), rgba(251,113,133,0.02) 30%);
+  border-color: rgba(251,113,133,0.45);
+  box-shadow: 0 0 24px rgba(251,113,133,0.10) inset;
+}
+.col.col-foray {
+  background: linear-gradient(180deg, rgba(251,191,36,0.10), rgba(251,191,36,0.02) 30%);
+  border-color: rgba(251,191,36,0.40);
+}
+.col.col-finish {
+  background: linear-gradient(180deg, rgba(34,211,238,0.06), rgba(34,211,238,0.01) 30%);
+  border-color: rgba(34,211,238,0.30);
+}
+.col.col-later {
+  background: linear-gradient(180deg, rgba(148,163,184,0.06), rgba(148,163,184,0.01) 30%);
+  border-color: rgba(148,163,184,0.30);
+}
+.col-head {
+  padding: 14px 14px 12px;
+  border-bottom: 1px solid var(--line);
+  position: sticky; top: 0; z-index: 2;
+  background: rgba(5,6,20,0.92);
+}
+.col-head .ch-title {
+  display: flex; align-items: center; gap: 10px;
+  font-size: 15px; font-weight: 900; letter-spacing: 0.04em;
+}
+.col-head .ch-cnt {
+  margin-left: auto;
+  font-size: 11px; font-weight: 800;
+  padding: 2px 8px;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid var(--line);
+  letter-spacing: 0.04em;
   clip-path: polygon(3px 0, 100% 0, 100% calc(100% - 3px), calc(100% - 3px) 100%, 0 100%, 0 3px);
 }
-.q-label.gold { color: #fbbf24; border: 1px solid rgba(251,191,36,0.40); }
-.q-label.danger { color: #fb7185; border: 1px solid rgba(251,113,133,0.50); background: rgba(251,113,133,0.10); }
-.q-label.dim { color: var(--text-3); border: 1px solid var(--line); }
-.axis-x, .axis-y {
-  position: absolute;
-  font-size: 10px; font-weight: 800;
-  letter-spacing: 0.14em; text-transform: uppercase;
-  color: var(--text-3);
-  pointer-events: none;
+.col-head .ch-axis {
+  font-size: 10px; font-weight: 700; letter-spacing: 0.10em;
+  color: var(--text-3); margin-top: 5px; text-transform: uppercase;
 }
-.axis-x { left: 64px; right: 40px; bottom: 12px; text-align: center; }
-.axis-y { left: 12px; top: 32px; bottom: 40px;
-  writing-mode: vertical-rl; transform: rotate(180deg); text-align: center;
+.col-blocked .ch-title { color: var(--danger); }
+.col-foray   .ch-title { color: var(--gold); }
+.col-finish  .ch-title { color: var(--info); }
+.col-later   .ch-title { color: var(--muted); }
+.col-body {
+  flex: 1; overflow-y: auto; padding: 10px;
+  display: flex; flex-direction: column; gap: 8px;
+  scrollbar-width: thin; scrollbar-color: rgba(167,139,250,0.40) transparent;
 }
-.axis-tick { position: absolute; font-size: 9px; font-weight: 700; color: var(--text-3); pointer-events: none; }
-.card {
-  position: absolute;
-  cursor: pointer;
-  transition: transform 0.15s ease, filter 0.15s ease, opacity 0.15s ease;
-  z-index: 5;
+.col-empty {
+  margin: 24px auto; text-align: center;
+  color: var(--text-3); font-size: 11.5px; line-height: 1.7;
+  padding: 14px;
 }
-.card:hover { transform: translate(-50%, 50%) scale(1.35); z-index: 20; }
-.card.selected { z-index: 25; }
-.card .dot {
-  width: 16px; height: 16px;
-  background: var(--c, #94a3b8);
-  border: 1.5px solid rgba(0,0,0,0.5);
-  box-shadow: 0 0 6px var(--c, #94a3b8);
-  clip-path: polygon(4px 0, 100% 0, 100% calc(100% - 4px), calc(100% - 4px) 100%, 0 100%, 0 4px);
-}
-.card.prio-h .dot { width: 22px; height: 22px; }
-.card.prio-l .dot { width: 11px; height: 11px; }
-.card.rev-A .dot { background: var(--rev-A); box-shadow: 0 0 10px var(--rev-A); }
-.card.rev-B .dot { background: var(--rev-B); box-shadow: 0 0 8px var(--rev-B); }
-.card.rev-C .dot { background: var(--rev-C); box-shadow: 0 0 7px var(--rev-C); }
-.card.rev-D .dot { background: var(--rev-D); box-shadow: 0 0 7px var(--rev-D); }
-.card.rev-E .dot { background: var(--rev-E); box-shadow: 0 0 5px var(--rev-E); }
-.card.selected .dot {
-  outline: 2px solid #22d3ee;
-  outline-offset: 3px;
-  box-shadow: 0 0 18px currentColor !important;
-}
-.card.dim { opacity: 0.15; }
-.card.matched .dot {
-  outline: 2px solid #fbbf24;
-  outline-offset: 2px;
-  filter: brightness(1.4);
-}
-.card .label {
-  position: absolute; left: 50%; bottom: 100%;
-  transform: translate(-50%, -6px);
-  background: rgba(5,6,20,0.96);
-  border: 1px solid var(--line-strong);
-  color: var(--text-1);
-  font-size: 10.5px; font-weight: 700;
-  padding: 4px 8px;
-  white-space: nowrap;
-  pointer-events: none;
-  display: none;
-  z-index: 50;
-}
-.card:hover .label, .card.selected .label { display: block; }
 
-.detail-pane {
-  border-left: 1px solid var(--line);
-  background: rgba(5,6,20,0.55);
+/* CARD */
+.card {
+  background: rgba(8,9,28,0.75);
+  border: 1px solid var(--line);
+  border-left: 4px solid var(--c, var(--muted));
+  padding: 9px 11px;
+  cursor: pointer;
+  transition: transform 0.10s ease, background 0.10s ease, box-shadow 0.10s ease;
+  clip-path: polygon(5px 0, 100% 0, 100% calc(100% - 5px), calc(100% - 5px) 100%, 0 100%, 0 5px);
+}
+.card.rev-A { --c: var(--rev-A); }
+.card.rev-B { --c: var(--rev-B); }
+.card.rev-C { --c: var(--rev-C); }
+.card.rev-D { --c: var(--rev-D); }
+.card.rev-E { --c: var(--rev-E); }
+.card:hover { background: rgba(20,22,46,0.90); transform: translateX(2px); }
+.card.selected {
+  border: 1.5px solid var(--info);
+  border-left: 4px solid var(--c);
+  box-shadow: 0 0 0 1px rgba(34,211,238,0.40), 0 0 14px rgba(34,211,238,0.18);
+  background: rgba(34,211,238,0.06);
+}
+.card.dim { opacity: 0.20; }
+.card.matched {
+  border-left-width: 5px;
+  box-shadow: 0 0 12px rgba(251,191,36,0.30);
+}
+.card .c-top {
+  display: flex; align-items: center; gap: 7px; margin-bottom: 5px;
+}
+.card .c-rev {
+  font-size: 9.5px; font-weight: 800; letter-spacing: 0.06em;
+  padding: 1px 6px; color: var(--c);
+  border: 1px solid var(--c);
+  background: rgba(0,0,0,0.30);
+  clip-path: polygon(2px 0, 100% 0, 100% calc(100% - 2px), calc(100% - 2px) 100%, 0 100%, 0 2px);
+}
+.card .c-cat {
+  font-size: 9px; font-weight: 700;
+  color: var(--text-3); letter-spacing: 0.10em;
+  text-transform: uppercase;
+}
+.card .c-act {
+  margin-left: auto;
+  font-size: 9px; font-weight: 800;
+  padding: 1px 6px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid var(--line);
+  color: var(--text-2);
+  clip-path: polygon(2px 0, 100% 0, 100% calc(100% - 2px), calc(100% - 2px) 100%, 0 100%, 0 2px);
+}
+.card .c-act.act-run { color: var(--info); border-color: rgba(34,211,238,0.40); }
+.card .c-act.act-first { color: var(--gold); border-color: rgba(251,191,36,0.55); }
+.card .c-act.act-hold { color: var(--gold); border-color: rgba(251,191,36,0.40); background: rgba(251,191,36,0.06); }
+.card .c-act.act-stop { color: var(--muted); border-color: rgba(148,163,184,0.40); }
+.card .c-name {
+  font-size: 12.5px; font-weight: 800; color: var(--text-1);
+  line-height: 1.35; margin-bottom: 6px;
+}
+.card .c-bottom {
+  display: flex; align-items: center; gap: 7px;
+  font-size: 10.5px; color: var(--text-2);
+}
+.card .c-prog-wrap {
+  flex: 1; height: 4px; background: rgba(255,255,255,0.05);
+  position: relative; overflow: hidden;
+}
+.card .c-prog-bar {
+  height: 100%; background: var(--c);
+  box-shadow: 0 0 6px var(--c);
+}
+.card .c-prog-num {
+  font-size: 11px; font-weight: 800; color: var(--text-1);
+  min-width: 36px; text-align: right;
+}
+.card .c-when {
+  font-size: 10px; color: var(--text-3);
+  margin-top: 4px;
+}
+
+/* DETAIL PANEL */
+.detail {
+  background: rgba(5,6,20,0.75);
+  border: 1px solid var(--line);
   display: flex; flex-direction: column;
+  overflow: hidden;
+  clip-path: polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px);
 }
-.detail-head { padding: 16px 18px 12px; border-bottom: 1px solid var(--line); }
+.detail-head {
+  padding: 16px 18px 14px;
+  border-bottom: 1px solid var(--line);
+}
 .detail-head .dh-label {
-  font-size: 10px; font-weight: 800; letter-spacing: 0.16em; text-transform: uppercase;
-  color: var(--text-3);
+  font-size: 10px; font-weight: 800; letter-spacing: 0.16em;
+  color: var(--text-3); text-transform: uppercase;
 }
-.detail-head h2 { font-size: 14px; margin-top: 5px; line-height: 1.4; color: var(--text-1); }
+.detail-head h2 { font-size: 14.5px; margin-top: 6px; line-height: 1.4; color: var(--text-1); }
 .detail-body { flex: 1; overflow-y: auto; padding: 14px 18px; }
 .detail-empty {
-  align-items: center; justify-content: center;
-  display: none; flex: 1; color: var(--text-3); font-size: 12px;
-  padding: 24px; text-align: center; line-height: 1.7;
+  flex: 1; align-items: center; justify-content: center;
+  display: none; color: var(--text-3); font-size: 12px;
+  padding: 24px; text-align: center; line-height: 1.85;
 }
-.detail-empty.show { display: flex; }
+.detail-empty.show { display: flex; flex-direction: column; }
+.detail-empty .em-title {
+  color: var(--text-1); font-weight: 800; font-size: 13px; margin-bottom: 10px;
+}
 .detail-content { display: none; }
 .detail-content.show { display: block; }
 .dc-meta { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
@@ -212,10 +304,10 @@ body {
 .pill-rev-D { color: var(--rev-D); border-color: rgba(192,132,252,0.50); background: rgba(192,132,252,0.08); }
 .pill-rev-E { color: var(--rev-E); border-color: rgba(148,163,184,0.40); background: rgba(148,163,184,0.06); }
 .pill-cat { color: var(--text-2); border-color: var(--line); background: rgba(167,139,250,0.05); }
-.pill-prog { color: #67e8f9; border-color: rgba(34,211,238,0.40); background: rgba(34,211,238,0.10); }
-.dc-when { font-size: 11px; color: var(--text-2); margin-bottom: 10px; }
-.dc-owner { font-size: 11px; color: var(--text-2); margin-bottom: 12px; }
-.dc-owner b { color: #67e8f9; font-weight: 800; }
+.pill-prog { color: var(--info); border-color: rgba(34,211,238,0.40); background: rgba(34,211,238,0.10); }
+.dc-when { font-size: 11.5px; color: var(--text-2); margin-bottom: 10px; }
+.dc-owner { font-size: 11.5px; color: var(--text-2); margin-bottom: 12px; }
+.dc-owner b { color: var(--info); font-weight: 800; }
 .dc-actions {
   display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 14px;
   padding-bottom: 12px; border-bottom: 1px dashed var(--line);
@@ -223,66 +315,49 @@ body {
 .dc-actions button {
   font-family: inherit; cursor: pointer;
   padding: 6px 11px; font-size: 11px; font-weight: 800;
-  letter-spacing: 0.06em;
-  background: rgba(8,9,28,0.70); border: 1px solid var(--line);
+  letter-spacing: 0.04em;
+  background: rgba(8,9,28,0.80); border: 1px solid var(--line);
   color: var(--text-2);
   clip-path: polygon(3px 0, 100% 0, 100% calc(100% - 3px), calc(100% - 3px) 100%, 0 100%, 0 3px);
 }
-.dc-actions button:hover { color: #fff; border-color: rgba(34,211,238,0.5); background: rgba(34,211,238,0.10); }
-.dc-actions button.active { background: rgba(34,211,238,0.20); color: #fff; border-color: #22d3ee; }
+.dc-actions button:hover { color: #fff; border-color: var(--info); background: rgba(34,211,238,0.10); }
+.dc-actions button.active { background: rgba(34,211,238,0.22); color: #fff; border-color: var(--info); }
 .dc-desc { font-size: 12px; line-height: 1.65; color: var(--text-2); }
 .dc-desc table { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 11px; }
 .dc-desc th, .dc-desc td { border-bottom: 1px dashed var(--line); padding: 5px 7px; text-align: left; }
 .dc-desc th { color: var(--text-2); font-weight: 800; }
 .dc-desc b { color: var(--text-1); }
 
-.legend {
-  position: fixed; left: 18px; bottom: 18px; z-index: 50;
-  background: rgba(8,9,28,0.85);
-  border: 1px solid var(--line);
-  padding: 10px 12px;
-  font-size: 10.5px; color: var(--text-2);
-  clip-path: polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px);
-}
-.legend .ltitle {
-  font-size: 9.5px; font-weight: 800; letter-spacing: 0.14em;
-  color: var(--text-3); text-transform: uppercase; margin-bottom: 5px;
-}
-.legend .row { display: flex; align-items: center; gap: 8px; margin: 3px 0; }
-.legend .sw { width: 10px; height: 10px; background: var(--c); box-shadow: 0 0 5px var(--c); }
-.legend .hint {
-  margin-top: 8px; padding-top: 7px;
-  border-top: 1px dashed var(--line);
-  font-size: 9.5px; color: var(--text-3); line-height: 1.6;
-}
-.legend .hint kbd {
-  display: inline-block;
-  padding: 1px 5px; margin: 0 2px;
-  background: rgba(34,211,238,0.10);
-  border: 1px solid rgba(34,211,238,0.30);
-  color: #67e8f9; font-size: 9px;
-}
-
+/* LOADING / ERROR */
 .loading {
   position: fixed; inset: 56px 0 0 0;
   display: flex; align-items: center; justify-content: center;
   color: var(--text-3); font-size: 13px; letter-spacing: 0.12em;
 }
 .error {
-  color: #fb7185; padding: 24px; max-width: 600px; margin: 80px auto;
+  color: var(--danger); padding: 24px; max-width: 600px; margin: 80px auto;
   background: rgba(251,113,133,0.06);
   border: 1px solid rgba(251,113,133,0.30);
   font-size: 13px; line-height: 1.7;
 }
-.error h3 { font-size: 16px; margin-bottom: 12px; color: #fb7185; }
+.error h3 { font-size: 16px; margin-bottom: 12px; color: var(--danger); }
 
-@media (max-width: 1100px) {
-  .app { grid-template-columns: 1fr 300px; }
-  .matrix-pane { padding: 24px 20px 32px 50px; }
+@media (max-width: 1400px) {
+  .app { grid-template-columns: repeat(4, 1fr) 320px; }
 }
-@media (max-width: 800px) {
-  .app { grid-template-columns: 1fr; }
-  .detail-pane { display: none; }
+@media (max-width: 1200px) {
+  .app { grid-template-columns: repeat(2, 1fr) 320px; grid-template-rows: 1fr 1fr; }
+  .col:nth-child(1) { grid-column: 1; grid-row: 1; }
+  .col:nth-child(2) { grid-column: 2; grid-row: 1; }
+  .col:nth-child(3) { grid-column: 1; grid-row: 2; }
+  .col:nth-child(4) { grid-column: 2; grid-row: 2; }
+  .detail { grid-column: 3; grid-row: 1 / 3; }
+  .hero .axis { display: none; }
+}
+@media (max-width: 900px) {
+  .app { grid-template-columns: 1fr; grid-template-rows: auto; overflow-y: auto; }
+  .col, .detail { grid-column: 1 !important; grid-row: auto !important; min-height: 320px; }
+  .hero { font-size: 11px; padding: 10px 16px; }
 }
 </style>
 </head>
@@ -291,10 +366,10 @@ body {
 <header class="topbar">
   <div class="brand">
     <span class="ver">V3</span>
-    <h1>매출 매트릭스 · 대표 보고</h1>
+    <h1>대표 보고 — 4분면 우선순위</h1>
   </div>
   <div class="search-wrap">
-    <input id="search" type="text" placeholder="🔍 검색 — 프로젝트명·부서·매출등급 (Ctrl+K)" autocomplete="off">
+    <input id="search" type="text" placeholder="🔍 검색 (Ctrl+K)" autocomplete="off">
   </div>
   <div class="bulk-actions">
     <span class="bulk-cnt" id="bulkCnt">선택 0</span>
@@ -307,54 +382,67 @@ body {
   <a class="v2-link" href="hanasm-map-v2.html" title="와이어 맵으로">← 와이어 맵</a>
 </header>
 
+<div class="hero">
+  <span class="hk">대표 1순위</span>
+  <span class="hl"><b>💎 막힌 금광</b> — 매출 영향 큰데 진행이 막힌 프로젝트부터 풀어야 합니다.</span>
+  <div class="axis">
+    <span class="axis-chip"><span class="dot" style="--c:#fbbf24"></span>직접</span>
+    <span class="axis-chip"><span class="dot" style="--c:#34d399"></span>전환</span>
+    <span class="axis-chip"><span class="dot" style="--c:#60a5fa"></span>CS</span>
+    <span class="axis-chip"><span class="dot" style="--c:#c084fc"></span>운영</span>
+    <span class="axis-chip"><span class="dot" style="--c:#94a3b8"></span>장기</span>
+  </div>
+</div>
+
 <main class="app">
-  <section class="matrix-pane">
-    <div id="matrix">
-      <div class="quadrant q-tl"></div>
-      <div class="quadrant q-tr"></div>
-      <div class="quadrant q-bl"></div>
-      <div class="quadrant q-br"></div>
-      <div class="q-label dim"    style="top: 14px; left: 14px;">✓ 마무리</div>
-      <div class="q-label gold"   style="top: 14px; right: 14px;">⚡ 주력</div>
-      <div class="q-label dim"    style="bottom: 30px; left: 14px;">💤 나중에</div>
-      <div class="q-label danger" style="bottom: 30px; right: 14px;">💎 막힌 금광</div>
-      <div class="axis-tick" style="left: -36px; top: 8px;">100%</div>
-      <div class="axis-tick" style="left: -32px; top: 50%; transform: translateY(-50%);">50%</div>
-      <div class="axis-tick" style="left: -22px; bottom: 32px;">0%</div>
+  <section class="col col-blocked" data-quad="blocked">
+    <div class="col-head">
+      <div class="ch-title">💎 막힌 금광 <span class="ch-cnt" id="cnt-blocked">0</span></div>
+      <div class="ch-axis">매출↑ · 진행↓50%</div>
     </div>
-    <div class="axis-x">매출 영향도 ──→ (장기 / 운영 / CS / 전환 / 직접매출)</div>
-    <div class="axis-y">진행률 ↑</div>
+    <div class="col-body" id="body-blocked"></div>
   </section>
-  <aside class="detail-pane">
+  <section class="col col-foray" data-quad="foray">
+    <div class="col-head">
+      <div class="ch-title">⚡ 주력 <span class="ch-cnt" id="cnt-foray">0</span></div>
+      <div class="ch-axis">매출↑ · 진행↑50%</div>
+    </div>
+    <div class="col-body" id="body-foray"></div>
+  </section>
+  <section class="col col-finish" data-quad="finish">
+    <div class="col-head">
+      <div class="ch-title">✓ 마무리 <span class="ch-cnt" id="cnt-finish">0</span></div>
+      <div class="ch-axis">매출↓ · 진행↑50%</div>
+    </div>
+    <div class="col-body" id="body-finish"></div>
+  </section>
+  <section class="col col-later" data-quad="later">
+    <div class="col-head">
+      <div class="ch-title">💤 나중에 <span class="ch-cnt" id="cnt-later">0</span></div>
+      <div class="ch-axis">매출↓ · 진행↓50%</div>
+    </div>
+    <div class="col-body" id="body-later"></div>
+  </section>
+
+  <aside class="detail">
     <div class="detail-head">
       <div class="dh-label">선택 프로젝트</div>
       <h2 id="detailTitle">카드 클릭하여 시작</h2>
     </div>
     <div class="detail-empty show" id="detailEmpty">
-      매트릭스에서 카드를 클릭하면 상세 내용이 여기 표시됩니다.<br><br>
-      <span style="color:#fbbf24">⚡ 우상단</span> = 주력 · 계속 진행<br>
-      <span style="color:#fb7185">💎 우하단</span> = 막힌 금광 (매출 큰데 진행 X)<br>
-      <span style="color:#94a3b8">✓ 좌상단</span> = 마무리 (진행 거의 끝)<br>
-      <span style="color:#94a3b8">💤 좌하단</span> = 나중에 (장기 기반)
+      <div class="em-title">사용법</div>
+      <div>
+        카드 <b>클릭</b> = 단일 선택<br>
+        <b>Shift+클릭</b> = 다중 선택<br>
+        상단 <b>일괄 액션</b>으로 한 번에 결정<br>
+        <b>Ctrl+K</b> = 검색
+      </div>
     </div>
     <div class="detail-body detail-content" id="detailBody"></div>
   </aside>
 </main>
 
-<div class="legend">
-  <div class="ltitle">매출 영향도 (색)</div>
-  <div class="row"><span class="sw" style="--c:#fbbf24"></span> 직접 — 광고·가격·신상</div>
-  <div class="row"><span class="sw" style="--c:#34d399"></span> 전환 — 주문·결제·옵션</div>
-  <div class="row"><span class="sw" style="--c:#60a5fa"></span> CS — 상담·재구매</div>
-  <div class="row"><span class="sw" style="--c:#c084fc"></span> 운영 — 자동화·처리량</div>
-  <div class="row"><span class="sw" style="--c:#94a3b8"></span> 장기 — SEO·콘텐츠</div>
-  <div class="hint">
-    <kbd>클릭</kbd> 선택 · <kbd>Shift+클릭</kbd> 다중<br>
-    <kbd>Ctrl+K</kbd> 검색 · <kbd>ESC</kbd> 해제
-  </div>
-</div>
-
-<div class="loading" id="loading">PROJECTS 데이터 로딩 중…</div>
+<div class="loading" id="loading">PROJECTS 로딩 중…</div>
 
 <script>
 async function loadData() {
@@ -371,7 +459,7 @@ async function loadData() {
       '<div class="error"><h3>데이터 로드 실패</h3>' +
       '<p>' + e.message + '</p>' +
       '<p style="margin-top:12px;">GitHub Pages를 통해 열어주세요 (file:// 직접 열기는 fetch 제한).<br>' +
-      '<a style="color:#67e8f9" href="hanasm-map-v2.html">→ 와이어 맵(v2)으로 이동</a></p></div>');
+      '<a style="color:#22d3ee" href="hanasm-map-v2.html">→ 와이어 맵(v2)으로 이동</a></p></div>');
     throw e;
   }
 }
@@ -379,9 +467,10 @@ async function loadData() {
 let ITEMS = [];
 let SELECTED = new Set();
 let SEARCH_Q = '';
-const PCATS_NAMES = { ad:'광고', ai:'인공지능·자동화', product:'신상품·등록', system:'시스템·자사물', offline:'오프라인·영업' };
+const PCATS_NAMES = { ad:'광고', ai:'AI·자동화', product:'신상품·등록', system:'시스템·자사물', offline:'오프라인·영업' };
 const REV_LABEL = { A:'직접매출', B:'전환개선', C:'CS전환', D:'운영', E:'장기기반' };
-const REV_X = { E:0.10, D:0.30, C:0.50, B:0.70, A:0.90 };
+const REV_RANK = { A:5, B:4, C:3, D:2, E:1 };
+const PRIO_RANK = { h:3, m:2, l:1 };
 const ACTION_LABEL = { run:'진행', first:'우선', hold:'보류', stop:'중단', merge:'통합' };
 
 function loadProjectState() {
@@ -412,70 +501,85 @@ function setAction(key, action) {
   pushDecisionLog(key, before, action);
 }
 
-function projectXY(item) {
+// 4분면 분류
+function quadrantOf(item) {
   const tier = item.revTier || 'E';
-  return { x: REV_X[tier], y: Math.max(0, Math.min(100, item.progress || 0)) / 100 };
+  const highRev = (tier === 'A' || tier === 'B');
+  const prog = item.progress || 0;
+  const highProg = prog >= 50;
+  if (highRev && !highProg) return 'blocked';
+  if (highRev && highProg)  return 'foray';
+  if (!highRev && highProg) return 'finish';
+  return 'later';
 }
 
-function applyOffsets(items) {
-  const groups = new Map();
-  items.forEach(e => {
-    const xy = projectXY(e.item);
-    const key = Math.round(xy.x * 10) + ':' + Math.round(xy.y * 10);
-    if (!groups.has(key)) groups.set(key, []);
-    groups.get(key).push(e);
-  });
-  groups.forEach(grp => {
-    grp.forEach((e, i) => {
-      if (i === 0) { e._dx = 0; e._dy = 0; return; }
-      const angle = (i * 137.5) * Math.PI / 180;
-      const r = 14 + (i - 1) * 4;
-      e._dx = Math.cos(angle) * r;
-      e._dy = Math.sin(angle) * r;
-    });
-  });
+function sortItems(a, b) {
+  const ra = REV_RANK[a.item.revTier || 'E'];
+  const rb = REV_RANK[b.item.revTier || 'E'];
+  if (ra !== rb) return rb - ra;
+  const pa = PRIO_RANK[a.item.prio || 'l'];
+  const pb = PRIO_RANK[b.item.prio || 'l'];
+  if (pa !== pb) return pb - pa;
+  return (b.item.progress || 0) - (a.item.progress || 0);
 }
 
-function placeCards() {
-  const matrix = document.getElementById('matrix');
-  matrix.querySelectorAll('.card').forEach(c => c.remove());
-  const rect = matrix.getBoundingClientRect();
-  const padL = 10, padR = 10, padT = 10, padB = 30;
-  const W = rect.width - padL - padR;
-  const H = rect.height - padT - padB;
-  ITEMS.forEach(e => {
-    const xy = projectXY(e.item);
-    const dx = e._dx || 0, dy = e._dy || 0;
-    const left = padL + xy.x * W + dx;
-    const bottom = padB + xy.y * H + dy;
-    const c = document.createElement('div');
-    c.className = 'card prio-' + (e.item.prio || 'm') + ' rev-' + (e.item.revTier || 'E');
-    c.style.left = left + 'px';
-    c.style.bottom = bottom + 'px';
-    c.style.transform = 'translate(-50%, 50%)';
-    c.dataset.key = e.key;
-    c.innerHTML = '<div class="dot"></div><div class="label">' + escapeHtml(e.item.name) + ' · ' + (e.item.progress || 0) + '%</div>';
-    if (SELECTED.has(e.key)) c.classList.add('selected');
-    if (SEARCH_Q) {
-      const hay = (e.item.name + ' ' + (e.item.owner || '') + ' ' + (e.item.ownerDept || '') + ' ' + REV_LABEL[e.item.revTier || 'E'] + ' ' + PCATS_NAMES[e.cat]).toLowerCase();
-      if (hay.includes(SEARCH_Q.toLowerCase())) c.classList.add('matched');
-      else c.classList.add('dim');
+function renderColumns() {
+  const buckets = { blocked: [], foray: [], finish: [], later: [] };
+  ITEMS.forEach(e => buckets[quadrantOf(e.item)].push(e));
+  Object.keys(buckets).forEach(q => {
+    buckets[q].sort(sortItems);
+    const body = document.getElementById('body-' + q);
+    const cntEl = document.getElementById('cnt-' + q);
+    cntEl.textContent = buckets[q].length;
+    if (!buckets[q].length) {
+      body.innerHTML = '<div class="col-empty">해당 영역에 프로젝트 없음</div>';
+      return;
     }
-    c.addEventListener('click', (ev) => {
-      ev.stopPropagation();
-      if (ev.shiftKey) {
-        if (SELECTED.has(e.key)) SELECTED.delete(e.key);
-        else SELECTED.add(e.key);
-      } else {
-        SELECTED.clear();
-        SELECTED.add(e.key);
-      }
-      placeCards();
-      renderDetail();
-      renderBulkActions();
-    });
-    matrix.appendChild(c);
+    body.innerHTML = '';
+    buckets[q].forEach(e => body.appendChild(renderCard(e)));
   });
+}
+
+function renderCard(e) {
+  const tier = e.item.revTier || 'E';
+  const action = getAction(e.key, e.item);
+  const card = document.createElement('div');
+  card.className = 'card rev-' + tier;
+  card.dataset.key = e.key;
+  if (SELECTED.has(e.key)) card.classList.add('selected');
+  // 검색 매칭
+  if (SEARCH_Q) {
+    const hay = (e.item.name + ' ' + (e.item.owner || '') + ' ' + (e.item.ownerDept || '') + ' ' + REV_LABEL[tier] + ' ' + PCATS_NAMES[e.cat]).toLowerCase();
+    if (hay.includes(SEARCH_Q.toLowerCase())) card.classList.add('matched');
+    else card.classList.add('dim');
+  }
+  const prog = e.item.progress || 0;
+  card.innerHTML =
+    '<div class="c-top">'
+    +   '<span class="c-rev">' + REV_LABEL[tier] + '</span>'
+    +   '<span class="c-cat">' + PCATS_NAMES[e.cat] + '</span>'
+    +   '<span class="c-act act-' + action + '">' + ACTION_LABEL[action] + '</span>'
+    + '</div>'
+    + '<div class="c-name">' + escapeHtml(e.item.name) + '</div>'
+    + '<div class="c-bottom">'
+    +   '<div class="c-prog-wrap"><div class="c-prog-bar" style="width:' + prog + '%"></div></div>'
+    +   '<span class="c-prog-num">' + prog + '%</span>'
+    + '</div>'
+    + (e.item.startWhen ? '<div class="c-when">📅 ' + escapeHtml(e.item.startWhen) + '</div>' : '');
+  card.addEventListener('click', (ev) => {
+    ev.stopPropagation();
+    if (ev.shiftKey) {
+      if (SELECTED.has(e.key)) SELECTED.delete(e.key);
+      else SELECTED.add(e.key);
+    } else {
+      SELECTED.clear();
+      SELECTED.add(e.key);
+    }
+    renderColumns();
+    renderDetail();
+    renderBulkActions();
+  });
+  return card;
 }
 
 function renderDetail() {
@@ -492,7 +596,7 @@ function renderDetail() {
     emptyEl.classList.remove('show');
     bodyEl.classList.add('show');
     titleEl.textContent = '다중 선택 (' + SELECTED.size + '건)';
-    bodyEl.innerHTML = '<div class="dc-desc">상단의 일괄 액션 버튼으로 한 번에 결정하세요.<br><br>'
+    bodyEl.innerHTML = '<div class="dc-desc"><b>상단 일괄 액션</b>으로 한 번에 결정하세요.<br><br>'
       + '<b>선택된 프로젝트:</b><br>'
       + Array.from(SELECTED).map(k => {
         const e = ITEMS.find(x => x.key === k);
@@ -527,7 +631,7 @@ function renderDetail() {
     btn.addEventListener('click', () => {
       setAction(key, btn.dataset.act);
       renderDetail();
-      placeCards();
+      renderColumns();
     });
   });
 }
@@ -546,7 +650,7 @@ function applyBulk(action) {
       if (e) setAction(key, action);
     });
   }
-  placeCards();
+  renderColumns();
   renderDetail();
   renderBulkActions();
 }
@@ -574,13 +678,12 @@ function escapeHtml(s) {
       });
     });
   } catch(e) {}
-  applyOffsets(ITEMS);
-  placeCards();
+  renderColumns();
   renderBulkActions();
   const searchEl = document.getElementById('search');
   searchEl.addEventListener('input', () => {
     SEARCH_Q = searchEl.value.trim();
-    placeCards();
+    renderColumns();
   });
   document.querySelectorAll('[data-bulk]').forEach(b => {
     b.addEventListener('click', () => applyBulk(b.dataset.bulk));
@@ -594,17 +697,18 @@ function escapeHtml(s) {
     }
     if (e.key === 'Escape') {
       if (tag === 'INPUT') searchEl.blur();
-      else { SELECTED.clear(); placeCards(); renderDetail(); renderBulkActions(); }
+      else { SELECTED.clear(); renderColumns(); renderDetail(); renderBulkActions(); }
     }
   });
-  document.querySelector('.matrix-pane').addEventListener('click', (e) => {
+  // 빈 곳 클릭 = 해제
+  document.querySelector('main.app').addEventListener('click', (e) => {
     if (e.target.closest('.card')) return;
+    if (e.target.closest('.detail')) return;
     SELECTED.clear();
-    placeCards();
+    renderColumns();
     renderDetail();
     renderBulkActions();
   });
-  window.addEventListener('resize', () => placeCards());
 })();
 </script>
 </body>
