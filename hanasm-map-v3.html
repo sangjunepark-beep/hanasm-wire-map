@@ -446,6 +446,60 @@ body {
 }
 .card .c-owner b { color: var(--info); font-weight: 800; }
 
+/* 회의 메모 — v2와 같은 localStorage 키 (hanasm.meetingMemo.v3) 공유 → 양쪽 sync */
+.memo-strip {
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  z-index: 220;
+  height: 38px;
+  background: rgba(8,9,28,0.92);
+  border-top: 1px solid rgba(34,211,238,0.30);
+  display: flex; align-items: center; gap: 12px;
+  padding: 0 18px;
+  transition: height 0.22s ease;
+  overflow: hidden;
+  font-family: inherit;
+}
+.memo-strip:focus-within {
+  height: 95px;
+  background: rgba(8,9,28,0.98);
+  border-top-color: rgba(34,211,238,0.55);
+  align-items: flex-start;
+  padding-top: 8px; padding-bottom: 8px;
+}
+.memo-strip .ms-label {
+  flex: 0 0 auto;
+  font-size: 13px; font-weight: 800;
+  letter-spacing: 0.14em; color: var(--info);
+  white-space: nowrap;
+  padding-top: 1px;
+}
+.memo-strip .ms-cnt {
+  flex: 0 0 auto;
+  font-size: 11px; font-weight: 700;
+  color: var(--text-3); letter-spacing: 0.04em;
+  white-space: nowrap;
+  padding-top: 2px;
+}
+.memo-strip textarea {
+  flex: 1 1 auto;
+  background: transparent;
+  border: none; outline: none;
+  color: var(--text-1);
+  font-family: inherit;
+  font-size: 14px; line-height: 1.55;
+  resize: none;
+  padding: 0;
+  height: 22px;
+  transition: height 0.22s ease;
+  user-select: text;
+}
+.memo-strip:focus-within textarea { height: 78px; }
+.memo-strip textarea::placeholder { color: #6b7280; }
+/* 메모가 하단 38px 차지하므로 main.app 영역 bottom 보정 */
+main.app { bottom: 38px !important; transition: bottom 0.22s ease; }
+body.memo-expanded main.app { bottom: 95px !important; }
+
 /* LOADING / ERROR */
 .loading {
   position: fixed; inset: 56px 0 0 0;
@@ -590,6 +644,13 @@ body {
     </section>
   </div>
 </main>
+
+<!-- 회의 메모 (v2와 공유) -->
+<div class="memo-strip" id="floatingMemo">
+  <span class="ms-label">📝 회의 메모</span>
+  <textarea id="memoText" placeholder="회의 진행 메모 · 결정 근거 · 후속 액션 — 자동 저장 · v2 와이어 맵과 공유"></textarea>
+  <span class="ms-cnt" id="memoCnt">0자</span>
+</div>
 
 <div class="loading" id="loading">PROJECTS 로딩 중…</div>
 
@@ -1061,6 +1122,38 @@ function applyBulk(action) {
 function escapeHtml(s) {
   return String(s == null ? '' : s).replace(/[&<>"]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));
 }
+// 회의 메모 — v2와 같은 localStorage 키 공유 (hanasm.meetingMemo.v3)
+const MEMO_KEY = 'hanasm.meetingMemo.v3';
+function loadMeetingMemo() {
+  try { return localStorage.getItem(MEMO_KEY) || ''; } catch(e) { return ''; }
+}
+function saveMeetingMemo(v) {
+  try { localStorage.setItem(MEMO_KEY, v); } catch(e) {}
+}
+function bindMemo() {
+  const ta = document.getElementById('memoText');
+  const cnt = document.getElementById('memoCnt');
+  const wrap = document.getElementById('floatingMemo');
+  if (!ta) return;
+  ta.value = loadMeetingMemo();
+  if (cnt) cnt.textContent = (ta.value.length) + '자';
+  let _t = null;
+  ta.addEventListener('input', () => {
+    if (cnt) cnt.textContent = (ta.value.length) + '자';
+    clearTimeout(_t);
+    _t = setTimeout(() => saveMeetingMemo(ta.value), 300);
+  });
+  // focus 시 body 클래스 → app 영역 위로 밀어줌
+  ta.addEventListener('focus', () => document.body.classList.add('memo-expanded'));
+  ta.addEventListener('blur', () => document.body.classList.remove('memo-expanded'));
+  // 다른 탭/창에서 변경 시 sync
+  window.addEventListener('storage', (e) => {
+    if (e.key === MEMO_KEY) {
+      ta.value = e.newValue || '';
+      if (cnt) cnt.textContent = (ta.value.length) + '자';
+    }
+  });
+}
 // desc 안 가격표(<table>) 분리 — 우측 가격표 영역에 표시
 function splitDesc(desc) {
   if (!desc) return { text: '', tables: '' };
@@ -1092,6 +1185,7 @@ function splitDesc(desc) {
   renderColumns();
   renderBulkActions();
   initColumnSortable();
+  bindMemo();
   const searchEl = document.getElementById('search');
   searchEl.addEventListener('input', () => {
     SEARCH_Q = searchEl.value.trim();
