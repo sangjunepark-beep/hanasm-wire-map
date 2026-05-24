@@ -3724,12 +3724,12 @@ function focusProjectRelation(ownerDept, related=[], opts={}) {
 // 빈 곳 클릭 시 focus 해제
 document.getElementById('stage').addEventListener('click', (e) => {
   if (e.target.id === 'stage' || e.target.id === 'world') {
-    // 빈 곳 클릭 = 카드 잠금도 같이 해제
+    // 빈 곳 클릭 = 카드 잠금 해제 + 노드 강조 해제. 카메라는 그대로 (사용자가 직접 fitView 하면 됨)
     if (window.LOCKED_PROJ_KEY) {
       window.LOCKED_PROJ_KEY = null;
       document.querySelectorAll('.proj-item.locked').forEach(c => c.classList.remove('locked'));
     }
-    focusProjectRelation(null, []);
+    focusProjectRelation(null, [], { skipZoom: true });
   }
 });
 function renderProjects() {
@@ -3910,16 +3910,17 @@ function renderProjects() {
       if (e.target.closest('.dept-edit')) return;  // 주관/유관 편집 영역은 카드 클릭 무시
       if (e.target.closest('.pi-desc')) return;     // 상세내용(본문) 클릭은 닫지 않음
       if (e.target.closest('.pi-prog-wrap')) return; // 진행률 바 클릭도 무시
-      // 클릭 = 잠금 토글
+      // 카드 클릭 = 잠금 토글 + 노드 강조만. 카메라 자동 이동 X (회의 중 노이즈)
+      // 카메라 이동 원할 때: 우클릭 → '와이어 맵에서 보기'
       if (window.LOCKED_PROJ_KEY === el.dataset.key) {
         window.LOCKED_PROJ_KEY = null;
         el.classList.remove('locked');
-        focusProjectRelation(null, []);
+        focusProjectRelation(null, [], { skipZoom: true });
       } else {
         document.querySelectorAll('.proj-item.locked').forEach(c => c.classList.remove('locked'));
         window.LOCKED_PROJ_KEY = el.dataset.key;
         el.classList.add('locked');
-        focusProjectRelation(el.dataset.owner, (el.dataset.related || '').split(',').filter(Boolean));
+        focusProjectRelation(el.dataset.owner, (el.dataset.related || '').split(',').filter(Boolean), { skipZoom: true });
       }
       el.classList.toggle('open');
     });
@@ -4304,19 +4305,10 @@ document.getElementById('projToggle').addEventListener('click', () => {
   if (tp) tp.classList.remove('show');
   document.getElementById('projPanel').classList.add('show');
   renderProjects();
-  // 패널 열기 → 카메라 자동 재조정 (와이어 맵 가려지지 않게)
-  setTimeout(() => {
-    if (document.body.classList.contains('proj-focus')) return; // focus 줌 중이면 유지
-    fitView();
-  }, 50);
+  // 카메라 자동 이동 제거 (노이즈) — 필요하면 사용자가 직접 '초기화' 버튼
 });
 document.getElementById('ppClose').addEventListener('click', () => {
   document.getElementById('projPanel').classList.remove('show');
-  // 패널 닫기 → 카메라 복원
-  setTimeout(() => {
-    if (document.body.classList.contains('proj-focus')) return;
-    fitView();
-  }, 50);
 });
 
 // ===== 카테고리 필터 칩 =====
