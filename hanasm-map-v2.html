@@ -771,22 +771,22 @@ body.proj-focus svg.wires path:not(.preview-wire):not(.preview-wire-rel) { opaci
   background: rgba(8,9,28,0.8);
   border: 1px solid #a855f7;
   color: #c084fc;
-  padding: 8px 14px; font-size: 13.9px;
+  padding: 7px 12px; font-size: 12.5px;
   font-family: inherit; font-weight: 700; cursor: pointer;
-  letter-spacing: 0.12em; text-transform: uppercase;
-  clip-path: polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px);
+  letter-spacing: 0.06em; white-space: nowrap;
+  clip-path: polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px);
 }
 .proj-toggle:hover { background: rgba(167,139,250,0.18); color: #fff; }
 /* ⑤ 회의 모드 토글 */
 .meeting-toggle {
-  position: fixed; top: 16px; right: 280px; z-index: 110;
+  position: fixed; top: 16px; right: 200px; z-index: 110;
   background: rgba(8,9,28,0.8);
   border: 1px solid rgba(167,139,250,0.40);
   color: #c084fc;
-  padding: 8px 14px; font-size: 13.9px;
+  padding: 7px 12px; font-size: 12.5px;
   font-family: inherit; font-weight: 700; cursor: pointer;
-  letter-spacing: 0.12em; text-transform: uppercase;
-  clip-path: polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px);
+  letter-spacing: 0.06em; white-space: nowrap;
+  clip-path: polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px);
 }
 .meeting-toggle:hover { background: rgba(167,139,250,0.18); color: #fff; }
 body.meeting-mode .meeting-toggle {
@@ -935,7 +935,7 @@ body.edit-mode .node .frame { outline: 2px dashed rgba(251,191,36,0.6); outline-
 #editToggle.active { background: rgba(251,191,36,0.25) !important; }
 .proj-panel {
   position: fixed; top: 60px; right: 18px; bottom: 80px;
-  width: 460px; z-index: 210;
+  width: 500px; z-index: 210;
   background: rgba(8,9,28,0.94);
   border: 1px solid #a855f7;
   display: flex; flex-direction: column;
@@ -946,8 +946,12 @@ body.edit-mode .node .frame { outline: 2px dashed rgba(251,191,36,0.6); outline-
   box-shadow: -10px 0 40px rgba(0,0,0,0.55);
 }
 .proj-panel.show { transform: translateX(0); opacity: 1; pointer-events: auto; }
-.proj-panel .pp-head { padding: 14px 18px 12px; border-bottom: 1px solid rgba(167,139,250,0.22); display: flex; justify-content: space-between; align-items: center; }
-.proj-panel .pp-title { font-size: 15.2px; font-weight: 800; letter-spacing: 0.14em; text-transform: uppercase; background: linear-gradient(90deg, #c084fc, #93c5fd); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.proj-panel .pp-head { padding: 12px 14px 10px; border-bottom: 1px solid rgba(167,139,250,0.22); display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.proj-panel .pp-title { font-size: 13.5px; font-weight: 800; letter-spacing: 0.06em; background: linear-gradient(90deg, #c084fc, #93c5fd); -webkit-background-clip: text; background-clip: text; color: transparent; white-space: nowrap; flex-shrink: 0; }
+.proj-panel .pp-actions { display: flex; gap: 5px; align-items: center; flex-wrap: nowrap; }
+.proj-panel .pp-actions button, .proj-panel .pp-actions .pp-sync, .proj-panel .pp-actions .pp-add, .proj-panel .pp-actions .pp-log {
+  font-size: 11px !important; padding: 4px 8px !important; white-space: nowrap; letter-spacing: 0.02em !important;
+}
 .proj-panel .pp-x { cursor: pointer; color: #8a8fad; font-size: 17.7px; padding: 4px; }
 .proj-panel .pp-x:hover { color: #fff; }
 .proj-panel .pp-actions { display: flex; align-items: center; gap: 10px; }
@@ -2966,13 +2970,13 @@ loadPositions();
 window.addEventListener('resize', () => { fitView(); drawAllWires(); });
 </script>
 
-<button class="proj-toggle" id="undoBtn" style="right: 290px; display: none;">↶ 되돌리기 <span id="undoCnt" style="opacity:0.7;">0</span></button>
-<button class="proj-toggle" id="editToggle" style="right: 175px;">✎ 편집</button>
+<button class="proj-toggle" id="undoBtn" style="right: 360px; display: none;">↶ 되돌리기 <span id="undoCnt" style="opacity:0.7;">0</span></button>
+<button class="proj-toggle" id="editToggle" style="right: 290px;">✎ 편집</button>
+<button class="meeting-toggle" id="meetingToggle" title="회의 모드 — 단축키 P / 해제 ESC">⛶ 회의</button>
 <button class="proj-toggle" id="projToggle">≡ 신규 프로젝트</button>
-<button class="meeting-toggle" id="meetingToggle" title="회의 모드 — 단축키 P / 해제 ESC">⛶ 회의 모드</button>
 <aside class="proj-panel" id="projPanel">
   <div class="pp-head">
-    <div class="pp-title">신규 프로젝트 판단 보드</div>
+    <div class="pp-title">프로젝트 보드</div>
     <div class="pp-actions">
       <button type="button" class="pp-sync" id="ppSync" title="GitHub와 동기화 (다른 PC와 공유)">⟳ 동기화</button>
       <button type="button" class="pp-add" id="ppAdd" title="프로젝트 새로 추가">＋ 추가</button>
