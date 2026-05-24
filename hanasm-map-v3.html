@@ -95,28 +95,61 @@ body {
   gap: 8px; padding: 10px 14px 14px;
 }
 
-/* DETAIL (상단 가로 전체) */
+/* DETAIL (상단 가로 전체) — 3분할: 정보·액션 / desc 텍스트 / 가격표 */
 .detail {
   background: rgba(5,6,20,0.78);
   border: 1px solid var(--line);
   padding: 14px 18px;
   clip-path: polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px);
-  display: flex; gap: 18px; align-items: flex-start;
-  min-height: 130px; max-height: 38vh;
+  display: flex; gap: 16px; align-items: flex-start;
+  min-height: 130px; max-height: 42vh;
   overflow: hidden;
 }
 .detail.empty { min-height: 64px; }
 .detail .d-left {
-  flex: 0 0 320px; max-width: 320px;
-  display: flex; flex-direction: column; gap: 8px;
+  flex: 0 0 300px; max-width: 300px;
+  display: flex; flex-direction: column; gap: 7px;
+  max-height: calc(42vh - 28px); overflow-y: auto;
+  padding-right: 4px;
 }
 .detail .d-right {
-  flex: 1; overflow-y: auto; max-height: calc(38vh - 28px);
+  flex: 1 1 0; overflow-y: auto; max-height: calc(42vh - 28px);
   padding-right: 6px;
   user-select: text;
+  min-width: 0;
 }
-.detail .d-right::-webkit-scrollbar { width: 6px; }
-.detail .d-right::-webkit-scrollbar-thumb { background: rgba(167,139,250,0.30); }
+.detail .d-pricecol {
+  flex: 0 0 360px; max-width: 360px;
+  overflow-y: auto; max-height: calc(42vh - 28px);
+  padding: 0 4px;
+  user-select: text;
+  border-left: 1px dashed var(--line);
+  padding-left: 14px;
+  display: none;
+}
+.detail .d-pricecol.show { display: block; }
+.detail .d-pricecol-head {
+  font-size: 10px; font-weight: 800; letter-spacing: 0.16em;
+  color: var(--gold); text-transform: uppercase;
+  margin-bottom: 8px;
+}
+.detail .d-right::-webkit-scrollbar,
+.detail .d-left::-webkit-scrollbar,
+.detail .d-pricecol::-webkit-scrollbar { width: 6px; }
+.detail .d-right::-webkit-scrollbar-thumb,
+.detail .d-left::-webkit-scrollbar-thumb,
+.detail .d-pricecol::-webkit-scrollbar-thumb { background: rgba(167,139,250,0.30); }
+.detail .d-pricecol table {
+  width: 100%; border-collapse: collapse; font-size: 11px;
+  background: rgba(0,0,0,0.25); border: 1px solid var(--line);
+}
+.detail .d-pricecol th, .detail .d-pricecol td {
+  border-bottom: 1px dashed var(--line); padding: 6px 8px; text-align: left;
+  white-space: nowrap;
+}
+.detail .d-pricecol th { color: var(--gold); font-weight: 800; background: rgba(251,191,36,0.08); }
+.detail .d-pricecol td:nth-child(n+2) { text-align: right; }
+.detail .d-pricecol b { color: var(--text-1); }
 .detail .d-empty {
   width: 100%; text-align: center; padding: 14px;
   color: var(--text-3); font-size: 12px; line-height: 1.7;
@@ -366,7 +399,9 @@ body {
 .card .c-owner {
   font-size: 9.5px; color: var(--text-3); margin-top: 3px;
   letter-spacing: 0.04em;
+  line-height: 1.4;
 }
+.card .c-owner b { color: var(--info); font-weight: 800; }
 
 /* LOADING / ERROR */
 .loading {
@@ -429,6 +464,7 @@ body {
     </div>
     <div class="d-left" id="detailLeft" style="display:none"></div>
     <div class="d-right" id="detailRight" style="display:none"></div>
+    <div class="d-pricecol" id="detailPriceCol"></div>
   </section>
 
   <!-- 힌트 + 범례 -->
@@ -607,18 +643,23 @@ function renderCard(e) {
   }
   const prog = e.item.progress || 0;
   const prio = e.item.prio || 'm';
+  const ownerDept = e.item.ownerDept || '';
+  const related = (e.item.related || []).join('·');
+  const status = e.item.status || 'active';
   card.innerHTML =
     '<div class="c-top">'
     +   '<span class="c-rev">' + REV_LABEL[tier] + '</span>'
     +   '<span class="c-cat">' + PCATS_NAMES[e.cat] + '</span>'
     +   '<span class="c-prio ' + prio + '">' + PRIO_LABEL[prio] + '</span>'
+    +   (status === 'stop' ? '<span class="c-prio l" style="margin-left:auto">중단</span>' : '')
     + '</div>'
     + '<div class="c-name">' + escapeHtml(e.item.name) + '</div>'
     + '<div class="c-bottom">'
     +   '<div class="c-prog-wrap"><div class="c-prog-bar" style="width:' + prog + '%"></div></div>'
     +   '<span class="c-prog-num">' + prog + '%</span>'
     + '</div>'
-    + (e.item.owner ? '<div class="c-owner">담당 ' + escapeHtml(e.item.owner) + '</div>' : '');
+    + (e.item.startWhen ? '<div class="c-owner">📅 ' + escapeHtml(e.item.startWhen) + '</div>' : '')
+    + (ownerDept ? '<div class="c-owner">주관 <b style="color:#67e8f9">' + escapeHtml(ownerDept) + '</b>' + (related ? ' · 유관 ' + escapeHtml(related) : '') + (e.item.owner ? ' · 담당 ' + escapeHtml(e.item.owner) : '') + '</div>' : (e.item.owner ? '<div class="c-owner">담당 ' + escapeHtml(e.item.owner) + '</div>' : ''));
   card.addEventListener('click', (ev) => {
     ev.stopPropagation();
     if (ev.shiftKey) {
@@ -697,11 +738,13 @@ function renderDetail() {
   const emptyEl = document.getElementById('detailEmpty');
   const leftEl = document.getElementById('detailLeft');
   const rightEl = document.getElementById('detailRight');
+  const priceEl = document.getElementById('detailPriceCol');
   if (SELECTED.size === 0) {
     detail.classList.add('empty');
     emptyEl.style.display = '';
     leftEl.style.display = 'none';
     rightEl.style.display = 'none';
+    priceEl.classList.remove('show');
     return;
   }
   detail.classList.remove('empty');
@@ -710,6 +753,7 @@ function renderDetail() {
   rightEl.style.display = '';
 
   if (SELECTED.size > 1) {
+    priceEl.classList.remove('show');
     leftEl.innerHTML =
       '<div class="d-title">다중 선택 (' + SELECTED.size + '건)</div>'
       + '<div class="d-row"><span class="lbl">안내</span><span class="val">상단 <b>일괄 액션</b> 버튼으로 한 번에 결정</span></div>';
@@ -731,6 +775,7 @@ function renderDetail() {
   const action = getAction(key, it);
   const prio = it.prio || 'm';
   const status = it.status || 'active';
+  const split = splitDesc(it.desc || '');
 
   leftEl.innerHTML =
     '<div class="d-title">' + escapeHtml(it.name) + '</div>'
@@ -751,8 +796,17 @@ function renderDetail() {
 
   rightEl.innerHTML =
     '<div class="d-desc">'
-    +   (it.desc || '<i style="color:#6b7280">상세 설명 없음</i>')
+    +   (split.text || it.desc || '<i style="color:#6b7280">상세 설명 없음</i>')
     + '</div>';
+
+  // 가격표(또는 다른 <table>) 분리 표시
+  if (split.tables) {
+    priceEl.classList.add('show');
+    priceEl.innerHTML = '<div class="d-pricecol-head">📋 가격표 / 표</div>' + split.tables;
+  } else {
+    priceEl.classList.remove('show');
+    priceEl.innerHTML = '';
+  }
 
   leftEl.querySelectorAll('.d-actions button').forEach(btn => {
     btn.addEventListener('click', () => {
@@ -784,6 +838,13 @@ function applyBulk(action) {
 
 function escapeHtml(s) {
   return String(s == null ? '' : s).replace(/[&<>"]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));
+}
+// desc 안 가격표(<table>) 분리 — 우측 가격표 영역에 표시
+function splitDesc(desc) {
+  if (!desc) return { text: '', tables: '' };
+  const tables = [];
+  const text = desc.replace(/<table[\s\S]*?<\/table>/g, (m) => { tables.push(m); return ''; });
+  return { text: text.trim(), tables: tables.join('\n') };
 }
 
 (async function init() {
