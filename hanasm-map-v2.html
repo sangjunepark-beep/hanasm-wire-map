@@ -60,6 +60,19 @@ body {
   clip-path: polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px);
 }
 .title .date { font-size: 11px; color: var(--text-3); letter-spacing: 0.05em; }
+.title .v3-link {
+  pointer-events: auto;
+  font-size: 11px; font-weight: 800;
+  letter-spacing: 0.10em;
+  color: #fbbf24; text-decoration: none;
+  padding: 6px 12px;
+  background: rgba(251,191,36,0.10);
+  border: 1px solid rgba(251,191,36,0.45);
+  margin-left: 14px;
+  clip-path: polygon(4px 0, 100% 0, 100% calc(100% - 4px), calc(100% - 4px) 100%, 0 100%, 0 4px);
+  transition: background 0.15s ease, color 0.15s ease;
+}
+.title .v3-link:hover { background: rgba(251,191,36,0.25); color: #fff; box-shadow: 0 0 8px rgba(251,191,36,0.30); }
 .hint {
   display: none;
   font-size: 10.5px; color: var(--text-2); font-weight: 500;
@@ -1569,8 +1582,9 @@ body:has(.proj-panel.show) .node .dept-projects-section { display: none !importa
 <div class="topbar">
   <div class="title">
     <img class="brand-logo" src="https://www.hanasignmall.kr/image/common/hana_logo2.png" alt="HANASIGNMALL" />
-    
+
     <span class="date" id="today"></span>
+    <a class="v3-link" href="hanasm-map-v3.html" title="대표 보고용 매출 매트릭스 (포트폴리오 뷰)">📊 매출 매트릭스 V3 →</a>
   </div>
   <div class="hint">클릭 = 빛 · 더블 = 확대 · 드래그 = 이동 · 휠 = 줌</div>
 </div>
