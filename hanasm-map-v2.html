@@ -1396,16 +1396,7 @@ body.edit-mode .node .frame { outline: 2px dashed rgba(251,191,36,0.6); outline-
   position: relative;
   z-index: 3;
 }
-.proj-item.touring::after {
-  content: '▶ 시연 중';
-  position: absolute;
-  top: -10px; right: 10px;
-  background: #fbbf24; color: #050614;
-  font-size: 11.4px; font-weight: 900;
-  padding: 3px 9px; letter-spacing: 0.12em;
-  clip-path: polygon(3px 0, 100% 0, 100% calc(100% - 3px), calc(100% - 3px) 100%, 0 100%, 0 3px);
-  pointer-events: none;
-}
+/* "시연 중" 배지 제거 — outline + glow만으로 시각 표시 */
 /* 카드 클릭으로 잠금된 상태 — 마우스 떠나도 와이어 맵 강조 유지 */
 .proj-item.locked {
   outline: 2px solid #22d3ee;
@@ -1413,22 +1404,7 @@ body.edit-mode .node .frame { outline: 2px dashed rgba(251,191,36,0.6); outline-
   position: relative;
   z-index: 2;
 }
-.proj-item.locked::after {
-  content: '🔒 선택됨';
-  position: absolute;
-  top: -10px; left: 10px;
-  background: #22d3ee; color: #050614;
-  font-size: 11.4px; font-weight: 900;
-  padding: 3px 9px; letter-spacing: 0.10em;
-  clip-path: polygon(3px 0, 100% 0, 100% calc(100% - 3px), calc(100% - 3px) 100%, 0 100%, 0 3px);
-  pointer-events: none;
-}
-/* 투어 중인 카드가 잠긴 상태일 때는 투어 배지 우선 — locked 배지 숨김 */
-.proj-item.touring.locked::after {
-  content: '▶ 시연 중';
-  background: #fbbf24; color: #050614;
-  left: auto; right: 10px;
-}
+/* "선택됨" 배지 제거 — outline + glow만으로 시각 표시 (배지가 패널 위로 잘렸음) */
 
 .dept-projects-section { margin-top: 10px; padding-top: 8px; border-top: 1px dashed rgba(96,165,250,0.30); }
 /* 우측 신규 프로젝트 판단 보드(projPanel)가 열려있으면, 부서 expanded의 신규 프로젝트 섹션은 숨김 — 중복 방지, 보드 우선 */
@@ -1592,7 +1568,7 @@ body:has(.proj-panel.show) .node .dept-projects-section { display: none !importa
     <img class="brand-logo" src="https://www.hanasignmall.kr/image/common/hana_logo2.png" alt="HANASIGNMALL" />
 
     <span class="date" id="today"></span>
-    <a class="v3-link" href="hanasm-map-v3.html" title="대표 보고용 매출 매트릭스 (포트폴리오 뷰)">📊 매출 매트릭스 V3 →</a>
+    <a class="v3-link" href="hanasm-map-v3.html" title="프로젝트 진행 관리 (V3) — 드래그로 결정">📊 프로젝트 진행 관리 V3 →</a>
   </div>
   <div class="hint">클릭 = 빛 · 더블 = 확대 · 드래그 = 이동 · 휠 = 줌</div>
 </div>
@@ -3930,14 +3906,14 @@ function renderProjects() {
       if (e.target.closest('.pi-dec')) return;
       if (e.target.closest('.pi-action')) return;
       if (e.target.closest('.dept-edit')) return;  // 주관/유관 편집 영역은 카드 클릭 무시
+      if (e.target.closest('.pi-desc')) return;     // 상세내용(본문) 클릭은 닫지 않음
+      if (e.target.closest('.pi-prog-wrap')) return; // 진행률 바 클릭도 무시
       // 클릭 = 잠금 토글
       if (window.LOCKED_PROJ_KEY === el.dataset.key) {
-        // 같은 카드 다시 클릭 → 잠금 해제
         window.LOCKED_PROJ_KEY = null;
         el.classList.remove('locked');
         focusProjectRelation(null, []);
       } else {
-        // 새 카드 잠금
         document.querySelectorAll('.proj-item.locked').forEach(c => c.classList.remove('locked'));
         window.LOCKED_PROJ_KEY = el.dataset.key;
         el.classList.add('locked');
