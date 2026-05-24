@@ -1,52 +1,611 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="ko">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>HANASM V3 · Revenue Portfolio Dashboard</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HANASM V3 · 매출 매트릭스 (대표 보고)</title>
 <style>
-*{box-sizing:border-box}html,body{margin:0;height:100%;overflow:hidden;background:#050614;color:#f4f7ff;font-family:Pretendard,'Noto Sans KR',system-ui,sans-serif}button,input,select{font:inherit}button{cursor:pointer}.top{height:64px;display:flex;align-items:center;justify-content:space-between;padding:0 18px;background:rgba(5,6,20,.96);border-bottom:1px solid rgba(148,163,255,.18)}.brand{display:flex;align-items:center;gap:12px}.logo{height:18px;filter:drop-shadow(0 0 7px rgba(167,139,250,.45)) brightness(1.15)}.ver{font-size:11px;font-weight:950;background:#fbbf24;color:#130f05;padding:4px 9px;clip-path:polygon(6px 0,100% 0,100% calc(100% - 6px),calc(100% - 6px) 100%,0 100%,0 6px)}h1{margin:0;font-size:13px;letter-spacing:.14em;background:linear-gradient(90deg,#fbbf24,#22d3ee);-webkit-background-clip:text;color:transparent}.tabs{display:flex;gap:7px;flex-wrap:wrap}.tabs button{border:1px solid rgba(96,165,250,.32);background:rgba(8,10,29,.75);color:#a5acc8;font-size:12px;font-weight:900;padding:8px 10px}.tabs button.on{background:#fbbf24;color:#151008;border-color:#fbbf24}.tabs button:hover{color:#fff}.app{height:calc(100% - 64px);display:grid;grid-template-columns:1fr 430px;gap:14px;padding:14px;background:radial-gradient(circle at 18% 18%,rgba(251,191,36,.12),transparent 30%),radial-gradient(circle at 77% 77%,rgba(34,211,238,.1),transparent 34%),#050614}.panel{position:relative;overflow:hidden;background:rgba(8,10,29,.8);border:1px solid rgba(148,163,255,.22);clip-path:polygon(14px 0,100% 0,100% calc(100% - 14px),calc(100% - 14px) 100%,0 100%,0 14px)}.head{padding:16px;border-bottom:1px solid rgba(148,163,255,.14)}.k{font-size:10px;font-weight:950;color:#22d3ee;letter-spacing:.15em}.head h2{margin:5px 0 0;font-size:19px}.head p{margin:6px 0 0;color:#a5acc8;font-size:12px;line-height:1.5}.body{height:calc(100% - 82px);overflow:auto;padding:14px}.detail{height:calc(100% - 82px);overflow:auto;padding:14px}.summary{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:14px}.sum{background:rgba(255,255,255,.045);border:1px solid rgba(148,163,255,.16);padding:12px}.sum b{display:block;font-size:25px;color:#fbbf24}.sum span{font-size:11px;color:#a5acc8;font-weight:800}.tools{display:grid;grid-template-columns:1fr 135px 135px 135px;gap:8px;margin-bottom:12px}.tools input,.tools select{background:rgba(5,6,20,.62);border:1px solid rgba(148,163,255,.22);color:#f3f4fb;padding:8px;font-size:12px}.grid{display:grid;gap:12px}.dashGrid{display:grid;grid-template-columns:1.15fr .85fr;gap:12px}.box{border:1px solid rgba(148,163,255,.16);background:rgba(255,255,255,.035);padding:12px}.box h3{margin:0 0 9px;font-size:15px}.card{border:1px solid rgba(148,163,255,.18);border-left:5px solid var(--c,#60a5fa);background:rgba(17,24,55,.78);padding:12px;margin-bottom:10px;clip-path:polygon(8px 0,100% 0,100% calc(100% - 8px),calc(100% - 8px) 100%,0 100%,0 8px)}.card.on{box-shadow:0 0 0 2px rgba(251,191,36,.43),0 0 22px rgba(251,191,36,.18)}.topline{display:grid;grid-template-columns:42px 1fr auto;gap:10px;align-items:start}.rank{height:36px;display:grid;place-items:center;background:rgba(251,191,36,.14);color:#fbbf24;font-weight:950}.card h3{margin:0;font-size:15px;line-height:1.35}.brief{font-size:12px;color:#cbd5e1;line-height:1.55;margin-top:7px}.chips{display:flex;gap:5px;flex-wrap:wrap;margin-top:8px}.chip{font-size:9.5px;color:#a5acc8;border:1px solid rgba(148,163,255,.14);background:rgba(255,255,255,.04);padding:3px 6px}.revA{color:#fbbf24!important;border-color:rgba(251,191,36,.55)!important}.revB{color:#34d399!important;border-color:rgba(52,211,153,.5)!important}.revC{color:#60a5fa!important;border-color:rgba(96,165,250,.5)!important}.revD{color:#c084fc!important;border-color:rgba(192,132,252,.5)!important}.revE{color:#a5acc8!important}.actions{display:flex;gap:5px;flex-wrap:wrap;justify-content:flex-end}.actions button{background:rgba(5,6,20,.65);border:1px solid rgba(148,163,255,.22);color:#cbd5e1;font-size:12px;font-weight:900;padding:6px 8px}.actions button:hover,.actions button.active{border-color:#fbbf24;color:#fff;background:rgba(251,191,36,.12)}.miniRel{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:9px}.miniRel div{border:1px solid rgba(148,163,255,.13);background:rgba(255,255,255,.03);padding:7px;font-size:11.5px;color:#cbd5e1;line-height:1.45}.miniRel b{color:#fff}.descFold{margin-top:10px;border-top:1px dashed rgba(251,191,36,.25);padding-top:10px;color:#cbd5e1;font-size:12px;line-height:1.65}.descFold table,.fullDesc table{width:100%;border-collapse:collapse;margin-top:8px;font-size:11px}.descFold th,.descFold td,.fullDesc th,.fullDesc td{border-bottom:1px dashed rgba(255,255,255,.1);padding:5px 7px}.deptGrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(175px,1fr));gap:10px}.deptCard{border:1px solid rgba(148,163,255,.18);background:rgba(17,24,55,.75);padding:12px;cursor:pointer}.deptCard.on{border-color:#fbbf24;box-shadow:0 0 0 2px rgba(251,191,36,.22)}.deptCard h3{margin:0;font-size:15px}.meter{height:7px;background:rgba(148,163,184,.15);margin-top:8px}.meter i{display:block;height:100%;background:linear-gradient(90deg,#fbbf24,#22d3ee)}.bizColumns{display:grid;grid-template-columns:1fr 1fr;gap:12px}.bizCol{border:1px solid rgba(148,163,255,.16);background:rgba(255,255,255,.035);padding:12px}.bizCol h3{margin:0 0 8px;font-size:15px}.detailCard{border:1px solid rgba(96,165,250,.28);background:rgba(8,10,29,.72);padding:14px}.detailCard h3{margin:0 0 10px;font-size:19px;line-height:1.35}.pills{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}.pill{font-size:10px;font-weight:900;border:1px solid rgba(148,163,255,.18);color:#a5acc8;padding:4px 7px}.pill.gold{color:#fbbf24;border-color:rgba(251,191,36,.55)}.pill.green{color:#34d399;border-color:rgba(52,211,153,.5)}.pill.blue{color:#60a5fa;border-color:rgba(96,165,250,.5)}.fullDesc{font-size:12.5px;color:#dbe2ef;line-height:1.7;white-space:normal}.infoGrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:12px 0}.info{border:1px solid rgba(148,163,255,.16);background:rgba(255,255,255,.035);padding:9px;font-size:12px;line-height:1.55}.info b{color:#fff}.bizTree{display:grid;gap:8px;margin-top:12px}.bizRow{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.biz{display:inline-flex;align-items:center;justify-content:center;min-height:32px;padding:7px 10px;border:1px solid rgba(148,163,255,.18);background:rgba(255,255,255,.04);font-size:12px;font-weight:800}.biz.root{border-color:#22d3ee;color:#22d3ee}.biz.personal{border-color:#60a5fa;color:#60a5fa}.biz.corp{border-color:#a855f7;color:#c084fc}.biz.hit{background:rgba(34,211,238,.12);border-color:#22d3ee;color:#fff;box-shadow:0 0 12px rgba(34,211,238,.22)}.warn{margin-top:12px;border:1px solid rgba(251,191,36,.22);background:rgba(251,191,36,.06);padding:10px;color:#fbbf24;font-size:12px;line-height:1.55}.empty{color:#747b99;padding:16px;font-size:13px}.sourceFrame{display:none}.mapModal{display:none;position:fixed;inset:0;z-index:999;background:rgba(0,0,0,.76)}.mapModal.show{display:block}.mapBox{position:absolute;inset:42px;background:#050614;border:1px solid rgba(96,165,250,.35)}.mapBox iframe{width:100%;height:100%;border:0}.close{position:absolute;right:16px;top:10px;z-index:2;background:#fbbf24;color:#151008;border:0;font-weight:900;padding:8px 12px}@media(max-width:1280px){.app{grid-template-columns:1fr}.body,.detail{height:auto;max-height:560px}.summary{grid-template-columns:repeat(2,1fr)}.tools,.miniRel,.dashGrid,.bizColumns,.infoGrid{grid-template-columns:1fr}.top{height:auto;min-height:64px;display:block;padding:10px}.tabs{margin-top:8px}}@media(max-width:680px){.topline{grid-template-columns:36px 1fr}.actions{grid-column:2/3;justify-content:flex-start}}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg-0:#050614; --bg-1:#0a0b22; --bg-2:#12142e;
+  --line:rgba(167,139,250,0.20); --line-strong:rgba(34,211,238,0.50);
+  --text-1:#f3f4fb; --text-2:#c5c9e0; --text-3:#8a8fad;
+  --rev-A:#fbbf24; --rev-B:#34d399; --rev-C:#60a5fa; --rev-D:#c084fc; --rev-E:#94a3b8;
+  --cat-ad:#fbbf24; --cat-ai:#c084fc; --cat-product:#34d399; --cat-system:#60a5fa; --cat-offline:#fb923c;
+}
+html, body {
+  height: 100vh; overflow: hidden;
+  background: var(--bg-0); color: var(--text-1);
+  font-family: "JetBrains Mono", "Inter", "Pretendard", "Noto Sans KR", monospace, system-ui;
+  -webkit-font-smoothing: antialiased; letter-spacing: 0.01em; font-weight: 500;
+}
+body {
+  background:
+    radial-gradient(ellipse at 80% 80%, rgba(251,191,36,0.06), transparent 55%),
+    radial-gradient(ellipse at 20% 80%, rgba(96,165,250,0.05), transparent 55%),
+    radial-gradient(ellipse at 50% 0%, rgba(167,139,250,0.04), transparent 60%),
+    linear-gradient(180deg, #050614 0%, #07091b 50%, #050614 100%);
+}
+
+.topbar {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+  height: 56px; padding: 0 20px;
+  display: flex; align-items: center; gap: 18px;
+  background: rgba(5,6,20,0.85);
+  border-bottom: 1px solid var(--line);
+}
+.brand {
+  display: flex; align-items: center; gap: 10px;
+  font-size: 13px; font-weight: 900; letter-spacing: 0.14em;
+  background: linear-gradient(90deg, #fbbf24, #22d3ee);
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+.brand .ver {
+  font-size: 10px; padding: 3px 7px; font-weight: 900;
+  background: #fbbf24; color: #050614;
+  letter-spacing: 0.08em;
+  clip-path: polygon(4px 0, 100% 0, 100% calc(100% - 4px), calc(100% - 4px) 100%, 0 100%, 0 4px);
+}
+.brand h1 { font-size: 13px; font-weight: 900; }
+.search-wrap { flex: 0 1 320px; position: relative; }
+#search {
+  width: 100%; height: 32px;
+  background: rgba(8,9,28,0.78);
+  border: 1px solid var(--line);
+  color: var(--text-1); font-family: inherit; font-size: 12px;
+  padding: 0 12px; outline: none;
+  clip-path: polygon(4px 0, 100% 0, 100% calc(100% - 4px), calc(100% - 4px) 100%, 0 100%, 0 4px);
+}
+#search:focus { border-color: rgba(34,211,238,0.55); background: rgba(8,9,28,0.95); }
+#search::placeholder { color: var(--text-3); }
+.bulk-actions {
+  display: flex; gap: 6px; align-items: center;
+  margin-left: auto;
+  font-size: 11px; color: var(--text-3);
+}
+.bulk-actions .bulk-cnt {
+  font-size: 10px; font-weight: 800; color: #fbbf24;
+  padding: 3px 8px;
+  background: rgba(251,191,36,0.12);
+  border: 1px solid rgba(251,191,36,0.40);
+  clip-path: polygon(3px 0, 100% 0, 100% calc(100% - 3px), calc(100% - 3px) 100%, 0 100%, 0 3px);
+}
+.bulk-actions button {
+  font-family: inherit; cursor: pointer;
+  padding: 5px 10px; font-size: 10.5px; font-weight: 800;
+  letter-spacing: 0.06em;
+  background: rgba(8,9,28,0.70); border: 1px solid var(--line);
+  color: var(--text-2);
+  clip-path: polygon(3px 0, 100% 0, 100% calc(100% - 3px), calc(100% - 3px) 100%, 0 100%, 0 3px);
+}
+.bulk-actions button:hover { color: #fff; border-color: rgba(34,211,238,0.5); background: rgba(34,211,238,0.10); }
+.bulk-actions button.danger:hover { border-color: rgba(251,191,36,0.6); color: #fbbf24; background: rgba(251,191,36,0.10); }
+.bulk-actions button:disabled { opacity: 0.35; cursor: not-allowed; }
+.v2-link {
+  font-size: 11px; font-weight: 700; letter-spacing: 0.10em; text-transform: uppercase;
+  color: #67e8f9; text-decoration: none;
+  padding: 5px 11px; border: 1px solid rgba(34,211,238,0.40);
+  clip-path: polygon(4px 0, 100% 0, 100% calc(100% - 4px), calc(100% - 4px) 100%, 0 100%, 0 4px);
+}
+.v2-link:hover { background: rgba(34,211,238,0.15); color: #fff; }
+
+.app {
+  position: fixed; top: 56px; left: 0; right: 0; bottom: 0;
+  display: grid; grid-template-columns: 1fr 360px;
+}
+.matrix-pane { position: relative; padding: 32px 40px 40px 64px; overflow: hidden; }
+#matrix {
+  position: relative;
+  width: 100%; height: 100%;
+  background: linear-gradient(to right, rgba(167,139,250,0.04) 0, transparent 50%, rgba(251,191,36,0.05) 100%);
+  border: 1px solid var(--line);
+  clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px);
+}
+.quadrant { position: absolute; pointer-events: none; }
+.q-tl { top: 0; left: 0;     width: 50%; height: 50%; border-right: 1px dashed var(--line); border-bottom: 1px dashed var(--line); }
+.q-tr { top: 0; right: 0;    width: 50%; height: 50%; border-bottom: 1px dashed var(--line); }
+.q-bl { bottom: 0; left: 0;  width: 50%; height: 50%; border-right: 1px dashed var(--line); }
+.q-br { bottom: 0; right: 0; width: 50%; height: 50%;
+  background: radial-gradient(circle at 80% 80%, rgba(251,77,77,0.10), transparent 65%);
+}
+.q-label {
+  position: absolute;
+  font-size: 11px; font-weight: 900; letter-spacing: 0.18em;
+  color: var(--text-3); text-transform: uppercase;
+  padding: 6px 11px;
+  background: rgba(5,6,20,0.6);
+  clip-path: polygon(3px 0, 100% 0, 100% calc(100% - 3px), calc(100% - 3px) 100%, 0 100%, 0 3px);
+}
+.q-label.gold { color: #fbbf24; border: 1px solid rgba(251,191,36,0.40); }
+.q-label.danger { color: #fb7185; border: 1px solid rgba(251,113,133,0.50); background: rgba(251,113,133,0.10); }
+.q-label.dim { color: var(--text-3); border: 1px solid var(--line); }
+.axis-x, .axis-y {
+  position: absolute;
+  font-size: 10px; font-weight: 800;
+  letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--text-3);
+  pointer-events: none;
+}
+.axis-x { left: 64px; right: 40px; bottom: 12px; text-align: center; }
+.axis-y { left: 12px; top: 32px; bottom: 40px;
+  writing-mode: vertical-rl; transform: rotate(180deg); text-align: center;
+}
+.axis-tick { position: absolute; font-size: 9px; font-weight: 700; color: var(--text-3); pointer-events: none; }
+.card {
+  position: absolute;
+  cursor: pointer;
+  transition: transform 0.15s ease, filter 0.15s ease, opacity 0.15s ease;
+  z-index: 5;
+}
+.card:hover { transform: translate(-50%, 50%) scale(1.35); z-index: 20; }
+.card.selected { z-index: 25; }
+.card .dot {
+  width: 16px; height: 16px;
+  background: var(--c, #94a3b8);
+  border: 1.5px solid rgba(0,0,0,0.5);
+  box-shadow: 0 0 6px var(--c, #94a3b8);
+  clip-path: polygon(4px 0, 100% 0, 100% calc(100% - 4px), calc(100% - 4px) 100%, 0 100%, 0 4px);
+}
+.card.prio-h .dot { width: 22px; height: 22px; }
+.card.prio-l .dot { width: 11px; height: 11px; }
+.card.rev-A .dot { background: var(--rev-A); box-shadow: 0 0 10px var(--rev-A); }
+.card.rev-B .dot { background: var(--rev-B); box-shadow: 0 0 8px var(--rev-B); }
+.card.rev-C .dot { background: var(--rev-C); box-shadow: 0 0 7px var(--rev-C); }
+.card.rev-D .dot { background: var(--rev-D); box-shadow: 0 0 7px var(--rev-D); }
+.card.rev-E .dot { background: var(--rev-E); box-shadow: 0 0 5px var(--rev-E); }
+.card.selected .dot {
+  outline: 2px solid #22d3ee;
+  outline-offset: 3px;
+  box-shadow: 0 0 18px currentColor !important;
+}
+.card.dim { opacity: 0.15; }
+.card.matched .dot {
+  outline: 2px solid #fbbf24;
+  outline-offset: 2px;
+  filter: brightness(1.4);
+}
+.card .label {
+  position: absolute; left: 50%; bottom: 100%;
+  transform: translate(-50%, -6px);
+  background: rgba(5,6,20,0.96);
+  border: 1px solid var(--line-strong);
+  color: var(--text-1);
+  font-size: 10.5px; font-weight: 700;
+  padding: 4px 8px;
+  white-space: nowrap;
+  pointer-events: none;
+  display: none;
+  z-index: 50;
+}
+.card:hover .label, .card.selected .label { display: block; }
+
+.detail-pane {
+  border-left: 1px solid var(--line);
+  background: rgba(5,6,20,0.55);
+  display: flex; flex-direction: column;
+}
+.detail-head { padding: 16px 18px 12px; border-bottom: 1px solid var(--line); }
+.detail-head .dh-label {
+  font-size: 10px; font-weight: 800; letter-spacing: 0.16em; text-transform: uppercase;
+  color: var(--text-3);
+}
+.detail-head h2 { font-size: 14px; margin-top: 5px; line-height: 1.4; color: var(--text-1); }
+.detail-body { flex: 1; overflow-y: auto; padding: 14px 18px; }
+.detail-empty {
+  align-items: center; justify-content: center;
+  display: none; flex: 1; color: var(--text-3); font-size: 12px;
+  padding: 24px; text-align: center; line-height: 1.7;
+}
+.detail-empty.show { display: flex; }
+.detail-content { display: none; }
+.detail-content.show { display: block; }
+.dc-meta { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+.dc-meta .pill {
+  font-size: 10px; font-weight: 800;
+  padding: 3px 8px;
+  border: 1px solid;
+  clip-path: polygon(2px 0, 100% 0, 100% calc(100% - 2px), calc(100% - 2px) 100%, 0 100%, 0 2px);
+}
+.pill-rev-A { color: var(--rev-A); border-color: rgba(251,191,36,0.55); background: rgba(251,191,36,0.12); }
+.pill-rev-B { color: var(--rev-B); border-color: rgba(52,211,153,0.50); background: rgba(52,211,153,0.08); }
+.pill-rev-C { color: var(--rev-C); border-color: rgba(96,165,250,0.50); background: rgba(96,165,250,0.08); }
+.pill-rev-D { color: var(--rev-D); border-color: rgba(192,132,252,0.50); background: rgba(192,132,252,0.08); }
+.pill-rev-E { color: var(--rev-E); border-color: rgba(148,163,184,0.40); background: rgba(148,163,184,0.06); }
+.pill-cat { color: var(--text-2); border-color: var(--line); background: rgba(167,139,250,0.05); }
+.pill-prog { color: #67e8f9; border-color: rgba(34,211,238,0.40); background: rgba(34,211,238,0.10); }
+.dc-when { font-size: 11px; color: var(--text-2); margin-bottom: 10px; }
+.dc-owner { font-size: 11px; color: var(--text-2); margin-bottom: 12px; }
+.dc-owner b { color: #67e8f9; font-weight: 800; }
+.dc-actions {
+  display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 14px;
+  padding-bottom: 12px; border-bottom: 1px dashed var(--line);
+}
+.dc-actions button {
+  font-family: inherit; cursor: pointer;
+  padding: 6px 11px; font-size: 11px; font-weight: 800;
+  letter-spacing: 0.06em;
+  background: rgba(8,9,28,0.70); border: 1px solid var(--line);
+  color: var(--text-2);
+  clip-path: polygon(3px 0, 100% 0, 100% calc(100% - 3px), calc(100% - 3px) 100%, 0 100%, 0 3px);
+}
+.dc-actions button:hover { color: #fff; border-color: rgba(34,211,238,0.5); background: rgba(34,211,238,0.10); }
+.dc-actions button.active { background: rgba(34,211,238,0.20); color: #fff; border-color: #22d3ee; }
+.dc-desc { font-size: 12px; line-height: 1.65; color: var(--text-2); }
+.dc-desc table { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 11px; }
+.dc-desc th, .dc-desc td { border-bottom: 1px dashed var(--line); padding: 5px 7px; text-align: left; }
+.dc-desc th { color: var(--text-2); font-weight: 800; }
+.dc-desc b { color: var(--text-1); }
+
+.legend {
+  position: fixed; left: 18px; bottom: 18px; z-index: 50;
+  background: rgba(8,9,28,0.85);
+  border: 1px solid var(--line);
+  padding: 10px 12px;
+  font-size: 10.5px; color: var(--text-2);
+  clip-path: polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px);
+}
+.legend .ltitle {
+  font-size: 9.5px; font-weight: 800; letter-spacing: 0.14em;
+  color: var(--text-3); text-transform: uppercase; margin-bottom: 5px;
+}
+.legend .row { display: flex; align-items: center; gap: 8px; margin: 3px 0; }
+.legend .sw { width: 10px; height: 10px; background: var(--c); box-shadow: 0 0 5px var(--c); }
+.legend .hint {
+  margin-top: 8px; padding-top: 7px;
+  border-top: 1px dashed var(--line);
+  font-size: 9.5px; color: var(--text-3); line-height: 1.6;
+}
+.legend .hint kbd {
+  display: inline-block;
+  padding: 1px 5px; margin: 0 2px;
+  background: rgba(34,211,238,0.10);
+  border: 1px solid rgba(34,211,238,0.30);
+  color: #67e8f9; font-size: 9px;
+}
+
+.loading {
+  position: fixed; inset: 56px 0 0 0;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--text-3); font-size: 13px; letter-spacing: 0.12em;
+}
+.error {
+  color: #fb7185; padding: 24px; max-width: 600px; margin: 80px auto;
+  background: rgba(251,113,133,0.06);
+  border: 1px solid rgba(251,113,133,0.30);
+  font-size: 13px; line-height: 1.7;
+}
+.error h3 { font-size: 16px; margin-bottom: 12px; color: #fb7185; }
+
+@media (max-width: 1100px) {
+  .app { grid-template-columns: 1fr 300px; }
+  .matrix-pane { padding: 24px 20px 32px 50px; }
+}
+@media (max-width: 800px) {
+  .app { grid-template-columns: 1fr; }
+  .detail-pane { display: none; }
+}
 </style>
 </head>
 <body>
-<header class="top"><div class="brand"><img class="logo" src="https://www.hanasignmall.kr/image/common/hana_logo2.png" alt="HANASIGNMALL"><span class="ver">V3</span><h1>EXECUTIVE REVENUE PORTFOLIO DASHBOARD</h1></div><nav class="tabs"><button class="on" data-view="exec">대표판단</button><button data-view="sales">매출순서</button><button data-view="dept">부서밀도</button><button data-view="biz">사업자·몰</button><button data-view="blocked">막힌업무</button><button id="openMap">V2맵</button></nav></header>
-<main class="app"><section class="panel"><div class="head"><div class="k" id="viewK">EXECUTIVE SUMMARY</div><h2 id="viewTitle">대표 판단 대시보드</h2><p id="viewDesc">개인사업자/법인사업자 몰 구조와 부서별 업무 밀도를 유지하면서, 신규 프로젝트를 매출증진 기준으로 정렬합니다.</p><div id="summary" class="summary"></div><div class="tools"><input id="q" placeholder="검색"><select id="cat"><option value="all">전체 카테고리</option></select><select id="state"><option value="all">전체 상태</option><option value="go">진행</option><option value="hold">보류/중단</option></select><select id="revFilter"><option value="all">전체 매출등급</option><option value="A">A 직접매출</option><option value="B">B 전환개선</option><option value="C">C CS전환</option><option value="D">D 운영처리</option><option value="E">E 장기기반</option></select></div></div><div id="mainBody" class="body"></div></section><section class="panel"><div class="head"><div class="k">SELECTED PROJECT</div><h2>선택 프로젝트 상세</h2><p>V2 원문 설명은 삭제하지 않습니다. 매출등급은 보조판단입니다.</p></div><div id="detail" class="detail"></div></section></main>
-<iframe id="sourceFrame" class="sourceFrame" src="./hanasm-map-v2.html"></iframe><div id="mapModal" class="mapModal"><button class="close" id="closeMap">닫기</button><div class="mapBox"><iframe id="mapFrame" src="./hanasm-map-v2.html"></iframe></div></div>
+
+<header class="topbar">
+  <div class="brand">
+    <span class="ver">V3</span>
+    <h1>매출 매트릭스 · 대표 보고</h1>
+  </div>
+  <div class="search-wrap">
+    <input id="search" type="text" placeholder="🔍 검색 — 프로젝트명·부서·매출등급 (Ctrl+K)" autocomplete="off">
+  </div>
+  <div class="bulk-actions">
+    <span class="bulk-cnt" id="bulkCnt">선택 0</span>
+    <button data-bulk="first" disabled>⚡ 우선</button>
+    <button data-bulk="run" disabled>● 진행</button>
+    <button data-bulk="hold" disabled class="danger">⏸ 보류</button>
+    <button data-bulk="stop" disabled class="danger">⊘ 중단</button>
+    <button data-bulk="clear" disabled>✕ 해제</button>
+  </div>
+  <a class="v2-link" href="hanasm-map-v2.html" title="와이어 맵으로">← 와이어 맵</a>
+</header>
+
+<main class="app">
+  <section class="matrix-pane">
+    <div id="matrix">
+      <div class="quadrant q-tl"></div>
+      <div class="quadrant q-tr"></div>
+      <div class="quadrant q-bl"></div>
+      <div class="quadrant q-br"></div>
+      <div class="q-label dim"    style="top: 14px; left: 14px;">✓ 마무리</div>
+      <div class="q-label gold"   style="top: 14px; right: 14px;">⚡ 주력</div>
+      <div class="q-label dim"    style="bottom: 30px; left: 14px;">💤 나중에</div>
+      <div class="q-label danger" style="bottom: 30px; right: 14px;">💎 막힌 금광</div>
+      <div class="axis-tick" style="left: -36px; top: 8px;">100%</div>
+      <div class="axis-tick" style="left: -32px; top: 50%; transform: translateY(-50%);">50%</div>
+      <div class="axis-tick" style="left: -22px; bottom: 32px;">0%</div>
+    </div>
+    <div class="axis-x">매출 영향도 ──→ (장기 / 운영 / CS / 전환 / 직접매출)</div>
+    <div class="axis-y">진행률 ↑</div>
+  </section>
+  <aside class="detail-pane">
+    <div class="detail-head">
+      <div class="dh-label">선택 프로젝트</div>
+      <h2 id="detailTitle">카드 클릭하여 시작</h2>
+    </div>
+    <div class="detail-empty show" id="detailEmpty">
+      매트릭스에서 카드를 클릭하면 상세 내용이 여기 표시됩니다.<br><br>
+      <span style="color:#fbbf24">⚡ 우상단</span> = 주력 · 계속 진행<br>
+      <span style="color:#fb7185">💎 우하단</span> = 막힌 금광 (매출 큰데 진행 X)<br>
+      <span style="color:#94a3b8">✓ 좌상단</span> = 마무리 (진행 거의 끝)<br>
+      <span style="color:#94a3b8">💤 좌하단</span> = 나중에 (장기 기반)
+    </div>
+    <div class="detail-body detail-content" id="detailBody"></div>
+  </aside>
+</main>
+
+<div class="legend">
+  <div class="ltitle">매출 영향도 (색)</div>
+  <div class="row"><span class="sw" style="--c:#fbbf24"></span> 직접 — 광고·가격·신상</div>
+  <div class="row"><span class="sw" style="--c:#34d399"></span> 전환 — 주문·결제·옵션</div>
+  <div class="row"><span class="sw" style="--c:#60a5fa"></span> CS — 상담·재구매</div>
+  <div class="row"><span class="sw" style="--c:#c084fc"></span> 운영 — 자동화·처리량</div>
+  <div class="row"><span class="sw" style="--c:#94a3b8"></span> 장기 — SEO·콘텐츠</div>
+  <div class="hint">
+    <kbd>클릭</kbd> 선택 · <kbd>Shift+클릭</kbd> 다중<br>
+    <kbd>Ctrl+K</kbd> 검색 · <kbd>ESC</kbd> 해제
+  </div>
+</div>
+
+<div class="loading" id="loading">PROJECTS 데이터 로딩 중…</div>
+
 <script>
-const CAT_COLOR={ad:'#fbbf24',ai:'#c084fc',product:'#34d399',system:'#60a5fa',offline:'#fb923c'};
-const DEPT={web:'웹팀',cs:'CS팀',design:'디자인팀',dev:'개발팀',fin:'경영지원',sales:'외부영업',product:'제작실',factory2:'2공장'};
-let PROJECTS=null,cats={},items=[],ORDER=[],selected='',expanded={},projectState={},view='exec',selectedDept='web',deptOrders={};
-const $=s=>document.querySelector(s),esc=s=>String(s??'').replace(/[&<>"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));
-function safeEval(expr){try{return $('#sourceFrame').contentWindow.eval(expr)}catch(e){return undefined}}
-function loadFromV2(){try{PROJECTS=safeEval('PROJECTS');if(!PROJECTS)throw new Error('PROJECTS not accessible');projectState=safeEval('PROJECT_STATE')||{};cats=Object.fromEntries(Object.keys(PROJECTS).map(k=>[k,PROJECTS[k].name||k]));items=[];Object.keys(PROJECTS).forEach(cat=>(PROJECTS[cat].items||[]).forEach((p,i)=>items.push({...p,cat,id:cat+'::'+p.name,idx:i})));initCatOptions();initOrders();render()}catch(e){document.body.innerHTML='<div style="padding:24px"><h2>V3 로드 실패</h2><p>'+esc(e.message)+'</p></div>'}}
-function initCatOptions(){const sel=$('#cat');if(sel.dataset.ready)return;Object.keys(cats).forEach(k=>sel.insertAdjacentHTML('beforeend',`<option value="${esc(k)}">${esc(cats[k])}</option>`));sel.dataset.ready='1'}
-function initOrders(){const ids=items.map(x=>x.id);try{ORDER=JSON.parse(localStorage.getItem('hanasm.v3.exec.order')||'[]')}catch(e){ORDER=[]}if(!ORDER.length)ORDER=[...items].sort((a,b)=>priorityScore(b)-priorityScore(a)).map(x=>x.id);ORDER=ORDER.filter(id=>ids.includes(id));ids.forEach(id=>{if(!ORDER.includes(id))ORDER.push(id)});try{deptOrders=JSON.parse(localStorage.getItem('hanasm.v3.exec.deptOrders')||'{}')}catch(e){deptOrders={}}if(!selected)selected=ORDER[0]||'';saveOrders()}
-function saveOrders(){localStorage.setItem('hanasm.v3.exec.order',JSON.stringify(ORDER));localStorage.setItem('hanasm.v3.exec.deptOrders',JSON.stringify(deptOrders))}
-function ordered(){const m=new Map(items.map(x=>[x.id,x]));return ORDER.map(id=>m.get(id)).filter(Boolean)}
-function actionLabel(p){const k=p.cat+'::'+p.name;return projectState?.[k]?.action||p.decision||p.status||'go'}
-function actionKo(v){return {go:'진행',active:'진행',hold:'보류',later:'보류',stop:'중단'}[v]||v}
-function textOf(p){const d=document.createElement('div');d.innerHTML=[p.name,p.desc,p.startWhen,cats[p.cat]].join(' ');return d.textContent.replace(/\s+/g,' ').trim()}
-function revenue(p){const t=textOf(p);let tier='E',label='장기기반',reason='장기 유입·브랜드·데이터 기반';if(/가격인상|광고|G마켓|옥션|조달|매출|판매|구매|주차스티커 상세|상세페이지 일체|당일 배송|신상품|스마트스토어|쿠팡|11번가/.test(t)){tier='A';label='직접매출';reason='광고·판매채널·가격·상품상세 등 매출에 직접 연결'}else if(/주문 폼|단계별 주문|전환|옵션|상세페이지|카톡 링크|회원가입|견적 요청|결제|파일 업로드|디자인 파일/.test(t)){tier='B';label='전환개선';reason='주문/결제/상담 전환 병목 개선'}else if(/CS|상담|챗봇|RAG|DM|통화|카톡|재구매|신규 분리/.test(t)){tier='C';label='CS전환';reason='상담·견적·재구매 전환 보조'}else if(/ERP|공정|매칭|자동화|플레이오토|KPI|발주|업무표|코드|토글/.test(t)){tier='D';label='운영처리량';reason='처리량·오류·반복업무 개선'}return {tier,label,reason,rank:{A:5,B:4,C:3,D:2,E:1}[tier]}}
-function priorityScore(p){const pr={h:30,m:20,l:10}[p.prio]||10,rv=revenue(p).rank*25,st=/(hold|later|stop)/.test(actionLabel(p))?-7:8,prog=Math.min(15,Math.round((p.progress||0)/7));return rv+pr+st+prog}
-function shortText(html,n){const d=document.createElement('div');d.innerHTML=html||'';let t=d.textContent.replace(/\s+/g,' ').trim();return t.length>n?t.slice(0,n)+'…':t}
-function relText(p){return (p.related||[]).map(x=>DEPT[x]||x).join(', ')||'없음'}
-function malls(p){const t=textOf(p),h=[];const add=(biz,name)=>h.push({biz,name});if(/하나몰|더바른|스마트스토어|로켓|네이버|DTF/.test(t))add('personal','개인사업자/스마트스토어 계열');if(/신규몰|자사몰|\.kr|회원가입|자료실|대형 단지|파일 업로드|통합 상담/.test(t))add('corp','법인사업자/신규몰 .kr');if(/고도몰|\.com/.test(t))add('corp','고도몰 .com');if(/쿠팡/.test(t))add('corp','쿠팡');if(/G마켓|옥션|조달|공공기관/.test(t))add('corp','G마켓/옥션');if(/11번가/.test(t))add('corp','11번가');if(/ERP|공정|매칭코드|이카운트/.test(t))add('system','ERP/DB');if(/플레이오토/.test(t))add('system','플레이오토');return h.length?h:[{biz:'none',name:'특정몰 직접 명시 없음'}]}
-function filtered(list=ordered()){const q=$('#q').value.trim().toLowerCase(),cat=$('#cat').value,st=$('#state').value,rf=$('#revFilter').value;return list.filter(p=>{const a=actionLabel(p),rv=revenue(p);return (cat==='all'||p.cat===cat)&&(rf==='all'||rv.tier===rf)&&(st==='all'||(st==='go'&&/^(go|active)$/.test(a))||(st==='hold'&&/(hold|later|stop)/.test(a)))&&(!q||[p.name,p.owner,p.ownerDept,p.startWhen,p.desc,(p.related||[]).join(' ')].join(' ').toLowerCase().includes(q))})}
-function render(){const p=items.find(x=>x.id===selected)||filtered()[0]||items[0];selected=p?p.id:'';renderSummary();if(view==='exec')renderExec();if(view==='sales')renderSales();if(view==='dept')renderDept();if(view==='biz')renderBiz();if(view==='blocked')renderBlocked();renderDetail(p)}
-function renderSummary(){const all=items, direct=all.filter(p=>revenue(p).tier==='A').length, blocked=all.filter(p=>/(hold|later|stop)/.test(actionLabel(p))).length, dense=deptStats()[0];$('#summary').innerHTML=`<div class=sum><b>${all.length}</b><span>전체 프로젝트</span></div><div class=sum><b>${direct}</b><span>직접매출</span></div><div class=sum><b>${blocked}</b><span>보류/중단</span></div><div class=sum><b>${dense?DEPT[dense.dept]||dense.dept:'-'}</b><span>최다 부서</span></div><div class=sum><b>${filtered().length}</b><span>현재 보기</span></div>`}
-function setTitle(k,t,d){$('#viewK').textContent=k;$('#viewTitle').textContent=t;$('#viewDesc').textContent=d}
-function renderExec(){setTitle('EXECUTIVE SUMMARY','대표 판단 대시보드','매출증진 기준으로 전체 현황, 과밀 부서, 막힌 업무, 사업자/몰 영향을 한 화면에서 봅니다.');const f=filtered(), top=f.slice(0,5), st=deptStats().slice(0,5), blocked=f.filter(p=>/(hold|later|stop)/.test(actionLabel(p))||((p.progress||0)<20&&revenue(p).rank>=4)).slice(0,5);$('#mainBody').innerHTML=`<div class=dashGrid><section class=box><h3>이번에 먼저 볼 매출 우선 프로젝트</h3>${top.map((p,i)=>card(p,i,'compact')).join('')}</section><section class=box><h3>부서별 과밀</h3><div class=deptGrid>${st.map(s=>deptCard(s)).join('')}</div><h3 class=sectionTitle>막힌 매출업무</h3>${blocked.map((p,i)=>card(p,i,'compact')).join('')||'<div class=empty>없음</div>'}</section></div>`}
-function renderSales(){setTitle('REVENUE ORDER','매출 우선순서','직접매출 → 전환개선 → CS전환 → 운영처리량 → 장기기반 순으로 대표 판단 순서를 잡습니다.');$('#mainBody').innerHTML=filtered().map((p,i)=>card(p,i,'global')).join('')||'<div class=empty>표시할 프로젝트가 없습니다.</div>'}
-function card(p,i,scope){const rv=revenue(p),open=expanded[p.id],ms=malls(p).map(m=>m.name).join(', ');return `<article class="card ${p.id===selected?'on':''}" style="--c:${CAT_COLOR[p.cat]||'#60a5fa'}" onclick="selected='${esc(p.id)}';render()"><div class=topline><div class=rank>${i+1}</div><div><h3>${esc(p.name)}</h3><div class=brief>${esc(shortText(p.desc,scope==='compact'?115:185))}</div><div class=chips><span class="chip rev${rv.tier}">${rv.tier} ${rv.label}</span><span class=chip>${esc(cats[p.cat])}</span><span class=chip>${actionKo(actionLabel(p))}</span><span class=chip>${p.progress||0}%</span></div></div><div class=actions onclick="event.stopPropagation()"><button onclick="moveProject('${esc(p.id)}',-1)">↑</button><button onclick="moveProject('${esc(p.id)}',1)">↓</button><button class="${open?'active':''}" onclick="toggle('${esc(p.id)}')">원문</button><button onclick="showMap('${esc(p.id)}')">맵</button></div></div>${scope==='compact'?'':`<div class=miniRel><div><b>매출 판단</b><br>${esc(rv.reason)}</div><div><b>부서</b><br>주관 ${esc(DEPT[p.ownerDept]||p.ownerDept||'-')} / 유관 ${esc(relText(p))}</div><div><b>몰·시스템</b><br>${esc(ms)}</div></div>`}${open?`<div class=descFold>${p.desc||''}</div>`:''}</article>`}
-function deptStats(){const map={};items.forEach(p=>{const d=p.ownerDept||'none';map[d]=map[d]||{dept:d,count:0,score:0,direct:0,blocked:0,items:[]};map[d].count++;map[d].score+=priorityScore(p);if(revenue(p).tier==='A')map[d].direct++;if(/(hold|later|stop)/.test(actionLabel(p)))map[d].blocked++;map[d].items.push(p)});return Object.values(map).sort((a,b)=>b.score-a.score)}
-function deptCard(s){return `<div class="deptCard ${selectedDept===s.dept?'on':''}" onclick="selectedDept='${esc(s.dept)}';view='dept';setTabs();render()"><h3>${esc(DEPT[s.dept]||s.dept||'미지정')}</h3><div class=chips><span class=chip>${s.count}건</span><span class="chip revA">직접 ${s.direct}</span><span class=chip>보류 ${s.blocked}</span></div><div class=meter><i style="width:${Math.min(100,s.score/5)}%"></i></div></div>`}
-function renderDept(){setTitle('DEPARTMENT CAPACITY','부서별 밀도·순서','부서별 매출 관련 업무 밀도를 보고, 부서 안에서 별도 순서를 정합니다.');const stats=deptStats();let html='<div class=deptGrid>'+stats.map(deptCard).join('')+'</div>';const list=deptOrdered(selectedDept);html+=`<h3 class=sectionTitle>${esc(DEPT[selectedDept]||selectedDept||'미지정')} 부서 내 순서</h3>`+list.map((p,i)=>card(p,i,'dept')).join('');$('#mainBody').innerHTML=html}
-function deptOrdered(dept){let list=items.filter(p=>p.ownerDept===dept||(!dept&& !p.ownerDept));let ids=list.map(p=>p.id),arr=deptOrders[dept]||[];if(!arr.length)arr=[...list].sort((a,b)=>priorityScore(b)-priorityScore(a)).map(p=>p.id);arr=arr.filter(id=>ids.includes(id));ids.forEach(id=>{if(!arr.includes(id))arr.push(id)});deptOrders[dept]=arr;saveOrders();const m=new Map(list.map(p=>[p.id,p]));return arr.map(id=>m.get(id)).filter(Boolean)}
-function renderBiz(){setTitle('BUSINESS / MALL IMPACT','사업자·몰 영향','대표가 기본으로 보는 개인사업자/법인사업자 구분에 따라 프로젝트 영향을 나눠 봅니다.');const f=filtered(), personal=f.filter(p=>malls(p).some(m=>m.biz==='personal')), corp=f.filter(p=>malls(p).some(m=>m.biz==='corp')), system=f.filter(p=>malls(p).some(m=>m.biz==='system'));$('#mainBody').innerHTML=`<div class=bizColumns><section class=bizCol><h3>개인사업자 몰 영향 ${personal.length}건</h3>${personal.map((p,i)=>card(p,i,'compact')).join('')||'<div class=empty>없음</div>'}</section><section class=bizCol><h3>법인사업자 몰 영향 ${corp.length}건</h3>${corp.map((p,i)=>card(p,i,'compact')).join('')||'<div class=empty>없음</div>'}</section><section class=bizCol><h3>시스템/ERP 영향 ${system.length}건</h3>${system.map((p,i)=>card(p,i,'compact')).join('')||'<div class=empty>없음</div>'}</section><section class=bizCol><h3>특정몰 직접 명시 없음</h3>${f.filter(p=>malls(p).some(m=>m.biz==='none')).map((p,i)=>card(p,i,'compact')).join('')||'<div class=empty>없음</div>'}</section></div>`}
-function renderBlocked(){setTitle('BLOCKED REVENUE WORK','막힌 매출업무','매출 영향이 있는데 보류·중단·저진행인 항목입니다. 대표가 “왜 안 됐는지” 확인하는 화면입니다.');const list=filtered().filter(p=>/(hold|later|stop)/.test(actionLabel(p))||((p.progress||0)<20&&revenue(p).rank>=4));$('#mainBody').innerHTML=list.map((p,i)=>card(p,i,'global')).join('')||'<div class=empty>막힌 매출업무가 없습니다.</div>'}
-function renderDetail(p){if(!p){$('#detail').innerHTML='<div class=empty>선택된 프로젝트가 없습니다.</div>';return}const rv=revenue(p),ms=malls(p);$('#detail').innerHTML=`<div class=detailCard><h3>${esc(p.name)}</h3><div class=pills><span class="pill gold">${rv.tier} ${rv.label}</span><span class="pill blue">${esc(cats[p.cat])}</span><span class="pill green">주관 ${esc(DEPT[p.ownerDept]||p.ownerDept||'-')}</span><span class=pill>${actionKo(actionLabel(p))}</span><span class=pill>${p.progress||0}%</span></div><div class=infoGrid><div class=info><b>매출 판단</b><br>${esc(rv.reason)}</div><div class=info><b>시기/담당</b><br>${esc(p.startWhen||'-')} / ${esc(p.owner||'-')}</div><div class=info><b>유관부서</b><br>${esc(relText(p))}</div><div class=info><b>우선점수</b><br>${priorityScore(p)}</div></div><div class=bizTree><div class=bizRow><span class="biz root">하나사인몰</span></div><div class=bizRow><span class="biz personal ${ms.some(x=>x.biz==='personal')?'hit':''}">개인사업자</span>${ms.filter(x=>x.biz==='personal').map(x=>`<span class="biz hit">${esc(x.name)}</span>`).join('')}</div><div class=bizRow><span class="biz corp ${ms.some(x=>x.biz==='corp')?'hit':''}">법인사업자</span>${ms.filter(x=>x.biz==='corp').map(x=>`<span class="biz hit">${esc(x.name)}</span>`).join('')}</div><div class=bizRow>${ms.filter(x=>x.biz==='system'||x.biz==='none').map(x=>`<span class="biz ${x.biz==='none'?'':'hit'}">${esc(x.name)}</span>`).join('')}</div></div><div class=warn>매출등급과 몰 영향은 V2 원문 키워드 기반 보조판단입니다. 정확 필드는 추후 revenue_tier / business_scope로 분리하는 게 좋습니다.</div><h3 style="margin-top:16px">원문 상세</h3><div class=fullDesc>${p.desc||''}</div></div>`}
-function toggle(id){expanded[id]=!expanded[id];selected=id;render()}function moveProject(id,dir){let f=filtered().map(p=>p.id),i=f.indexOf(id),j=i+dir;if(i<0||j<0||j>=f.length)return;let a=ORDER.indexOf(f[i]),b=ORDER.indexOf(f[j]);[ORDER[a],ORDER[b]]=[ORDER[b],ORDER[a]];selected=id;saveOrders();render()}function showMap(id){selected=id;const p=items.find(x=>x.id===id);$('#mapModal').classList.add('show');setTimeout(()=>{try{$('#mapFrame').contentWindow.eval(`focusProjectRelation(${JSON.stringify(p.ownerDept||'')}, ${JSON.stringify(p.related||[])})`)}catch(e){}},700)}function setTabs(){document.querySelectorAll('[data-view]').forEach(b=>b.classList.toggle('on',b.dataset.view===view))}
-$('#q').oninput=render;$('#cat').onchange=render;$('#state').onchange=render;$('#revFilter').onchange=render;document.querySelectorAll('[data-view]').forEach(b=>b.onclick=()=>{view=b.dataset.view;setTabs();render()});$('#openMap').onclick=()=>$('#mapModal').classList.add('show');$('#closeMap').onclick=()=>$('#mapModal').classList.remove('show');$('#sourceFrame').addEventListener('load',()=>setTimeout(loadFromV2,700));setTimeout(()=>{if(!PROJECTS)loadFromV2()},1800);
+async function loadData() {
+  try {
+    const r = await fetch('./hanasm-map-v2.html?t=' + Date.now(), { cache: 'no-store' });
+    if (!r.ok) throw new Error('v2 HTML fetch 실패 (' + r.status + ')');
+    const html = await r.text();
+    const m = html.match(/const PROJECTS = (\{[\s\S]*?\n\});\s*\n\s*const PCATS/);
+    if (!m) throw new Error('PROJECTS 객체 추출 실패');
+    return (new Function('return ' + m[1]))();
+  } catch(e) {
+    document.getElementById('loading').remove();
+    document.body.insertAdjacentHTML('beforeend',
+      '<div class="error"><h3>데이터 로드 실패</h3>' +
+      '<p>' + e.message + '</p>' +
+      '<p style="margin-top:12px;">GitHub Pages를 통해 열어주세요 (file:// 직접 열기는 fetch 제한).<br>' +
+      '<a style="color:#67e8f9" href="hanasm-map-v2.html">→ 와이어 맵(v2)으로 이동</a></p></div>');
+    throw e;
+  }
+}
+
+let ITEMS = [];
+let SELECTED = new Set();
+let SEARCH_Q = '';
+const PCATS_NAMES = { ad:'광고', ai:'인공지능·자동화', product:'신상품·등록', system:'시스템·자사물', offline:'오프라인·영업' };
+const REV_LABEL = { A:'직접매출', B:'전환개선', C:'CS전환', D:'운영', E:'장기기반' };
+const REV_X = { E:0.10, D:0.30, C:0.50, B:0.70, A:0.90 };
+const ACTION_LABEL = { run:'진행', first:'우선', hold:'보류', stop:'중단', merge:'통합' };
+
+function loadProjectState() {
+  try { return JSON.parse(localStorage.getItem('hanasm.projectState.v3') || '{}'); } catch(e) { return {}; }
+}
+function saveProjectState(s) {
+  try { localStorage.setItem('hanasm.projectState.v3', JSON.stringify(s)); } catch(e) {}
+}
+function pushDecisionLog(key, before, after) {
+  const [cat, ...rest] = key.split('::');
+  const name = rest.join('::');
+  let log;
+  try { log = JSON.parse(localStorage.getItem('hanasm.decisionsLog.v3') || '[]'); } catch(e) { log = []; }
+  log.push({ ts: Date.now(), iso: new Date().toISOString(), cat, name, before, after });
+  try { localStorage.setItem('hanasm.decisionsLog.v3', JSON.stringify(log)); } catch(e) {}
+}
+function getAction(key, item) {
+  const st = loadProjectState();
+  const fallback = item.status === 'stop' ? 'stop' : (item.decision === 'hold' || item.decision === 'later' ? 'hold' : 'run');
+  return (st[key] && (st[key].action === 'after' ? 'hold' : st[key].action)) || fallback;
+}
+function setAction(key, action) {
+  const st = loadProjectState();
+  const before = (st[key] && st[key].action) || 'run';
+  if (before === action) return;
+  st[key] = Object.assign({}, st[key] || {}, { action });
+  saveProjectState(st);
+  pushDecisionLog(key, before, action);
+}
+
+function projectXY(item) {
+  const tier = item.revTier || 'E';
+  return { x: REV_X[tier], y: Math.max(0, Math.min(100, item.progress || 0)) / 100 };
+}
+
+function applyOffsets(items) {
+  const groups = new Map();
+  items.forEach(e => {
+    const xy = projectXY(e.item);
+    const key = Math.round(xy.x * 10) + ':' + Math.round(xy.y * 10);
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key).push(e);
+  });
+  groups.forEach(grp => {
+    grp.forEach((e, i) => {
+      if (i === 0) { e._dx = 0; e._dy = 0; return; }
+      const angle = (i * 137.5) * Math.PI / 180;
+      const r = 14 + (i - 1) * 4;
+      e._dx = Math.cos(angle) * r;
+      e._dy = Math.sin(angle) * r;
+    });
+  });
+}
+
+function placeCards() {
+  const matrix = document.getElementById('matrix');
+  matrix.querySelectorAll('.card').forEach(c => c.remove());
+  const rect = matrix.getBoundingClientRect();
+  const padL = 10, padR = 10, padT = 10, padB = 30;
+  const W = rect.width - padL - padR;
+  const H = rect.height - padT - padB;
+  ITEMS.forEach(e => {
+    const xy = projectXY(e.item);
+    const dx = e._dx || 0, dy = e._dy || 0;
+    const left = padL + xy.x * W + dx;
+    const bottom = padB + xy.y * H + dy;
+    const c = document.createElement('div');
+    c.className = 'card prio-' + (e.item.prio || 'm') + ' rev-' + (e.item.revTier || 'E');
+    c.style.left = left + 'px';
+    c.style.bottom = bottom + 'px';
+    c.style.transform = 'translate(-50%, 50%)';
+    c.dataset.key = e.key;
+    c.innerHTML = '<div class="dot"></div><div class="label">' + escapeHtml(e.item.name) + ' · ' + (e.item.progress || 0) + '%</div>';
+    if (SELECTED.has(e.key)) c.classList.add('selected');
+    if (SEARCH_Q) {
+      const hay = (e.item.name + ' ' + (e.item.owner || '') + ' ' + (e.item.ownerDept || '') + ' ' + REV_LABEL[e.item.revTier || 'E'] + ' ' + PCATS_NAMES[e.cat]).toLowerCase();
+      if (hay.includes(SEARCH_Q.toLowerCase())) c.classList.add('matched');
+      else c.classList.add('dim');
+    }
+    c.addEventListener('click', (ev) => {
+      ev.stopPropagation();
+      if (ev.shiftKey) {
+        if (SELECTED.has(e.key)) SELECTED.delete(e.key);
+        else SELECTED.add(e.key);
+      } else {
+        SELECTED.clear();
+        SELECTED.add(e.key);
+      }
+      placeCards();
+      renderDetail();
+      renderBulkActions();
+    });
+    matrix.appendChild(c);
+  });
+}
+
+function renderDetail() {
+  const emptyEl = document.getElementById('detailEmpty');
+  const bodyEl = document.getElementById('detailBody');
+  const titleEl = document.getElementById('detailTitle');
+  if (SELECTED.size === 0) {
+    emptyEl.classList.add('show');
+    bodyEl.classList.remove('show');
+    titleEl.textContent = '카드 클릭하여 시작';
+    return;
+  }
+  if (SELECTED.size > 1) {
+    emptyEl.classList.remove('show');
+    bodyEl.classList.add('show');
+    titleEl.textContent = '다중 선택 (' + SELECTED.size + '건)';
+    bodyEl.innerHTML = '<div class="dc-desc">상단의 일괄 액션 버튼으로 한 번에 결정하세요.<br><br>'
+      + '<b>선택된 프로젝트:</b><br>'
+      + Array.from(SELECTED).map(k => {
+        const e = ITEMS.find(x => x.key === k);
+        return e ? '• ' + escapeHtml(e.item.name) + ' (' + REV_LABEL[e.item.revTier || 'E'] + ', ' + (e.item.progress || 0) + '%)' : '';
+      }).join('<br>')
+      + '</div>';
+    return;
+  }
+  const key = Array.from(SELECTED)[0];
+  const e = ITEMS.find(x => x.key === key);
+  if (!e) { emptyEl.classList.add('show'); bodyEl.classList.remove('show'); return; }
+  emptyEl.classList.remove('show');
+  bodyEl.classList.add('show');
+  titleEl.textContent = e.item.name;
+  const tier = e.item.revTier || 'E';
+  const action = getAction(key, e.item);
+  const ownerName = e.item.ownerDept || '';
+  const related = (e.item.related || []).join(', ') || '없음';
+  bodyEl.innerHTML =
+    '<div class="dc-meta">'
+    +   '<span class="pill pill-rev-' + tier + '">' + REV_LABEL[tier] + '</span>'
+    +   '<span class="pill pill-cat">' + PCATS_NAMES[e.cat] + '</span>'
+    +   '<span class="pill pill-prog">' + (e.item.progress || 0) + '%</span>'
+    + '</div>'
+    + (e.item.startWhen ? '<div class="dc-when">📅 ' + escapeHtml(e.item.startWhen) + '</div>' : '')
+    + '<div class="dc-owner"><b>주관</b> ' + escapeHtml(ownerName || '-') + ' · <b>유관</b> ' + escapeHtml(related) + (e.item.owner ? ' · <b>담당</b> ' + escapeHtml(e.item.owner) : '') + '</div>'
+    + '<div class="dc-actions">'
+    +   ['first','run','hold','stop','merge'].map(a => '<button data-act="' + a + '" class="' + (action === a ? 'active' : '') + '">' + ACTION_LABEL[a] + '</button>').join('')
+    + '</div>'
+    + '<div class="dc-desc">' + (e.item.desc || '<i style="color:#6b7280">설명 없음</i>') + '</div>';
+  bodyEl.querySelectorAll('.dc-actions button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      setAction(key, btn.dataset.act);
+      renderDetail();
+      placeCards();
+    });
+  });
+}
+
+function renderBulkActions() {
+  const cnt = SELECTED.size;
+  document.getElementById('bulkCnt').textContent = '선택 ' + cnt;
+  document.querySelectorAll('[data-bulk]').forEach(b => { b.disabled = (cnt === 0); });
+}
+
+function applyBulk(action) {
+  if (action === 'clear') { SELECTED.clear(); }
+  else {
+    SELECTED.forEach(key => {
+      const e = ITEMS.find(x => x.key === key);
+      if (e) setAction(key, action);
+    });
+  }
+  placeCards();
+  renderDetail();
+  renderBulkActions();
+}
+
+function escapeHtml(s) {
+  return String(s == null ? '' : s).replace(/[&<>"]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));
+}
+
+(async function init() {
+  let PROJECTS;
+  try { PROJECTS = await loadData(); }
+  catch(e) { console.error(e); return; }
+  document.getElementById('loading').remove();
+  ITEMS = [];
+  Object.keys(PROJECTS).forEach(cat => {
+    (PROJECTS[cat].items || []).forEach(item => {
+      ITEMS.push({ cat, key: cat + '::' + item.name, item });
+    });
+  });
+  try {
+    const user = JSON.parse(localStorage.getItem('hanasm.userProjects.v3') || '{}');
+    Object.keys(user).forEach(cat => {
+      (user[cat] || []).forEach(item => {
+        ITEMS.push({ cat, key: cat + '::' + item.name, item });
+      });
+    });
+  } catch(e) {}
+  applyOffsets(ITEMS);
+  placeCards();
+  renderBulkActions();
+  const searchEl = document.getElementById('search');
+  searchEl.addEventListener('input', () => {
+    SEARCH_Q = searchEl.value.trim();
+    placeCards();
+  });
+  document.querySelectorAll('[data-bulk]').forEach(b => {
+    b.addEventListener('click', () => applyBulk(b.dataset.bulk));
+  });
+  document.addEventListener('keydown', (e) => {
+    const tag = (e.target && e.target.tagName) || '';
+    if ((e.key === 'k' || e.key === 'K') && (e.metaKey || e.ctrlKey)) {
+      e.preventDefault();
+      searchEl.focus();
+      searchEl.select();
+    }
+    if (e.key === 'Escape') {
+      if (tag === 'INPUT') searchEl.blur();
+      else { SELECTED.clear(); placeCards(); renderDetail(); renderBulkActions(); }
+    }
+  });
+  document.querySelector('.matrix-pane').addEventListener('click', (e) => {
+    if (e.target.closest('.card')) return;
+    SELECTED.clear();
+    placeCards();
+    renderDetail();
+    renderBulkActions();
+  });
+  window.addEventListener('resize', () => placeCards());
+})();
 </script>
 </body>
 </html>
