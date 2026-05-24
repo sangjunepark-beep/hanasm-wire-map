@@ -3,31 +3,33 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>HANASM V3 · 대표 보고 (4분면 우선순위)</title>
+<title>HANASM V3 · 칸반 보드 (드래그 결정)</title>
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
 :root {
   --bg-0:#050614; --bg-1:#0a0b22; --bg-2:#12142e;
-  --line:rgba(167,139,250,0.18); --line-strong:rgba(34,211,238,0.45);
+  --line:rgba(167,139,250,0.20); --line-strong:rgba(34,211,238,0.50);
   --text-1:#f3f4fb; --text-2:#c5c9e0; --text-3:#8a8fad;
   --rev-A:#fbbf24; --rev-B:#34d399; --rev-C:#60a5fa; --rev-D:#c084fc; --rev-E:#94a3b8;
-  --gold:#fbbf24; --gold-strong:#f59e0b;
-  --danger:#fb7185; --info:#22d3ee; --muted:#94a3b8;
+  --gold:#fbbf24; --info:#22d3ee; --muted:#94a3b8; --danger:#fb7185;
+  --act-first:#fbbf24; --act-run:#22d3ee; --act-hold:#fbbf24; --act-stop:#94a3b8;
 }
 html, body {
   height: 100vh; overflow: hidden;
   background: var(--bg-0); color: var(--text-1);
-  font-family: "Pretendard", "Noto Sans KR", "Inter", system-ui, sans-serif;
+  font-family: "JetBrains Mono", "Inter", "Pretendard", "Noto Sans KR", monospace, system-ui;
   -webkit-font-smoothing: antialiased; letter-spacing: 0.01em;
+  user-select: none;  /* 텍스트 드래그 선택 방지 — Shift 다중 선택 시 긁힘 해결 */
 }
 body {
   background:
-    radial-gradient(ellipse at 20% 30%, rgba(251,113,133,0.06), transparent 55%),
-    radial-gradient(ellipse at 80% 90%, rgba(34,211,238,0.05), transparent 55%),
-    linear-gradient(180deg, #050614 0%, #08091f 50%, #050614 100%);
+    radial-gradient(ellipse at 25% 30%, rgba(167,139,250,0.08), transparent 60%),
+    radial-gradient(ellipse at 75% 70%, rgba(96,165,250,0.07), transparent 60%),
+    radial-gradient(circle at 50% 50%, rgba(34,211,238,0.025), transparent 55%),
+    linear-gradient(180deg, #050614 0%, #07091b 50%, #050614 100%);
 }
 
-/* TOP BAR */
+/* TOP BAR — v2와 동일 톤 */
 .topbar {
   position: fixed; top: 0; left: 0; right: 0; z-index: 100;
   height: 56px; padding: 0 22px;
@@ -36,16 +38,19 @@ body {
   border-bottom: 1px solid var(--line);
 }
 .brand { display: flex; align-items: center; gap: 10px; }
+.brand img { height: 16px; filter: drop-shadow(0 0 6px rgba(167,139,250,0.5)) brightness(1.15); }
 .brand .ver {
   font-size: 10.5px; padding: 3px 8px; font-weight: 900;
-  background: var(--gold); color: #050614;
+  background: rgba(251,191,36,0.15); color: var(--gold);
+  border: 1px solid rgba(251,191,36,0.45);
   letter-spacing: 0.10em;
   clip-path: polygon(4px 0, 100% 0, 100% calc(100% - 4px), calc(100% - 4px) 100%, 0 100%, 0 4px);
 }
 .brand h1 {
-  font-size: 14px; font-weight: 900; letter-spacing: 0.06em;
-  background: linear-gradient(90deg, var(--gold), var(--info));
+  font-size: 13px; font-weight: 800; letter-spacing: 0.14em;
+  background: linear-gradient(90deg, #c084fc, #93c5fd);
   -webkit-background-clip: text; background-clip: text; color: transparent;
+  text-transform: uppercase;
 }
 .search-wrap { flex: 0 1 280px; position: relative; }
 #search {
@@ -56,7 +61,7 @@ body {
   padding: 0 12px; outline: none;
   clip-path: polygon(4px 0, 100% 0, 100% calc(100% - 4px), calc(100% - 4px) 100%, 0 100%, 0 4px);
 }
-#search:focus { border-color: rgba(34,211,238,0.55); background: rgba(8,9,28,0.96); }
+#search:focus { border-color: var(--line-strong); background: rgba(8,9,28,0.96); }
 #search::placeholder { color: var(--text-3); }
 
 .bulk-actions { display: flex; gap: 6px; align-items: center; margin-left: auto; }
@@ -76,7 +81,6 @@ body {
   clip-path: polygon(3px 0, 100% 0, 100% calc(100% - 3px), calc(100% - 3px) 100%, 0 100%, 0 3px);
 }
 .bulk-actions button:hover { color: #fff; border-color: var(--info); background: rgba(34,211,238,0.12); }
-.bulk-actions button.danger:hover { border-color: var(--gold); color: var(--gold); background: rgba(251,191,36,0.10); }
 .bulk-actions button:disabled { opacity: 0.32; cursor: not-allowed; }
 .v2-link {
   font-size: 11px; font-weight: 800; letter-spacing: 0.10em; text-transform: uppercase;
@@ -86,131 +90,137 @@ body {
 }
 .v2-link:hover { background: rgba(34,211,238,0.15); color: #fff; }
 
-/* HERO BAR — 4분면 의미 설명 (대표가 첫 화면에서 즉시 인식) */
-.hero {
+/* HINT BAR */
+.hint {
   position: fixed; top: 56px; left: 0; right: 0;
-  padding: 14px 22px;
+  padding: 8px 22px;
   background: rgba(8,9,28,0.60);
   border-bottom: 1px solid var(--line);
-  display: flex; align-items: center; gap: 18px;
-  font-size: 12.5px; color: var(--text-2);
+  display: flex; align-items: center; gap: 14px;
+  font-size: 11px; color: var(--text-3);
   z-index: 90;
 }
-.hero .hk { font-size: 11px; font-weight: 900; letter-spacing: 0.18em; color: var(--text-3); text-transform: uppercase; }
-.hero .hl { color: var(--text-1); }
-.hero .hl b { color: var(--danger); font-weight: 800; }
-.hero .axis { margin-left: auto; display: flex; gap: 16px; align-items: center; font-size: 10.5px; color: var(--text-3); }
-.hero .axis-chip {
+.hint kbd {
+  display: inline-block;
+  padding: 1px 6px; margin: 0 2px;
+  background: rgba(34,211,238,0.10);
+  border: 1px solid rgba(34,211,238,0.30);
+  color: var(--info); font-size: 10px;
+  font-family: inherit;
+}
+.hint .legend {
+  margin-left: auto; display: flex; gap: 10px; align-items: center; font-size: 10.5px;
+}
+.hint .legend-chip {
   display: inline-flex; align-items: center; gap: 5px;
-  padding: 3px 8px;
+  padding: 2px 8px;
   background: rgba(255,255,255,0.04);
   border: 1px solid var(--line);
-  font-weight: 700;
+  font-weight: 700; letter-spacing: 0.04em;
 }
-.hero .axis-chip .dot {
+.hint .legend-chip .sw {
   width: 8px; height: 8px; background: var(--c);
-  display: inline-block;
+  box-shadow: 0 0 4px var(--c);
 }
 
-/* APP — 4컬럼 + 우측 디테일 */
+/* APP — 4 컬럼 + 우측 디테일 */
 .app {
-  position: fixed; top: 110px; left: 0; right: 0; bottom: 0;
+  position: fixed; top: 96px; left: 0; right: 0; bottom: 0;
   display: grid; grid-template-columns: repeat(4, 1fr) 360px;
   gap: 10px; padding: 12px 14px 14px;
   overflow: hidden;
 }
 .col {
-  background: rgba(8,9,28,0.55);
+  background: rgba(8,9,28,0.60);
   border: 1px solid var(--line);
+  border-top: 3px solid var(--col-c, var(--muted));
   display: flex; flex-direction: column;
   overflow: hidden;
   clip-path: polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px);
   position: relative;
+  transition: border-color 0.15s, background 0.15s;
 }
-.col.col-blocked {
-  background: linear-gradient(180deg, rgba(251,113,133,0.10), rgba(251,113,133,0.02) 30%);
-  border-color: rgba(251,113,133,0.45);
-  box-shadow: 0 0 24px rgba(251,113,133,0.10) inset;
-}
-.col.col-foray {
-  background: linear-gradient(180deg, rgba(251,191,36,0.10), rgba(251,191,36,0.02) 30%);
-  border-color: rgba(251,191,36,0.40);
-}
-.col.col-finish {
-  background: linear-gradient(180deg, rgba(34,211,238,0.06), rgba(34,211,238,0.01) 30%);
-  border-color: rgba(34,211,238,0.30);
-}
-.col.col-later {
-  background: linear-gradient(180deg, rgba(148,163,184,0.06), rgba(148,163,184,0.01) 30%);
-  border-color: rgba(148,163,184,0.30);
+.col[data-act="first"] { --col-c: var(--gold); }
+.col[data-act="run"]   { --col-c: var(--info); }
+.col[data-act="hold"]  { --col-c: var(--gold); opacity: 0.94; }
+.col[data-act="stop"]  { --col-c: var(--muted); opacity: 0.88; }
+.col.drag-over {
+  background: rgba(34,211,238,0.06);
+  border-color: var(--info);
+  box-shadow: 0 0 16px rgba(34,211,238,0.18) inset;
 }
 .col-head {
-  padding: 14px 14px 12px;
+  padding: 12px 14px 10px;
   border-bottom: 1px solid var(--line);
+  background: rgba(5,6,20,0.85);
   position: sticky; top: 0; z-index: 2;
-  background: rgba(5,6,20,0.92);
 }
 .col-head .ch-title {
   display: flex; align-items: center; gap: 10px;
-  font-size: 15px; font-weight: 900; letter-spacing: 0.04em;
+  font-size: 14px; font-weight: 900; letter-spacing: 0.08em;
+  color: var(--col-c, var(--text-1));
 }
 .col-head .ch-cnt {
   margin-left: auto;
   font-size: 11px; font-weight: 800;
   padding: 2px 8px;
-  background: rgba(255,255,255,0.06);
+  background: rgba(255,255,255,0.05);
   border: 1px solid var(--line);
-  letter-spacing: 0.04em;
+  color: var(--text-2);
   clip-path: polygon(3px 0, 100% 0, 100% calc(100% - 3px), calc(100% - 3px) 100%, 0 100%, 0 3px);
 }
-.col-head .ch-axis {
-  font-size: 10px; font-weight: 700; letter-spacing: 0.10em;
-  color: var(--text-3); margin-top: 5px; text-transform: uppercase;
+.col-head .ch-hint {
+  font-size: 9.5px; color: var(--text-3); letter-spacing: 0.08em;
+  margin-top: 4px; text-transform: uppercase; font-weight: 700;
 }
-.col-blocked .ch-title { color: var(--danger); }
-.col-foray   .ch-title { color: var(--gold); }
-.col-finish  .ch-title { color: var(--info); }
-.col-later   .ch-title { color: var(--muted); }
 .col-body {
   flex: 1; overflow-y: auto; padding: 10px;
-  display: flex; flex-direction: column; gap: 8px;
-  scrollbar-width: thin; scrollbar-color: rgba(167,139,250,0.40) transparent;
+  display: flex; flex-direction: column; gap: 7px;
+  scrollbar-width: thin;
+  min-height: 200px;
 }
+.col-body::-webkit-scrollbar { width: 6px; }
+.col-body::-webkit-scrollbar-thumb { background: rgba(167,139,250,0.30); }
 .col-empty {
-  margin: 24px auto; text-align: center;
-  color: var(--text-3); font-size: 11.5px; line-height: 1.7;
-  padding: 14px;
+  margin: 18px 8px; padding: 14px; text-align: center;
+  color: var(--text-3); font-size: 11px; line-height: 1.6;
+  border: 1px dashed var(--line);
 }
 
 /* CARD */
 .card {
-  background: rgba(8,9,28,0.75);
+  background: rgba(8,9,28,0.80);
   border: 1px solid var(--line);
   border-left: 4px solid var(--c, var(--muted));
   padding: 9px 11px;
-  cursor: pointer;
-  transition: transform 0.10s ease, background 0.10s ease, box-shadow 0.10s ease;
+  cursor: grab;
+  transition: background 0.10s, box-shadow 0.10s, transform 0.05s;
   clip-path: polygon(5px 0, 100% 0, 100% calc(100% - 5px), calc(100% - 5px) 100%, 0 100%, 0 5px);
 }
+.card:active { cursor: grabbing; }
 .card.rev-A { --c: var(--rev-A); }
 .card.rev-B { --c: var(--rev-B); }
 .card.rev-C { --c: var(--rev-C); }
 .card.rev-D { --c: var(--rev-D); }
 .card.rev-E { --c: var(--rev-E); }
-.card:hover { background: rgba(20,22,46,0.90); transform: translateX(2px); }
-.card.selected {
-  border: 1.5px solid var(--info);
-  border-left: 4px solid var(--c);
-  box-shadow: 0 0 0 1px rgba(34,211,238,0.40), 0 0 14px rgba(34,211,238,0.18);
-  background: rgba(34,211,238,0.06);
+.card:hover {
+  background: rgba(20,22,46,0.90);
+  box-shadow: 0 0 12px rgba(34,211,238,0.10);
 }
-.card.dim { opacity: 0.20; }
+.card.selected {
+  background: rgba(34,211,238,0.10);
+  box-shadow: 0 0 0 1.5px var(--info), 0 0 14px rgba(34,211,238,0.25);
+}
+.card.dim { opacity: 0.22; }
 .card.matched {
   border-left-width: 5px;
-  box-shadow: 0 0 12px rgba(251,191,36,0.30);
+  box-shadow: 0 0 12px var(--gold);
 }
+.card.sortable-ghost { opacity: 0.30; background: rgba(34,211,238,0.15); }
+.card.sortable-chosen { box-shadow: 0 0 16px rgba(34,211,238,0.40); }
 .card .c-top {
   display: flex; align-items: center; gap: 7px; margin-bottom: 5px;
+  flex-wrap: wrap;
 }
 .card .c-rev {
   font-size: 9.5px; font-weight: 800; letter-spacing: 0.06em;
@@ -224,19 +234,11 @@ body {
   color: var(--text-3); letter-spacing: 0.10em;
   text-transform: uppercase;
 }
-.card .c-act {
+.card .c-handle {
   margin-left: auto;
-  font-size: 9px; font-weight: 800;
-  padding: 1px 6px;
-  background: rgba(255,255,255,0.04);
-  border: 1px solid var(--line);
-  color: var(--text-2);
-  clip-path: polygon(2px 0, 100% 0, 100% calc(100% - 2px), calc(100% - 2px) 100%, 0 100%, 0 2px);
+  color: var(--text-3); font-size: 14px; line-height: 1;
+  padding: 0 2px;
 }
-.card .c-act.act-run { color: var(--info); border-color: rgba(34,211,238,0.40); }
-.card .c-act.act-first { color: var(--gold); border-color: rgba(251,191,36,0.55); }
-.card .c-act.act-hold { color: var(--gold); border-color: rgba(251,191,36,0.40); background: rgba(251,191,36,0.06); }
-.card .c-act.act-stop { color: var(--muted); border-color: rgba(148,163,184,0.40); }
 .card .c-name {
   font-size: 12.5px; font-weight: 800; color: var(--text-1);
   line-height: 1.35; margin-bottom: 6px;
@@ -246,40 +248,40 @@ body {
   font-size: 10.5px; color: var(--text-2);
 }
 .card .c-prog-wrap {
-  flex: 1; height: 4px; background: rgba(255,255,255,0.05);
+  flex: 1; height: 4px; background: rgba(255,255,255,0.06);
   position: relative; overflow: hidden;
 }
 .card .c-prog-bar {
   height: 100%; background: var(--c);
-  box-shadow: 0 0 6px var(--c);
+  box-shadow: 0 0 5px var(--c);
 }
 .card .c-prog-num {
   font-size: 11px; font-weight: 800; color: var(--text-1);
   min-width: 36px; text-align: right;
 }
 .card .c-when {
-  font-size: 10px; color: var(--text-3);
+  font-size: 9.5px; color: var(--text-3);
   margin-top: 4px;
 }
 
-/* DETAIL PANEL */
+/* DETAIL */
 .detail {
-  background: rgba(5,6,20,0.75);
+  background: rgba(5,6,20,0.78);
   border: 1px solid var(--line);
   display: flex; flex-direction: column;
   overflow: hidden;
   clip-path: polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px);
 }
 .detail-head {
-  padding: 16px 18px 14px;
+  padding: 14px 18px 12px;
   border-bottom: 1px solid var(--line);
 }
 .detail-head .dh-label {
   font-size: 10px; font-weight: 800; letter-spacing: 0.16em;
   color: var(--text-3); text-transform: uppercase;
 }
-.detail-head h2 { font-size: 14.5px; margin-top: 6px; line-height: 1.4; color: var(--text-1); }
-.detail-body { flex: 1; overflow-y: auto; padding: 14px 18px; }
+.detail-head h2 { font-size: 14px; margin-top: 5px; line-height: 1.4; color: var(--text-1); user-select: text; }
+.detail-body { flex: 1; overflow-y: auto; padding: 14px 18px; user-select: text; }
 .detail-empty {
   flex: 1; align-items: center; justify-content: center;
   display: none; color: var(--text-3); font-size: 12px;
@@ -328,7 +330,6 @@ body {
 .dc-desc th { color: var(--text-2); font-weight: 800; }
 .dc-desc b { color: var(--text-1); }
 
-/* LOADING / ERROR */
 .loading {
   position: fixed; inset: 56px 0 0 0;
   display: flex; align-items: center; justify-content: center;
@@ -352,12 +353,11 @@ body {
   .col:nth-child(3) { grid-column: 1; grid-row: 2; }
   .col:nth-child(4) { grid-column: 2; grid-row: 2; }
   .detail { grid-column: 3; grid-row: 1 / 3; }
-  .hero .axis { display: none; }
+  .hint .legend { display: none; }
 }
 @media (max-width: 900px) {
   .app { grid-template-columns: 1fr; grid-template-rows: auto; overflow-y: auto; }
   .col, .detail { grid-column: 1 !important; grid-row: auto !important; min-height: 320px; }
-  .hero { font-size: 11px; padding: 10px 16px; }
 }
 </style>
 </head>
@@ -365,8 +365,9 @@ body {
 
 <header class="topbar">
   <div class="brand">
+    <img src="https://www.hanasignmall.kr/image/common/hana_logo2.png" alt="HANASIGNMALL">
     <span class="ver">V3</span>
-    <h1>대표 보고 — 4분면 우선순위</h1>
+    <h1>칸반 보드 · 드래그 결정</h1>
   </div>
   <div class="search-wrap">
     <input id="search" type="text" placeholder="🔍 검색 (Ctrl+K)" autocomplete="off">
@@ -375,53 +376,53 @@ body {
     <span class="bulk-cnt" id="bulkCnt">선택 0</span>
     <button data-bulk="first" disabled>⚡ 우선</button>
     <button data-bulk="run" disabled>● 진행</button>
-    <button data-bulk="hold" disabled class="danger">⏸ 보류</button>
-    <button data-bulk="stop" disabled class="danger">⊘ 중단</button>
+    <button data-bulk="hold" disabled>⏸ 보류</button>
+    <button data-bulk="stop" disabled>⊘ 중단</button>
     <button data-bulk="clear" disabled>✕ 해제</button>
   </div>
   <a class="v2-link" href="hanasm-map-v2.html" title="와이어 맵으로">← 와이어 맵</a>
 </header>
 
-<div class="hero">
-  <span class="hk">대표 1순위</span>
-  <span class="hl"><b>💎 막힌 금광</b> — 매출 영향 큰데 진행이 막힌 프로젝트부터 풀어야 합니다.</span>
-  <div class="axis">
-    <span class="axis-chip"><span class="dot" style="--c:#fbbf24"></span>직접</span>
-    <span class="axis-chip"><span class="dot" style="--c:#34d399"></span>전환</span>
-    <span class="axis-chip"><span class="dot" style="--c:#60a5fa"></span>CS</span>
-    <span class="axis-chip"><span class="dot" style="--c:#c084fc"></span>운영</span>
-    <span class="axis-chip"><span class="dot" style="--c:#94a3b8"></span>장기</span>
+<div class="hint">
+  <span><kbd>드래그</kbd> 컬럼 간 이동 = 액션 변경 · 같은 컬럼 내 = 순서 저장</span>
+  <span><kbd>클릭</kbd> 선택 · <kbd>Shift+클릭</kbd> 다중 · <kbd>Ctrl+K</kbd> 검색 · <kbd>ESC</kbd> 해제</span>
+  <div class="legend">
+    <span class="legend-chip"><span class="sw" style="--c:#fbbf24"></span>직접</span>
+    <span class="legend-chip"><span class="sw" style="--c:#34d399"></span>전환</span>
+    <span class="legend-chip"><span class="sw" style="--c:#60a5fa"></span>CS</span>
+    <span class="legend-chip"><span class="sw" style="--c:#c084fc"></span>운영</span>
+    <span class="legend-chip"><span class="sw" style="--c:#94a3b8"></span>장기</span>
   </div>
 </div>
 
 <main class="app">
-  <section class="col col-blocked" data-quad="blocked">
+  <section class="col" data-act="first">
     <div class="col-head">
-      <div class="ch-title">💎 막힌 금광 <span class="ch-cnt" id="cnt-blocked">0</span></div>
-      <div class="ch-axis">매출↑ · 진행↓50%</div>
+      <div class="ch-title">⚡ 우선 <span class="ch-cnt" id="cnt-first">0</span></div>
+      <div class="ch-hint">먼저 풀어야</div>
     </div>
-    <div class="col-body" id="body-blocked"></div>
+    <div class="col-body" id="body-first" data-act="first"></div>
   </section>
-  <section class="col col-foray" data-quad="foray">
+  <section class="col" data-act="run">
     <div class="col-head">
-      <div class="ch-title">⚡ 주력 <span class="ch-cnt" id="cnt-foray">0</span></div>
-      <div class="ch-axis">매출↑ · 진행↑50%</div>
+      <div class="ch-title">● 진행 <span class="ch-cnt" id="cnt-run">0</span></div>
+      <div class="ch-hint">계속 진행 중</div>
     </div>
-    <div class="col-body" id="body-foray"></div>
+    <div class="col-body" id="body-run" data-act="run"></div>
   </section>
-  <section class="col col-finish" data-quad="finish">
+  <section class="col" data-act="hold">
     <div class="col-head">
-      <div class="ch-title">✓ 마무리 <span class="ch-cnt" id="cnt-finish">0</span></div>
-      <div class="ch-axis">매출↓ · 진행↑50%</div>
+      <div class="ch-title">⏸ 보류 <span class="ch-cnt" id="cnt-hold">0</span></div>
+      <div class="ch-hint">조건 충족 후 재개</div>
     </div>
-    <div class="col-body" id="body-finish"></div>
+    <div class="col-body" id="body-hold" data-act="hold"></div>
   </section>
-  <section class="col col-later" data-quad="later">
+  <section class="col" data-act="stop">
     <div class="col-head">
-      <div class="ch-title">💤 나중에 <span class="ch-cnt" id="cnt-later">0</span></div>
-      <div class="ch-axis">매출↓ · 진행↓50%</div>
+      <div class="ch-title">⊘ 중단 <span class="ch-cnt" id="cnt-stop">0</span></div>
+      <div class="ch-hint">진행하지 않음</div>
     </div>
-    <div class="col-body" id="body-later"></div>
+    <div class="col-body" id="body-stop" data-act="stop"></div>
   </section>
 
   <aside class="detail">
@@ -434,8 +435,9 @@ body {
       <div>
         카드 <b>클릭</b> = 단일 선택<br>
         <b>Shift+클릭</b> = 다중 선택<br>
-        상단 <b>일괄 액션</b>으로 한 번에 결정<br>
-        <b>Ctrl+K</b> = 검색
+        <b>드래그</b> = 다른 컬럼 이동 (액션 변경)<br>
+        상단 <b>일괄 액션</b>으로 한 번에 결정<br><br>
+        <span style="color: var(--info)">v2 와이어 맵과 같은 데이터를 공유합니다.</span>
       </div>
     </div>
     <div class="detail-body detail-content" id="detailBody"></div>
@@ -444,6 +446,7 @@ body {
 
 <div class="loading" id="loading">PROJECTS 로딩 중…</div>
 
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
 <script>
 async function loadData() {
   try {
@@ -472,6 +475,7 @@ const REV_LABEL = { A:'직접매출', B:'전환개선', C:'CS전환', D:'운영'
 const REV_RANK = { A:5, B:4, C:3, D:2, E:1 };
 const PRIO_RANK = { h:3, m:2, l:1 };
 const ACTION_LABEL = { run:'진행', first:'우선', hold:'보류', stop:'중단', merge:'통합' };
+const ORDER_KEY = 'hanasm.v3.kanban.order';
 
 function loadProjectState() {
   try { return JSON.parse(localStorage.getItem('hanasm.projectState.v3') || '{}'); } catch(e) { return {}; }
@@ -501,53 +505,65 @@ function setAction(key, action) {
   pushDecisionLog(key, before, action);
 }
 
-// 4분면 분류
-function quadrantOf(item) {
-  const tier = item.revTier || 'E';
-  const highRev = (tier === 'A' || tier === 'B');
-  const prog = item.progress || 0;
-  const highProg = prog >= 50;
-  if (highRev && !highProg) return 'blocked';
-  if (highRev && highProg)  return 'foray';
-  if (!highRev && highProg) return 'finish';
-  return 'later';
+// 컬럼 내 사용자 순서 저장 (localStorage)
+function loadOrder() {
+  try { return JSON.parse(localStorage.getItem(ORDER_KEY) || '{}'); } catch(e) { return {}; }
+}
+function saveOrder(map) {
+  try { localStorage.setItem(ORDER_KEY, JSON.stringify(map)); } catch(e) {}
 }
 
-function sortItems(a, b) {
-  const ra = REV_RANK[a.item.revTier || 'E'];
-  const rb = REV_RANK[b.item.revTier || 'E'];
-  if (ra !== rb) return rb - ra;
-  const pa = PRIO_RANK[a.item.prio || 'l'];
-  const pb = PRIO_RANK[b.item.prio || 'l'];
-  if (pa !== pb) return pb - pa;
-  return (b.item.progress || 0) - (a.item.progress || 0);
+// 카드 정렬: 사용자 저장 순서 우선, 없으면 매출등급 → 우선도 → 진행률
+function sortItems(arr, savedKeys) {
+  arr.sort((a, b) => {
+    const ia = savedKeys ? savedKeys.indexOf(a.key) : -1;
+    const ib = savedKeys ? savedKeys.indexOf(b.key) : -1;
+    if (ia >= 0 && ib >= 0) return ia - ib;
+    if (ia >= 0) return -1;
+    if (ib >= 0) return 1;
+    const ra = REV_RANK[a.item.revTier || 'E'];
+    const rb = REV_RANK[b.item.revTier || 'E'];
+    if (ra !== rb) return rb - ra;
+    const pa = PRIO_RANK[a.item.prio || 'l'];
+    const pb = PRIO_RANK[b.item.prio || 'l'];
+    if (pa !== pb) return pb - pa;
+    return (b.item.progress || 0) - (a.item.progress || 0);
+  });
+  return arr;
 }
 
 function renderColumns() {
-  const buckets = { blocked: [], foray: [], finish: [], later: [] };
-  ITEMS.forEach(e => buckets[quadrantOf(e.item)].push(e));
-  Object.keys(buckets).forEach(q => {
-    buckets[q].sort(sortItems);
-    const body = document.getElementById('body-' + q);
-    const cntEl = document.getElementById('cnt-' + q);
-    cntEl.textContent = buckets[q].length;
-    if (!buckets[q].length) {
-      body.innerHTML = '<div class="col-empty">해당 영역에 프로젝트 없음</div>';
+  const orderMap = loadOrder();
+  const buckets = { first: [], run: [], hold: [], stop: [] };
+  ITEMS.forEach(e => {
+    let act = getAction(e.key, e.item);
+    if (act === 'merge') act = 'run';  // 통합은 진행 컬럼으로 표시
+    if (!buckets[act]) act = 'run';
+    buckets[act].push(e);
+  });
+  Object.keys(buckets).forEach(act => {
+    const savedKeys = orderMap[act] || [];
+    sortItems(buckets[act], savedKeys);
+    const body = document.getElementById('body-' + act);
+    const cntEl = document.getElementById('cnt-' + act);
+    cntEl.textContent = buckets[act].length;
+    body.innerHTML = '';
+    if (!buckets[act].length) {
+      body.innerHTML = '<div class="col-empty">여기로 카드를 드래그하세요</div>';
       return;
     }
-    body.innerHTML = '';
-    buckets[q].forEach(e => body.appendChild(renderCard(e)));
+    buckets[act].forEach(e => body.appendChild(renderCard(e)));
   });
+  // Sortable 초기화 (매 렌더 시)
+  initSortables();
 }
 
 function renderCard(e) {
   const tier = e.item.revTier || 'E';
-  const action = getAction(e.key, e.item);
   const card = document.createElement('div');
   card.className = 'card rev-' + tier;
   card.dataset.key = e.key;
   if (SELECTED.has(e.key)) card.classList.add('selected');
-  // 검색 매칭
   if (SEARCH_Q) {
     const hay = (e.item.name + ' ' + (e.item.owner || '') + ' ' + (e.item.ownerDept || '') + ' ' + REV_LABEL[tier] + ' ' + PCATS_NAMES[e.cat]).toLowerCase();
     if (hay.includes(SEARCH_Q.toLowerCase())) card.classList.add('matched');
@@ -558,7 +574,7 @@ function renderCard(e) {
     '<div class="c-top">'
     +   '<span class="c-rev">' + REV_LABEL[tier] + '</span>'
     +   '<span class="c-cat">' + PCATS_NAMES[e.cat] + '</span>'
-    +   '<span class="c-act act-' + action + '">' + ACTION_LABEL[action] + '</span>'
+    +   '<span class="c-handle" title="드래그하여 이동">⋮⋮</span>'
     + '</div>'
     + '<div class="c-name">' + escapeHtml(e.item.name) + '</div>'
     + '<div class="c-bottom">'
@@ -582,6 +598,52 @@ function renderCard(e) {
   return card;
 }
 
+// Sortable 인스턴스 관리
+let _sortables = [];
+function initSortables() {
+  _sortables.forEach(s => s.destroy());
+  _sortables = [];
+  document.querySelectorAll('.col-body').forEach(body => {
+    const sortable = Sortable.create(body, {
+      group: 'kanban',
+      animation: 160,
+      ghostClass: 'sortable-ghost',
+      chosenClass: 'sortable-chosen',
+      handle: '.card',
+      onAdd: (evt) => onSortAdd(evt),
+      onUpdate: (evt) => onSortUpdate(evt)
+    });
+    _sortables.push(sortable);
+  });
+}
+
+function onSortAdd(evt) {
+  // 다른 컬럼에서 드롭됨 → 액션 변경
+  const card = evt.item;
+  const newCol = evt.to;
+  const newAct = newCol.dataset.act;
+  const key = card.dataset.key;
+  if (!newAct || !key) return;
+  setAction(key, newAct);
+  // 새 컬럼의 순서 갱신
+  saveColumnOrder(newAct);
+  // 원래 컬럼 카운트만 갱신 (전체 재렌더 X — 드래그 중 시각적 깜빡임 방지)
+  setTimeout(() => renderColumns(), 50);
+}
+function onSortUpdate(evt) {
+  // 같은 컬럼 내 순서 변경
+  const act = evt.from.dataset.act;
+  saveColumnOrder(act);
+}
+function saveColumnOrder(act) {
+  const body = document.getElementById('body-' + act);
+  if (!body) return;
+  const keys = [...body.querySelectorAll('.card')].map(c => c.dataset.key);
+  const map = loadOrder();
+  map[act] = keys;
+  saveOrder(map);
+}
+
 function renderDetail() {
   const emptyEl = document.getElementById('detailEmpty');
   const bodyEl = document.getElementById('detailBody');
@@ -596,7 +658,7 @@ function renderDetail() {
     emptyEl.classList.remove('show');
     bodyEl.classList.add('show');
     titleEl.textContent = '다중 선택 (' + SELECTED.size + '건)';
-    bodyEl.innerHTML = '<div class="dc-desc"><b>상단 일괄 액션</b>으로 한 번에 결정하세요.<br><br>'
+    bodyEl.innerHTML = '<div class="dc-desc"><b>상단 일괄 액션</b>으로 한 번에 결정.<br><br>'
       + '<b>선택된 프로젝트:</b><br>'
       + Array.from(SELECTED).map(k => {
         const e = ITEMS.find(x => x.key === k);
@@ -700,7 +762,6 @@ function escapeHtml(s) {
       else { SELECTED.clear(); renderColumns(); renderDetail(); renderBulkActions(); }
     }
   });
-  // 빈 곳 클릭 = 해제
   document.querySelector('main.app').addEventListener('click', (e) => {
     if (e.target.closest('.card')) return;
     if (e.target.closest('.detail')) return;
