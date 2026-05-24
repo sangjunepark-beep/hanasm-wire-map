@@ -12,14 +12,13 @@
   --text-1:#f3f4fb; --text-2:#c5c9e0; --text-3:#8a8fad;
   --rev-A:#fbbf24; --rev-B:#34d399; --rev-C:#60a5fa; --rev-D:#c084fc; --rev-E:#94a3b8;
   --gold:#fbbf24; --info:#22d3ee; --muted:#94a3b8; --danger:#fb7185;
-  --act-first:#fbbf24; --act-run:#22d3ee; --act-hold:#fbbf24; --act-stop:#94a3b8;
 }
 html, body {
   height: 100vh; overflow: hidden;
   background: var(--bg-0); color: var(--text-1);
   font-family: "JetBrains Mono", "Inter", "Pretendard", "Noto Sans KR", monospace, system-ui;
   -webkit-font-smoothing: antialiased; letter-spacing: 0.01em;
-  user-select: none;  /* 텍스트 드래그 선택 방지 — Shift 다중 선택 시 긁힘 해결 */
+  user-select: none;
 }
 body {
   background:
@@ -29,7 +28,7 @@ body {
     linear-gradient(180deg, #050614 0%, #07091b 50%, #050614 100%);
 }
 
-/* TOP BAR — v2와 동일 톤 */
+/* TOP BAR */
 .topbar {
   position: fixed; top: 0; left: 0; right: 0; z-index: 100;
   height: 56px; padding: 0 22px;
@@ -63,7 +62,6 @@ body {
 }
 #search:focus { border-color: var(--line-strong); background: rgba(8,9,28,0.96); }
 #search::placeholder { color: var(--text-3); }
-
 .bulk-actions { display: flex; gap: 6px; align-items: center; margin-left: auto; }
 .bulk-actions .bulk-cnt {
   font-size: 10.5px; font-weight: 800; color: var(--gold);
@@ -90,15 +88,113 @@ body {
 }
 .v2-link:hover { background: rgba(34,211,238,0.15); color: #fff; }
 
-/* HINT BAR */
+/* MAIN: grid rows = detail / hint / kanban */
+.app {
+  position: fixed; top: 56px; left: 0; right: 0; bottom: 0;
+  display: grid; grid-template-rows: auto auto 1fr;
+  gap: 8px; padding: 10px 14px 14px;
+}
+
+/* DETAIL (상단 가로 전체) */
+.detail {
+  background: rgba(5,6,20,0.78);
+  border: 1px solid var(--line);
+  padding: 14px 18px;
+  clip-path: polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px);
+  display: flex; gap: 18px; align-items: flex-start;
+  min-height: 130px; max-height: 38vh;
+  overflow: hidden;
+}
+.detail.empty { min-height: 64px; }
+.detail .d-left {
+  flex: 0 0 320px; max-width: 320px;
+  display: flex; flex-direction: column; gap: 8px;
+}
+.detail .d-right {
+  flex: 1; overflow-y: auto; max-height: calc(38vh - 28px);
+  padding-right: 6px;
+  user-select: text;
+}
+.detail .d-right::-webkit-scrollbar { width: 6px; }
+.detail .d-right::-webkit-scrollbar-thumb { background: rgba(167,139,250,0.30); }
+.detail .d-empty {
+  width: 100%; text-align: center; padding: 14px;
+  color: var(--text-3); font-size: 12px; line-height: 1.7;
+}
+.detail .d-empty b { color: var(--text-1); }
+.detail .d-empty kbd {
+  display: inline-block; padding: 1px 6px; margin: 0 2px;
+  background: rgba(34,211,238,0.10); border: 1px solid rgba(34,211,238,0.30);
+  color: var(--info); font-size: 10px;
+}
+.detail .d-title {
+  font-size: 16px; font-weight: 900; line-height: 1.3;
+  color: var(--text-1); margin-bottom: 4px;
+  user-select: text;
+}
+.detail .d-meta { display: flex; flex-wrap: wrap; gap: 5px; }
+.detail .d-meta .pill {
+  font-size: 10px; font-weight: 800;
+  padding: 3px 8px;
+  border: 1px solid;
+  clip-path: polygon(2px 0, 100% 0, 100% calc(100% - 2px), calc(100% - 2px) 100%, 0 100%, 0 2px);
+}
+.pill-rev-A { color: var(--rev-A); border-color: rgba(251,191,36,0.55); background: rgba(251,191,36,0.12); }
+.pill-rev-B { color: var(--rev-B); border-color: rgba(52,211,153,0.50); background: rgba(52,211,153,0.08); }
+.pill-rev-C { color: var(--rev-C); border-color: rgba(96,165,250,0.50); background: rgba(96,165,250,0.08); }
+.pill-rev-D { color: var(--rev-D); border-color: rgba(192,132,252,0.50); background: rgba(192,132,252,0.08); }
+.pill-rev-E { color: var(--rev-E); border-color: rgba(148,163,184,0.40); background: rgba(148,163,184,0.06); }
+.pill-cat { color: var(--text-2); border-color: var(--line); background: rgba(167,139,250,0.05); }
+.pill-prog { color: var(--info); border-color: rgba(34,211,238,0.40); background: rgba(34,211,238,0.10); }
+.pill-prio-h { color: var(--gold); border-color: rgba(251,191,36,0.40); background: rgba(251,191,36,0.08); }
+.pill-prio-m { color: var(--text-2); border-color: var(--line); background: rgba(255,255,255,0.04); }
+.pill-prio-l { color: var(--text-3); border-color: var(--line); background: rgba(255,255,255,0.02); }
+.pill-status-active { color: var(--info); border-color: rgba(34,211,238,0.30); background: rgba(34,211,238,0.06); }
+.pill-status-stop   { color: var(--muted); border-color: rgba(148,163,184,0.30); background: rgba(148,163,184,0.04); }
+.d-row {
+  display: flex; gap: 8px; font-size: 11px;
+  color: var(--text-2); line-height: 1.55; user-select: text;
+}
+.d-row .lbl {
+  flex: 0 0 52px; color: var(--text-3); font-weight: 700;
+  font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase;
+  padding-top: 1px;
+}
+.d-row .val { color: var(--text-1); user-select: text; }
+.d-row .val b { color: var(--info); }
+.d-actions {
+  display: flex; gap: 5px; flex-wrap: wrap; margin-top: 6px;
+}
+.d-actions button {
+  font-family: inherit; cursor: pointer;
+  padding: 5px 10px; font-size: 10.5px; font-weight: 800;
+  letter-spacing: 0.04em;
+  background: rgba(8,9,28,0.80); border: 1px solid var(--line);
+  color: var(--text-2);
+  clip-path: polygon(3px 0, 100% 0, 100% calc(100% - 3px), calc(100% - 3px) 100%, 0 100%, 0 3px);
+}
+.d-actions button:hover { color: #fff; border-color: var(--info); background: rgba(34,211,238,0.10); }
+.d-actions button.active { background: rgba(34,211,238,0.22); color: #fff; border-color: var(--info); }
+.d-desc {
+  font-size: 12px; line-height: 1.65; color: var(--text-2);
+  user-select: text;
+}
+.d-desc table {
+  width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 11px;
+  background: rgba(0,0,0,0.20); border: 1px solid var(--line);
+}
+.d-desc th, .d-desc td { border-bottom: 1px dashed var(--line); padding: 5px 7px; text-align: left; }
+.d-desc th { color: var(--text-2); font-weight: 800; background: rgba(0,0,0,0.30); }
+.d-desc b { color: var(--text-1); }
+
+/* HINT */
 .hint {
-  position: fixed; top: 56px; left: 0; right: 0;
-  padding: 8px 22px;
-  background: rgba(8,9,28,0.60);
-  border-bottom: 1px solid var(--line);
-  display: flex; align-items: center; gap: 14px;
-  font-size: 11px; color: var(--text-3);
-  z-index: 90;
+  padding: 6px 14px;
+  background: rgba(8,9,28,0.50);
+  border: 1px solid var(--line);
+  display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+  font-size: 10.5px; color: var(--text-3);
+  clip-path: polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px);
 }
 .hint kbd {
   display: inline-block;
@@ -108,9 +204,7 @@ body {
   color: var(--info); font-size: 10px;
   font-family: inherit;
 }
-.hint .legend {
-  margin-left: auto; display: flex; gap: 10px; align-items: center; font-size: 10.5px;
-}
+.hint .legend { margin-left: auto; display: flex; gap: 8px; align-items: center; }
 .hint .legend-chip {
   display: inline-flex; align-items: center; gap: 5px;
   padding: 2px 8px;
@@ -119,16 +213,15 @@ body {
   font-weight: 700; letter-spacing: 0.04em;
 }
 .hint .legend-chip .sw {
-  width: 8px; height: 8px; background: var(--c);
-  box-shadow: 0 0 4px var(--c);
+  width: 8px; height: 8px; background: var(--c); box-shadow: 0 0 4px var(--c);
 }
 
-/* APP — 4 컬럼 + 우측 디테일 */
-.app {
-  position: fixed; top: 96px; left: 0; right: 0; bottom: 0;
-  display: grid; grid-template-columns: repeat(4, 1fr) 360px;
-  gap: 10px; padding: 12px 14px 14px;
+/* KANBAN (하단 4컬럼) */
+.kanban {
+  display: grid; grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
   overflow: hidden;
+  min-height: 0;
 }
 .col {
   background: rgba(8,9,28,0.60);
@@ -144,47 +237,54 @@ body {
 .col[data-act="run"]   { --col-c: var(--info); }
 .col[data-act="hold"]  { --col-c: var(--gold); opacity: 0.94; }
 .col[data-act="stop"]  { --col-c: var(--muted); opacity: 0.88; }
-.col.drag-over {
-  background: rgba(34,211,238,0.06);
-  border-color: var(--info);
-  box-shadow: 0 0 16px rgba(34,211,238,0.18) inset;
-}
+.col.col-drag-ghost { opacity: 0.30; }
+.col.col-drag-chosen { box-shadow: 0 0 0 2px var(--info); }
 .col-head {
-  padding: 12px 14px 10px;
+  padding: 11px 13px 9px;
   border-bottom: 1px solid var(--line);
   background: rgba(5,6,20,0.85);
-  position: sticky; top: 0; z-index: 2;
+  cursor: grab;
 }
+.col-head:active { cursor: grabbing; }
 .col-head .ch-title {
   display: flex; align-items: center; gap: 10px;
-  font-size: 14px; font-weight: 900; letter-spacing: 0.08em;
+  font-size: 13.5px; font-weight: 900; letter-spacing: 0.06em;
   color: var(--col-c, var(--text-1));
 }
 .col-head .ch-cnt {
   margin-left: auto;
   font-size: 11px; font-weight: 800;
-  padding: 2px 8px;
+  padding: 2px 7px;
   background: rgba(255,255,255,0.05);
   border: 1px solid var(--line);
   color: var(--text-2);
   clip-path: polygon(3px 0, 100% 0, 100% calc(100% - 3px), calc(100% - 3px) 100%, 0 100%, 0 3px);
 }
+.col-head .ch-grip {
+  font-size: 11px; color: var(--text-3); margin-right: 4px;
+  letter-spacing: -1px;
+}
 .col-head .ch-hint {
   font-size: 9.5px; color: var(--text-3); letter-spacing: 0.08em;
-  margin-top: 4px; text-transform: uppercase; font-weight: 700;
+  margin-top: 3px; text-transform: uppercase; font-weight: 700;
 }
 .col-body {
-  flex: 1; overflow-y: auto; padding: 10px;
-  display: flex; flex-direction: column; gap: 7px;
+  flex: 1; overflow-y: auto; padding: 8px;
+  display: flex; flex-direction: column; gap: 6px;
   scrollbar-width: thin;
-  min-height: 200px;
+  min-height: 0;
 }
 .col-body::-webkit-scrollbar { width: 6px; }
 .col-body::-webkit-scrollbar-thumb { background: rgba(167,139,250,0.30); }
 .col-empty {
-  margin: 18px 8px; padding: 14px; text-align: center;
-  color: var(--text-3); font-size: 11px; line-height: 1.6;
+  margin: 14px 6px; padding: 12px; text-align: center;
+  color: var(--text-3); font-size: 10.5px; line-height: 1.6;
   border: 1px dashed var(--line);
+}
+.col-body.drag-over {
+  background: rgba(34,211,238,0.06);
+  outline: 1px dashed var(--info);
+  outline-offset: -4px;
 }
 
 /* CARD */
@@ -192,7 +292,7 @@ body {
   background: rgba(8,9,28,0.80);
   border: 1px solid var(--line);
   border-left: 4px solid var(--c, var(--muted));
-  padding: 9px 11px;
+  padding: 8px 10px;
   cursor: grab;
   transition: background 0.10s, box-shadow 0.10s, transform 0.05s;
   clip-path: polygon(5px 0, 100% 0, 100% calc(100% - 5px), calc(100% - 5px) 100%, 0 100%, 0 5px);
@@ -205,11 +305,11 @@ body {
 .card.rev-E { --c: var(--rev-E); }
 .card:hover {
   background: rgba(20,22,46,0.90);
-  box-shadow: 0 0 12px rgba(34,211,238,0.10);
+  box-shadow: 0 0 10px rgba(34,211,238,0.10);
 }
 .card.selected {
   background: rgba(34,211,238,0.10);
-  box-shadow: 0 0 0 1.5px var(--info), 0 0 14px rgba(34,211,238,0.25);
+  box-shadow: 0 0 0 1.5px var(--info), 0 0 12px rgba(34,211,238,0.20);
 }
 .card.dim { opacity: 0.22; }
 .card.matched {
@@ -217,35 +317,39 @@ body {
   box-shadow: 0 0 12px var(--gold);
 }
 .card.sortable-ghost { opacity: 0.30; background: rgba(34,211,238,0.15); }
-.card.sortable-chosen { box-shadow: 0 0 16px rgba(34,211,238,0.40); }
+.card.sortable-chosen { box-shadow: 0 0 12px rgba(34,211,238,0.40); }
 .card .c-top {
-  display: flex; align-items: center; gap: 7px; margin-bottom: 5px;
+  display: flex; align-items: center; gap: 6px; margin-bottom: 4px;
   flex-wrap: wrap;
 }
 .card .c-rev {
-  font-size: 9.5px; font-weight: 800; letter-spacing: 0.06em;
-  padding: 1px 6px; color: var(--c);
+  font-size: 9px; font-weight: 800; letter-spacing: 0.04em;
+  padding: 1px 5px; color: var(--c);
   border: 1px solid var(--c);
   background: rgba(0,0,0,0.30);
   clip-path: polygon(2px 0, 100% 0, 100% calc(100% - 2px), calc(100% - 2px) 100%, 0 100%, 0 2px);
 }
 .card .c-cat {
-  font-size: 9px; font-weight: 700;
+  font-size: 8.5px; font-weight: 700;
   color: var(--text-3); letter-spacing: 0.10em;
   text-transform: uppercase;
 }
-.card .c-handle {
-  margin-left: auto;
-  color: var(--text-3); font-size: 14px; line-height: 1;
-  padding: 0 2px;
+.card .c-prio {
+  font-size: 9px; font-weight: 800;
+  padding: 1px 5px;
+  border: 1px solid;
+  clip-path: polygon(2px 0, 100% 0, 100% calc(100% - 2px), calc(100% - 2px) 100%, 0 100%, 0 2px);
 }
+.card .c-prio.h { color: var(--gold); border-color: rgba(251,191,36,0.50); background: rgba(251,191,36,0.10); }
+.card .c-prio.m { color: var(--text-2); border-color: var(--line); }
+.card .c-prio.l { color: var(--text-3); border-color: var(--line); }
 .card .c-name {
-  font-size: 12.5px; font-weight: 800; color: var(--text-1);
-  line-height: 1.35; margin-bottom: 6px;
+  font-size: 11.5px; font-weight: 800; color: var(--text-1);
+  line-height: 1.30; margin-bottom: 5px;
 }
 .card .c-bottom {
-  display: flex; align-items: center; gap: 7px;
-  font-size: 10.5px; color: var(--text-2);
+  display: flex; align-items: center; gap: 6px;
+  font-size: 10px; color: var(--text-2);
 }
 .card .c-prog-wrap {
   flex: 1; height: 4px; background: rgba(255,255,255,0.06);
@@ -253,83 +357,18 @@ body {
 }
 .card .c-prog-bar {
   height: 100%; background: var(--c);
-  box-shadow: 0 0 5px var(--c);
+  box-shadow: 0 0 4px var(--c);
 }
 .card .c-prog-num {
-  font-size: 11px; font-weight: 800; color: var(--text-1);
-  min-width: 36px; text-align: right;
+  font-size: 10.5px; font-weight: 800; color: var(--text-1);
+  min-width: 32px; text-align: right;
 }
-.card .c-when {
-  font-size: 9.5px; color: var(--text-3);
-  margin-top: 4px;
-}
-
-/* DETAIL */
-.detail {
-  background: rgba(5,6,20,0.78);
-  border: 1px solid var(--line);
-  display: flex; flex-direction: column;
-  overflow: hidden;
-  clip-path: polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px);
-}
-.detail-head {
-  padding: 14px 18px 12px;
-  border-bottom: 1px solid var(--line);
-}
-.detail-head .dh-label {
-  font-size: 10px; font-weight: 800; letter-spacing: 0.16em;
-  color: var(--text-3); text-transform: uppercase;
-}
-.detail-head h2 { font-size: 14px; margin-top: 5px; line-height: 1.4; color: var(--text-1); user-select: text; }
-.detail-body { flex: 1; overflow-y: auto; padding: 14px 18px; user-select: text; }
-.detail-empty {
-  flex: 1; align-items: center; justify-content: center;
-  display: none; color: var(--text-3); font-size: 12px;
-  padding: 24px; text-align: center; line-height: 1.85;
-}
-.detail-empty.show { display: flex; flex-direction: column; }
-.detail-empty .em-title {
-  color: var(--text-1); font-weight: 800; font-size: 13px; margin-bottom: 10px;
-}
-.detail-content { display: none; }
-.detail-content.show { display: block; }
-.dc-meta { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
-.dc-meta .pill {
-  font-size: 10px; font-weight: 800;
-  padding: 3px 8px;
-  border: 1px solid;
-  clip-path: polygon(2px 0, 100% 0, 100% calc(100% - 2px), calc(100% - 2px) 100%, 0 100%, 0 2px);
-}
-.pill-rev-A { color: var(--rev-A); border-color: rgba(251,191,36,0.55); background: rgba(251,191,36,0.12); }
-.pill-rev-B { color: var(--rev-B); border-color: rgba(52,211,153,0.50); background: rgba(52,211,153,0.08); }
-.pill-rev-C { color: var(--rev-C); border-color: rgba(96,165,250,0.50); background: rgba(96,165,250,0.08); }
-.pill-rev-D { color: var(--rev-D); border-color: rgba(192,132,252,0.50); background: rgba(192,132,252,0.08); }
-.pill-rev-E { color: var(--rev-E); border-color: rgba(148,163,184,0.40); background: rgba(148,163,184,0.06); }
-.pill-cat { color: var(--text-2); border-color: var(--line); background: rgba(167,139,250,0.05); }
-.pill-prog { color: var(--info); border-color: rgba(34,211,238,0.40); background: rgba(34,211,238,0.10); }
-.dc-when { font-size: 11.5px; color: var(--text-2); margin-bottom: 10px; }
-.dc-owner { font-size: 11.5px; color: var(--text-2); margin-bottom: 12px; }
-.dc-owner b { color: var(--info); font-weight: 800; }
-.dc-actions {
-  display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 14px;
-  padding-bottom: 12px; border-bottom: 1px dashed var(--line);
-}
-.dc-actions button {
-  font-family: inherit; cursor: pointer;
-  padding: 6px 11px; font-size: 11px; font-weight: 800;
+.card .c-owner {
+  font-size: 9.5px; color: var(--text-3); margin-top: 3px;
   letter-spacing: 0.04em;
-  background: rgba(8,9,28,0.80); border: 1px solid var(--line);
-  color: var(--text-2);
-  clip-path: polygon(3px 0, 100% 0, 100% calc(100% - 3px), calc(100% - 3px) 100%, 0 100%, 0 3px);
 }
-.dc-actions button:hover { color: #fff; border-color: var(--info); background: rgba(34,211,238,0.10); }
-.dc-actions button.active { background: rgba(34,211,238,0.22); color: #fff; border-color: var(--info); }
-.dc-desc { font-size: 12px; line-height: 1.65; color: var(--text-2); }
-.dc-desc table { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 11px; }
-.dc-desc th, .dc-desc td { border-bottom: 1px dashed var(--line); padding: 5px 7px; text-align: left; }
-.dc-desc th { color: var(--text-2); font-weight: 800; }
-.dc-desc b { color: var(--text-1); }
 
+/* LOADING / ERROR */
 .loading {
   position: fixed; inset: 56px 0 0 0;
   display: flex; align-items: center; justify-content: center;
@@ -343,21 +382,16 @@ body {
 }
 .error h3 { font-size: 16px; margin-bottom: 12px; color: var(--danger); }
 
-@media (max-width: 1400px) {
-  .app { grid-template-columns: repeat(4, 1fr) 320px; }
-}
 @media (max-width: 1200px) {
-  .app { grid-template-columns: repeat(2, 1fr) 320px; grid-template-rows: 1fr 1fr; }
-  .col:nth-child(1) { grid-column: 1; grid-row: 1; }
-  .col:nth-child(2) { grid-column: 2; grid-row: 1; }
-  .col:nth-child(3) { grid-column: 1; grid-row: 2; }
-  .col:nth-child(4) { grid-column: 2; grid-row: 2; }
-  .detail { grid-column: 3; grid-row: 1 / 3; }
+  .kanban { grid-template-columns: repeat(2, 1fr); grid-auto-rows: 1fr; }
+  .detail .d-left { flex: 0 0 240px; }
   .hint .legend { display: none; }
 }
-@media (max-width: 900px) {
-  .app { grid-template-columns: 1fr; grid-template-rows: auto; overflow-y: auto; }
-  .col, .detail { grid-column: 1 !important; grid-row: auto !important; min-height: 320px; }
+@media (max-width: 800px) {
+  .kanban { grid-template-columns: 1fr; }
+  .detail { flex-direction: column; max-height: 50vh; }
+  .detail .d-left { flex: 0 0 auto; max-width: 100%; }
+  .detail .d-right { max-height: none; }
 }
 </style>
 </head>
@@ -383,65 +417,51 @@ body {
   <a class="v2-link" href="hanasm-map-v2.html" title="와이어 맵으로">← 와이어 맵</a>
 </header>
 
-<div class="hint">
-  <span><kbd>드래그</kbd> 컬럼 간 이동 = 액션 변경 · 같은 컬럼 내 = 순서 저장</span>
-  <span><kbd>클릭</kbd> 선택 · <kbd>Shift+클릭</kbd> 다중 · <kbd>Ctrl+K</kbd> 검색 · <kbd>ESC</kbd> 해제</span>
-  <div class="legend">
-    <span class="legend-chip"><span class="sw" style="--c:#fbbf24"></span>직접</span>
-    <span class="legend-chip"><span class="sw" style="--c:#34d399"></span>전환</span>
-    <span class="legend-chip"><span class="sw" style="--c:#60a5fa"></span>CS</span>
-    <span class="legend-chip"><span class="sw" style="--c:#c084fc"></span>운영</span>
-    <span class="legend-chip"><span class="sw" style="--c:#94a3b8"></span>장기</span>
-  </div>
-</div>
-
 <main class="app">
-  <section class="col" data-act="first">
-    <div class="col-head">
-      <div class="ch-title">⚡ 우선 <span class="ch-cnt" id="cnt-first">0</span></div>
-      <div class="ch-hint">먼저 풀어야</div>
+  <!-- 상단: 선택 프로젝트 상세 (가로 전체) -->
+  <section class="detail empty" id="detail">
+    <div class="d-empty" id="detailEmpty">
+      카드를 <b>클릭</b>하면 여기에 상세가 표시됩니다. ·
+      <kbd>Shift+클릭</kbd> 다중 선택 ·
+      <kbd>드래그</kbd> 컬럼 이동(액션 변경) 또는 컬럼 헤더 드래그(컬럼 순서 변경) ·
+      <kbd>Ctrl+K</kbd> 검색 ·
+      <kbd>ESC</kbd> 해제
     </div>
-    <div class="col-body" id="body-first" data-act="first"></div>
-  </section>
-  <section class="col" data-act="run">
-    <div class="col-head">
-      <div class="ch-title">● 진행 <span class="ch-cnt" id="cnt-run">0</span></div>
-      <div class="ch-hint">계속 진행 중</div>
-    </div>
-    <div class="col-body" id="body-run" data-act="run"></div>
-  </section>
-  <section class="col" data-act="hold">
-    <div class="col-head">
-      <div class="ch-title">⏸ 보류 <span class="ch-cnt" id="cnt-hold">0</span></div>
-      <div class="ch-hint">조건 충족 후 재개</div>
-    </div>
-    <div class="col-body" id="body-hold" data-act="hold"></div>
-  </section>
-  <section class="col" data-act="stop">
-    <div class="col-head">
-      <div class="ch-title">⊘ 중단 <span class="ch-cnt" id="cnt-stop">0</span></div>
-      <div class="ch-hint">진행하지 않음</div>
-    </div>
-    <div class="col-body" id="body-stop" data-act="stop"></div>
+    <div class="d-left" id="detailLeft" style="display:none"></div>
+    <div class="d-right" id="detailRight" style="display:none"></div>
   </section>
 
-  <aside class="detail">
-    <div class="detail-head">
-      <div class="dh-label">선택 프로젝트</div>
-      <h2 id="detailTitle">카드 클릭하여 시작</h2>
+  <!-- 힌트 + 범례 -->
+  <div class="hint">
+    <span><b style="color:#67e8f9">컬럼 헤더 드래그</b> = 컬럼 순서 조정 · <b style="color:#67e8f9">카드 드래그</b> = 액션 변경</span>
+    <div class="legend">
+      <span class="legend-chip"><span class="sw" style="--c:#fbbf24"></span>직접</span>
+      <span class="legend-chip"><span class="sw" style="--c:#34d399"></span>전환</span>
+      <span class="legend-chip"><span class="sw" style="--c:#60a5fa"></span>CS</span>
+      <span class="legend-chip"><span class="sw" style="--c:#c084fc"></span>운영</span>
+      <span class="legend-chip"><span class="sw" style="--c:#94a3b8"></span>장기</span>
     </div>
-    <div class="detail-empty show" id="detailEmpty">
-      <div class="em-title">사용법</div>
-      <div>
-        카드 <b>클릭</b> = 단일 선택<br>
-        <b>Shift+클릭</b> = 다중 선택<br>
-        <b>드래그</b> = 다른 컬럼 이동 (액션 변경)<br>
-        상단 <b>일괄 액션</b>으로 한 번에 결정<br><br>
-        <span style="color: var(--info)">v2 와이어 맵과 같은 데이터를 공유합니다.</span>
-      </div>
-    </div>
-    <div class="detail-body detail-content" id="detailBody"></div>
-  </aside>
+  </div>
+
+  <!-- 하단: 4컬럼 칸반 (컬럼 순서 조정 가능) -->
+  <div class="kanban" id="kanban">
+    <section class="col" data-act="first">
+      <div class="col-head"><div class="ch-title"><span class="ch-grip">⋮⋮</span>⚡ 우선 <span class="ch-cnt" id="cnt-first">0</span></div><div class="ch-hint">먼저 풀어야</div></div>
+      <div class="col-body" id="body-first" data-act="first"></div>
+    </section>
+    <section class="col" data-act="run">
+      <div class="col-head"><div class="ch-title"><span class="ch-grip">⋮⋮</span>● 진행 <span class="ch-cnt" id="cnt-run">0</span></div><div class="ch-hint">계속 진행 중</div></div>
+      <div class="col-body" id="body-run" data-act="run"></div>
+    </section>
+    <section class="col" data-act="hold">
+      <div class="col-head"><div class="ch-title"><span class="ch-grip">⋮⋮</span>⏸ 보류 <span class="ch-cnt" id="cnt-hold">0</span></div><div class="ch-hint">조건 충족 후 재개</div></div>
+      <div class="col-body" id="body-hold" data-act="hold"></div>
+    </section>
+    <section class="col" data-act="stop">
+      <div class="col-head"><div class="ch-title"><span class="ch-grip">⋮⋮</span>⊘ 중단 <span class="ch-cnt" id="cnt-stop">0</span></div><div class="ch-hint">진행하지 않음</div></div>
+      <div class="col-body" id="body-stop" data-act="stop"></div>
+    </section>
+  </div>
 </main>
 
 <div class="loading" id="loading">PROJECTS 로딩 중…</div>
@@ -474,8 +494,11 @@ const PCATS_NAMES = { ad:'광고', ai:'AI·자동화', product:'신상품·등�
 const REV_LABEL = { A:'직접매출', B:'전환개선', C:'CS전환', D:'운영', E:'장기기반' };
 const REV_RANK = { A:5, B:4, C:3, D:2, E:1 };
 const PRIO_RANK = { h:3, m:2, l:1 };
+const PRIO_LABEL = { h:'상', m:'중', l:'하' };
 const ACTION_LABEL = { run:'진행', first:'우선', hold:'보류', stop:'중단', merge:'통합' };
+const STATUS_LABEL = { active:'활성', stop:'중단', done:'완료' };
 const ORDER_KEY = 'hanasm.v3.kanban.order';
+const COL_ORDER_KEY = 'hanasm.v3.kanban.colOrder';
 
 function loadProjectState() {
   try { return JSON.parse(localStorage.getItem('hanasm.projectState.v3') || '{}'); } catch(e) { return {}; }
@@ -504,16 +527,20 @@ function setAction(key, action) {
   saveProjectState(st);
   pushDecisionLog(key, before, action);
 }
-
-// 컬럼 내 사용자 순서 저장 (localStorage)
 function loadOrder() {
   try { return JSON.parse(localStorage.getItem(ORDER_KEY) || '{}'); } catch(e) { return {}; }
 }
 function saveOrder(map) {
   try { localStorage.setItem(ORDER_KEY, JSON.stringify(map)); } catch(e) {}
 }
+function loadColOrder() {
+  try { return JSON.parse(localStorage.getItem(COL_ORDER_KEY) || 'null') || ['first','run','hold','stop']; }
+  catch(e) { return ['first','run','hold','stop']; }
+}
+function saveColOrder(arr) {
+  try { localStorage.setItem(COL_ORDER_KEY, JSON.stringify(arr)); } catch(e) {}
+}
 
-// 카드 정렬: 사용자 저장 순서 우선, 없으면 매출등급 → 우선도 → 진행률
 function sortItems(arr, savedKeys) {
   arr.sort((a, b) => {
     const ia = savedKeys ? savedKeys.indexOf(a.key) : -1;
@@ -532,12 +559,22 @@ function sortItems(arr, savedKeys) {
   return arr;
 }
 
+// 컬럼 순서 적용
+function applyColumnOrder() {
+  const order = loadColOrder();
+  const kanban = document.getElementById('kanban');
+  order.forEach(act => {
+    const col = kanban.querySelector('.col[data-act="' + act + '"]');
+    if (col) kanban.appendChild(col);
+  });
+}
+
 function renderColumns() {
   const orderMap = loadOrder();
   const buckets = { first: [], run: [], hold: [], stop: [] };
   ITEMS.forEach(e => {
     let act = getAction(e.key, e.item);
-    if (act === 'merge') act = 'run';  // 통합은 진행 컬럼으로 표시
+    if (act === 'merge') act = 'run';
     if (!buckets[act]) act = 'run';
     buckets[act].push(e);
   });
@@ -549,13 +586,12 @@ function renderColumns() {
     cntEl.textContent = buckets[act].length;
     body.innerHTML = '';
     if (!buckets[act].length) {
-      body.innerHTML = '<div class="col-empty">여기로 카드를 드래그하세요</div>';
+      body.innerHTML = '<div class="col-empty">여기로 드래그하세요</div>';
       return;
     }
     buckets[act].forEach(e => body.appendChild(renderCard(e)));
   });
-  // Sortable 초기화 (매 렌더 시)
-  initSortables();
+  initCardSortables();
 }
 
 function renderCard(e) {
@@ -570,18 +606,19 @@ function renderCard(e) {
     else card.classList.add('dim');
   }
   const prog = e.item.progress || 0;
+  const prio = e.item.prio || 'm';
   card.innerHTML =
     '<div class="c-top">'
     +   '<span class="c-rev">' + REV_LABEL[tier] + '</span>'
     +   '<span class="c-cat">' + PCATS_NAMES[e.cat] + '</span>'
-    +   '<span class="c-handle" title="드래그하여 이동">⋮⋮</span>'
+    +   '<span class="c-prio ' + prio + '">' + PRIO_LABEL[prio] + '</span>'
     + '</div>'
     + '<div class="c-name">' + escapeHtml(e.item.name) + '</div>'
     + '<div class="c-bottom">'
     +   '<div class="c-prog-wrap"><div class="c-prog-bar" style="width:' + prog + '%"></div></div>'
     +   '<span class="c-prog-num">' + prog + '%</span>'
     + '</div>'
-    + (e.item.startWhen ? '<div class="c-when">📅 ' + escapeHtml(e.item.startWhen) + '</div>' : '');
+    + (e.item.owner ? '<div class="c-owner">담당 ' + escapeHtml(e.item.owner) + '</div>' : '');
   card.addEventListener('click', (ev) => {
     ev.stopPropagation();
     if (ev.shiftKey) {
@@ -598,40 +635,34 @@ function renderCard(e) {
   return card;
 }
 
-// Sortable 인스턴스 관리
-let _sortables = [];
-function initSortables() {
-  _sortables.forEach(s => s.destroy());
-  _sortables = [];
+let _cardSortables = [];
+function initCardSortables() {
+  _cardSortables.forEach(s => s.destroy());
+  _cardSortables = [];
   document.querySelectorAll('.col-body').forEach(body => {
     const sortable = Sortable.create(body, {
-      group: 'kanban',
+      group: 'kanban-cards',
       animation: 160,
       ghostClass: 'sortable-ghost',
       chosenClass: 'sortable-chosen',
       handle: '.card',
-      onAdd: (evt) => onSortAdd(evt),
-      onUpdate: (evt) => onSortUpdate(evt)
+      onAdd: (evt) => onCardAdd(evt),
+      onUpdate: (evt) => onCardUpdate(evt)
     });
-    _sortables.push(sortable);
+    _cardSortables.push(sortable);
   });
 }
-
-function onSortAdd(evt) {
-  // 다른 컬럼에서 드롭됨 → 액션 변경
+function onCardAdd(evt) {
   const card = evt.item;
   const newCol = evt.to;
   const newAct = newCol.dataset.act;
   const key = card.dataset.key;
   if (!newAct || !key) return;
   setAction(key, newAct);
-  // 새 컬럼의 순서 갱신
   saveColumnOrder(newAct);
-  // 원래 컬럼 카운트만 갱신 (전체 재렌더 X — 드래그 중 시각적 깜빡임 방지)
   setTimeout(() => renderColumns(), 50);
 }
-function onSortUpdate(evt) {
-  // 같은 컬럼 내 순서 변경
+function onCardUpdate(evt) {
   const act = evt.from.dataset.act;
   saveColumnOrder(act);
 }
@@ -644,52 +675,86 @@ function saveColumnOrder(act) {
   saveOrder(map);
 }
 
+// 컬럼 자체 순서 변경 (Sortable on .kanban)
+let _colSortable = null;
+function initColumnSortable() {
+  if (_colSortable) _colSortable.destroy();
+  _colSortable = Sortable.create(document.getElementById('kanban'), {
+    animation: 200,
+    handle: '.col-head',
+    draggable: '.col',
+    ghostClass: 'col-drag-ghost',
+    chosenClass: 'col-drag-chosen',
+    onEnd: () => {
+      const order = [...document.querySelectorAll('.kanban .col')].map(c => c.dataset.act);
+      saveColOrder(order);
+    }
+  });
+}
+
 function renderDetail() {
+  const detail = document.getElementById('detail');
   const emptyEl = document.getElementById('detailEmpty');
-  const bodyEl = document.getElementById('detailBody');
-  const titleEl = document.getElementById('detailTitle');
+  const leftEl = document.getElementById('detailLeft');
+  const rightEl = document.getElementById('detailRight');
   if (SELECTED.size === 0) {
-    emptyEl.classList.add('show');
-    bodyEl.classList.remove('show');
-    titleEl.textContent = '카드 클릭하여 시작';
+    detail.classList.add('empty');
+    emptyEl.style.display = '';
+    leftEl.style.display = 'none';
+    rightEl.style.display = 'none';
     return;
   }
+  detail.classList.remove('empty');
+  emptyEl.style.display = 'none';
+  leftEl.style.display = '';
+  rightEl.style.display = '';
+
   if (SELECTED.size > 1) {
-    emptyEl.classList.remove('show');
-    bodyEl.classList.add('show');
-    titleEl.textContent = '다중 선택 (' + SELECTED.size + '건)';
-    bodyEl.innerHTML = '<div class="dc-desc"><b>상단 일괄 액션</b>으로 한 번에 결정.<br><br>'
-      + '<b>선택된 프로젝트:</b><br>'
+    leftEl.innerHTML =
+      '<div class="d-title">다중 선택 (' + SELECTED.size + '건)</div>'
+      + '<div class="d-row"><span class="lbl">안내</span><span class="val">상단 <b>일괄 액션</b> 버튼으로 한 번에 결정</span></div>';
+    rightEl.innerHTML = '<div class="d-desc"><b>선택된 프로젝트:</b><br>'
       + Array.from(SELECTED).map(k => {
         const e = ITEMS.find(x => x.key === k);
-        return e ? '• ' + escapeHtml(e.item.name) + ' (' + REV_LABEL[e.item.revTier || 'E'] + ', ' + (e.item.progress || 0) + '%)' : '';
+        if (!e) return '';
+        return '• ' + escapeHtml(e.item.name) + ' <span style="color:#94a3b8">[' + REV_LABEL[e.item.revTier || 'E'] + ' · ' + PCATS_NAMES[e.cat] + ' · ' + (e.item.progress || 0) + '%]</span>';
       }).join('<br>')
       + '</div>';
     return;
   }
+  // 단일 선택 — 풀 데이터 표시
   const key = Array.from(SELECTED)[0];
   const e = ITEMS.find(x => x.key === key);
-  if (!e) { emptyEl.classList.add('show'); bodyEl.classList.remove('show'); return; }
-  emptyEl.classList.remove('show');
-  bodyEl.classList.add('show');
-  titleEl.textContent = e.item.name;
-  const tier = e.item.revTier || 'E';
-  const action = getAction(key, e.item);
-  const ownerName = e.item.ownerDept || '';
-  const related = (e.item.related || []).join(', ') || '없음';
-  bodyEl.innerHTML =
-    '<div class="dc-meta">'
+  if (!e) { return; }
+  const it = e.item;
+  const tier = it.revTier || 'E';
+  const action = getAction(key, it);
+  const prio = it.prio || 'm';
+  const status = it.status || 'active';
+
+  leftEl.innerHTML =
+    '<div class="d-title">' + escapeHtml(it.name) + '</div>'
+    + '<div class="d-meta">'
     +   '<span class="pill pill-rev-' + tier + '">' + REV_LABEL[tier] + '</span>'
     +   '<span class="pill pill-cat">' + PCATS_NAMES[e.cat] + '</span>'
-    +   '<span class="pill pill-prog">' + (e.item.progress || 0) + '%</span>'
+    +   '<span class="pill pill-prio-' + prio + '">우선 ' + PRIO_LABEL[prio] + '</span>'
+    +   '<span class="pill pill-prog">' + (it.progress || 0) + '%</span>'
+    +   '<span class="pill pill-status-' + status + '">' + (STATUS_LABEL[status] || status) + '</span>'
     + '</div>'
-    + (e.item.startWhen ? '<div class="dc-when">📅 ' + escapeHtml(e.item.startWhen) + '</div>' : '')
-    + '<div class="dc-owner"><b>주관</b> ' + escapeHtml(ownerName || '-') + ' · <b>유관</b> ' + escapeHtml(related) + (e.item.owner ? ' · <b>담당</b> ' + escapeHtml(e.item.owner) : '') + '</div>'
-    + '<div class="dc-actions">'
+    + (it.startWhen ? '<div class="d-row"><span class="lbl">시기</span><span class="val">📅 ' + escapeHtml(it.startWhen) + '</span></div>' : '')
+    + '<div class="d-row"><span class="lbl">주관</span><span class="val"><b>' + escapeHtml(it.ownerDept || '-') + '</b>' + (it.owner ? ' · 담당 ' + escapeHtml(it.owner) : '') + '</span></div>'
+    + '<div class="d-row"><span class="lbl">유관</span><span class="val">' + escapeHtml((it.related && it.related.length ? it.related.join(', ') : '없음')) + '</span></div>'
+    + '<div class="d-row"><span class="lbl">결정</span><span class="val">' + (it.decision || '-') + '</span></div>'
+    + '<div class="d-actions">'
     +   ['first','run','hold','stop','merge'].map(a => '<button data-act="' + a + '" class="' + (action === a ? 'active' : '') + '">' + ACTION_LABEL[a] + '</button>').join('')
-    + '</div>'
-    + '<div class="dc-desc">' + (e.item.desc || '<i style="color:#6b7280">설명 없음</i>') + '</div>';
-  bodyEl.querySelectorAll('.dc-actions button').forEach(btn => {
+    + '</div>';
+
+  rightEl.innerHTML =
+    '<div class="d-desc">'
+    +   (it.desc || '<i style="color:#6b7280">상세 설명 없음</i>')
+    + '</div>';
+
+  leftEl.querySelectorAll('.d-actions button').forEach(btn => {
     btn.addEventListener('click', () => {
       setAction(key, btn.dataset.act);
       renderDetail();
@@ -740,8 +805,10 @@ function escapeHtml(s) {
       });
     });
   } catch(e) {}
+  applyColumnOrder();
   renderColumns();
   renderBulkActions();
+  initColumnSortable();
   const searchEl = document.getElementById('search');
   searchEl.addEventListener('input', () => {
     SEARCH_Q = searchEl.value.trim();
@@ -762,9 +829,8 @@ function escapeHtml(s) {
       else { SELECTED.clear(); renderColumns(); renderDetail(); renderBulkActions(); }
     }
   });
-  document.querySelector('main.app').addEventListener('click', (e) => {
+  document.querySelector('.kanban').addEventListener('click', (e) => {
     if (e.target.closest('.card')) return;
-    if (e.target.closest('.detail')) return;
     SELECTED.clear();
     renderColumns();
     renderDetail();
