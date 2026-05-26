@@ -99,34 +99,53 @@ body {
 
 /* DETAIL (상단 가로 전체) — 3분할: 정보·액션 / desc 텍스트 / 가격표 */
 .detail {
+  position: relative;
   background: rgba(5,6,20,0.78);
   border: 1px solid var(--line);
   padding: 14px 18px;
   clip-path: polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px);
   display: flex; gap: 16px; align-items: flex-start;
-  min-height: 130px; max-height: 42vh;
+  min-height: 130px; max-height: 50vh;
   overflow: hidden;
+  transition: max-height 0.2s ease;
 }
+.detail.expanded { max-height: 82vh; }
 .detail.empty { min-height: 64px; }
 .detail .d-left {
   flex: 0 0 300px; max-width: 300px;
   display: flex; flex-direction: column; gap: 7px;
-  max-height: calc(42vh - 28px); overflow-y: auto;
+  max-height: calc(50vh - 28px); overflow-y: auto;
   padding-right: 4px;
 }
+.detail.expanded .d-left { max-height: calc(82vh - 28px); }
 .detail .d-right {
-  flex: 1 1 0; overflow-y: auto; max-height: calc(42vh - 28px);
+  flex: 1 1 0; overflow-y: auto; max-height: calc(50vh - 28px);
   padding-right: 6px;
   user-select: text;
   min-width: 0;
 }
+.detail.expanded .d-right { max-height: calc(82vh - 28px); }
 .detail .d-pricecol {
   flex: 0 0 340px; max-width: 340px;
-  overflow-y: auto; max-height: calc(42vh - 28px);
+  overflow-y: auto; max-height: calc(50vh - 28px);
   padding: 0 4px;
   user-select: text;
   display: none;
 }
+.detail.expanded .d-pricecol { max-height: calc(82vh - 28px); }
+/* 펼치기/접기 토글 버튼 */
+.d-expand-btn {
+  position: absolute; top: 8px; right: 10px;
+  z-index: 5;
+  font-family: inherit; cursor: pointer;
+  padding: 3px 9px; font-size: 12.5px; font-weight: 800;
+  background: rgba(8,9,28,0.85); border: 1px solid var(--line);
+  color: var(--text-2);
+  letter-spacing: 0.04em;
+  clip-path: polygon(3px 0, 100% 0, 100% calc(100% - 3px), calc(100% - 3px) 100%, 0 100%, 0 3px);
+}
+.d-expand-btn:hover { color: #fff; border-color: var(--info); background: rgba(34,211,238,0.12); }
+.detail.empty .d-expand-btn { display: none; }
 .detail .d-pricecol.show { display: block; }
 /* 가격표가 있을 때 desc 영역과 사이에 구분선 */
 .detail .d-pricecol.show + .d-right {
@@ -552,12 +571,14 @@ body.memo-expanded main.app { bottom: 95px !important; }
 <main class="app">
   <!-- 상단: 선택 프로젝트 상세 (가로 전체) -->
   <section class="detail empty" id="detail">
+    <button class="d-expand-btn" id="detailExpandBtn" title="펼치기/접기 (Alt+E)">▼ 펼치기</button>
     <div class="d-empty" id="detailEmpty">
       카드를 <b>클릭</b>하면 여기에 상세가 표시됩니다. ·
       <kbd>Shift+클릭</kbd> 다중 선택 ·
       <kbd>드래그</kbd> 컬럼 이동(액션 변경) 또는 컬럼 헤더 드래그(컬럼 순서 변경) ·
       <kbd>Ctrl+K</kbd> 검색 ·
-      <kbd>ESC</kbd> 해제
+      <kbd>ESC</kbd> 해제 ·
+      <kbd>Alt+E</kbd> 상세 펼치기
     </div>
     <div class="d-left" id="detailLeft" style="display:none"></div>
     <div class="d-pricecol" id="detailPriceCol"></div>
@@ -1203,12 +1224,34 @@ function splitDesc(desc) {
       renderColumns();
     });
   });
+  // detail 영역 펼치기/접기 토글 — localStorage 저장
+  const detailEl = document.getElementById('detail');
+  const expandBtn = document.getElementById('detailExpandBtn');
+  const EXPAND_KEY = 'hanasm.detailExpanded.v3';
+  function applyExpandState() {
+    const on = localStorage.getItem(EXPAND_KEY) === '1';
+    detailEl.classList.toggle('expanded', on);
+    expandBtn.textContent = on ? '▲ 접기' : '▼ 펼치기';
+  }
+  function toggleExpand() {
+    const cur = localStorage.getItem(EXPAND_KEY) === '1';
+    localStorage.setItem(EXPAND_KEY, cur ? '0' : '1');
+    applyExpandState();
+  }
+  applyExpandState();
+  expandBtn.addEventListener('click', toggleExpand);
   document.addEventListener('keydown', (e) => {
     const tag = (e.target && e.target.tagName) || '';
     if ((e.key === 'k' || e.key === 'K') && (e.metaKey || e.ctrlKey)) {
       e.preventDefault();
       searchEl.focus();
       searchEl.select();
+    }
+    if (e.altKey && (e.key === 'e' || e.key === 'E')) {
+      if (tag !== 'INPUT' && tag !== 'TEXTAREA') {
+        e.preventDefault();
+        toggleExpand();
+      }
     }
     if (e.key === 'Escape') {
       if (tag === 'INPUT') searchEl.blur();
