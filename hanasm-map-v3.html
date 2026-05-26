@@ -544,9 +544,48 @@ body.memo-expanded main.app { bottom: 95px !important; }
   .detail .d-left { flex: 0 0 auto; max-width: 100%; }
   .detail .d-right { max-height: none; }
 }
+
+/* ⑤ 회의 모드 토글 (v3) */
+.meeting-toggle {
+  position: fixed; top: 14px; right: 240px; z-index: 110;
+  background: rgba(8,9,28,0.85);
+  border: 1px solid rgba(167,139,250,0.40);
+  color: #c084fc;
+  padding: 7px 12px; font-size: 12.5px;
+  font-family: inherit; font-weight: 700; cursor: pointer;
+  letter-spacing: 0.06em; white-space: nowrap;
+  clip-path: polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px);
+}
+.meeting-toggle:hover { background: rgba(167,139,250,0.18); color: #fff; }
+body.meeting-mode .meeting-toggle {
+  background: rgba(251,191,36,0.20);
+  border-color: #fbbf24;
+  color: #fbbf24;
+  box-shadow: 0 0 14px rgba(251,191,36,0.45);
+}
+/* 회의모드 — v3 UI 정리 (header, 그 외 컨트롤 숨김 · 카드/디테일/메모 유지) */
+body.meeting-mode header.topbar { display: none !important; }
+body.meeting-mode .app { top: 0 !important; padding-top: 8px !important; }
+body.meeting-mode { background: #000 !important; }
+/* 회의모드 보조 링크 (v2로 이동) */
+.meeting-aux-link {
+  position: fixed; top: 14px; right: 130px; z-index: 110;
+  background: rgba(8,9,28,0.85);
+  border: 1px solid rgba(251,191,36,0.40);
+  color: #fbbf24;
+  padding: 7px 12px; font-size: 12.5px;
+  font-weight: 700; cursor: pointer;
+  letter-spacing: 0.06em; white-space: nowrap;
+  text-decoration: none; display: none;
+  clip-path: polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px);
+}
+.meeting-aux-link:hover { background: rgba(251,191,36,0.18); color: #fff; }
+body.meeting-mode .meeting-aux-link { display: inline-block; }
 </style>
 </head>
 <body>
+<button class="meeting-toggle" id="meetingToggle" title="회의 모드 — 단축키 P / 해제 ESC">⛶ 회의</button>
+<a class="meeting-aux-link" id="meetingAuxLink" href="hanasm-map-v2.html" title="와이어 맵(V2)으로">← 와이어 맵</a>
 
 <header class="topbar">
   <div class="brand">
@@ -1264,6 +1303,51 @@ function splitDesc(desc) {
     renderColumns();
     renderDetail();
     renderBulkActions();
+  });
+})();
+
+// ⑤ 회의 모드 (v3) — 단축키 P, ESC 해제, 풀스크린 토글, v2와 localStorage 공유
+function toggleMeetingMode(force) {
+  const on = (typeof force === 'boolean') ? force : !document.body.classList.contains('meeting-mode');
+  document.body.classList.toggle('meeting-mode', on);
+  const btn = document.getElementById('meetingToggle');
+  if (btn) btn.innerHTML = on ? '✕ 회의모드 해제' : '⛶ 회의';
+  try {
+    if (on && !document.fullscreenElement && document.documentElement.requestFullscreen) {
+      document.documentElement.requestFullscreen().catch(() => {});
+    } else if (!on && document.fullscreenElement && document.exitFullscreen) {
+      document.exitFullscreen().catch(() => {});
+    }
+  } catch(e) {}
+  try { localStorage.setItem('hanasm.meetingMode', on ? '1' : '0'); } catch(e) {}
+}
+document.addEventListener('keydown', (e) => {
+  const tag = (e.target && e.target.tagName) || '';
+  if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+  if ((e.key === 'p' || e.key === 'P') && !e.ctrlKey && !e.metaKey && !e.altKey) {
+    e.preventDefault();
+    toggleMeetingMode();
+  }
+  if (e.key === 'Escape' && document.body.classList.contains('meeting-mode')) {
+    toggleMeetingMode(false);
+  }
+});
+(function bindMeetingBtn(){
+  const _mBtn = document.getElementById('meetingToggle');
+  if (_mBtn) _mBtn.addEventListener('click', () => toggleMeetingMode());
+  // 페이지 로드 시 localStorage 상태 자동 복원
+  try {
+    if (localStorage.getItem('hanasm.meetingMode') === '1') {
+      toggleMeetingMode(true);
+    }
+  } catch(e) {}
+  // 다른 탭/페이지에서 회의모드 토글 시 sync
+  window.addEventListener('storage', (e) => {
+    if (e.key === 'hanasm.meetingMode') {
+      const should = (e.newValue === '1');
+      const cur = document.body.classList.contains('meeting-mode');
+      if (should !== cur) toggleMeetingMode(should);
+    }
   });
 })();
 </script>

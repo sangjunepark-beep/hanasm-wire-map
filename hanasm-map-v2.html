@@ -3250,6 +3250,18 @@ function toggleMeetingMode(force) {
   document.body.classList.toggle('meeting-mode', on);
   const btn = document.getElementById('meetingToggle');
   if (btn) btn.innerHTML = on ? '✕ 회의모드 해제' : '⛶ 회의 모드';
+  // 회의모드 보조 링크 (v3로 이동) — 동적 생성
+  let aux = document.getElementById('meetingAuxLink');
+  if (on && !aux) {
+    aux = document.createElement('a');
+    aux.id = 'meetingAuxLink';
+    aux.href = 'hanasm-map-v3.html';
+    aux.textContent = '→ V3 프로젝트';
+    aux.title = '프로젝트 진행 관리 (V3)';
+    aux.style.cssText = 'position:fixed;top:16px;right:330px;z-index:120;color:#fbbf24;background:rgba(8,9,28,0.85);border:1px solid rgba(251,191,36,0.40);padding:7px 12px;font-size:12.5px;font-weight:700;letter-spacing:0.06em;text-decoration:none;font-family:inherit;clip-path:polygon(6px 0,100% 0,100% calc(100% - 6px),calc(100% - 6px) 100%,0 100%,0 6px);';
+    document.body.appendChild(aux);
+  }
+  if (aux) aux.style.display = on ? 'inline-block' : 'none';
   try {
     if (on && !document.fullscreenElement && document.documentElement.requestFullscreen) {
       document.documentElement.requestFullscreen().catch(() => {});
@@ -3257,7 +3269,7 @@ function toggleMeetingMode(force) {
       document.exitFullscreen().catch(() => {});
     }
   } catch(e) {}
-  // ④ 인트로 줌 제거됨 — 클로즈업 후 줌아웃 동작이 어색하다는 피드백 (2026-05-24)
+  try { localStorage.setItem('hanasm.meetingMode', on ? '1' : '0'); } catch(e) {}
 }
 function playIntroZoom() { /* disabled */ }
 document.addEventListener('keydown', (e) => {
@@ -3275,6 +3287,20 @@ document.addEventListener('keydown', (e) => {
 (function bindMeetingBtn(){
   const _mBtn = document.getElementById('meetingToggle');
   if (_mBtn) _mBtn.addEventListener('click', () => toggleMeetingMode());
+  // 페이지 로드 시 localStorage 상태 자동 복원
+  try {
+    if (localStorage.getItem('hanasm.meetingMode') === '1') {
+      toggleMeetingMode(true);
+    }
+  } catch(e) {}
+  // 다른 탭/페이지에서 회의모드 토글 시 sync
+  window.addEventListener('storage', (e) => {
+    if (e.key === 'hanasm.meetingMode') {
+      const should = (e.newValue === '1');
+      const cur = document.body.classList.contains('meeting-mode');
+      if (should !== cur) toggleMeetingMode(should);
+    }
+  });
 })();
 
 // ③ 부서 노드 위 매출등급 미니바 + ⑥ 결정 상태 라인 (진행/보류/중단)
