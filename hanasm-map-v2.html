@@ -1619,6 +1619,14 @@ const CX = STAGE_W / 2, CY = STAGE_H / 2;
 
 // ============ TASKS ============
 const TASKS = {
+  kimsr: [
+    { name:"디자인 시안 작업·수정", status:"정기", prio:"h" },
+    { name:"디자인 관련 고객 상담 통화", status:"정기", prio:"h" },
+    { name:"시안 확정건 발주 작업", status:"정기", prio:"h" },
+    { name:"신규 디자인 작업", status:"간헐", prio:"m" },
+    { name:"셀프 디자인 작업", status:"간헐", prio:"m" },
+    { name:"피난안내도 외주 요청 작업", status:"간헐", prio:"m" }
+  ],
   wooyh: [
     { name:"아크릴 레이저 운용", status:"정기", prio:"h" },
     { name:"준드 평판컷팅기 운용", status:"정기", prio:"h" },
@@ -2013,7 +2021,7 @@ const DATA = {
       links:["erp"],
       members:[
         { name:"정예진", role:"대리", title:"디자인", tasks: null },
-        { name:"김사랑", role:"대리", title:"디자인", tasks: null },
+        { name:"김사랑", role:"대리", title:"디자인", tasks: TASKS.kimsr },
         { name:"신혜리", role:"주임", title:"디자인", tasks: null },
         { name:"이경민", role:"주임", title:"디자인", tasks: TASKS.leekm },
         { name:"박민진", role:"주임", title:"디자인", tasks: null }
