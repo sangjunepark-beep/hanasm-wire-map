@@ -1562,191 +1562,291 @@ body:has(.proj-panel.show) .node .dept-projects-section { display: none !importa
 .cat .proj-item { border-left-color: var(--cat-c); }
 
 
-/* ═══════════════════════════════════════════════
-   LIGHT THEME OVERRIDE — 화이트 + 차콜 2톤
-   ═══════════════════════════════════════════════ */
+/* ═══════════════════════════════════════════════════════════
+   DARK MONOCHROME 2-TONE OVERRIDE — v4/v5
+   톤 1: 블랙 #0a0a0a   |   톤 2: 화이트 #ffffff
+   음영은 모두 rgba(255,255,255, x)의 알파 조절로만 표현
+   v2/v3와 다른 무드: 직각 박스, 글로우 제거, 굵은 타이포, 여백 여유
+   ═══════════════════════════════════════════════════════════ */
+
 :root {
-  --bg-0: #ffffff !important; --bg-1: #fafafa !important; --bg-2: #f4f4f5 !important;
-  --line: #e4e4e7 !important; --line-2: #d4d4d8 !important;
-  --text-1: #111827 !important; --text-2: #4b5563 !important; --text-3: #9ca3af !important;
-  --purple-1: #111827; --purple-2: #374151; --purple-3: #4b5563;
-  --blue-1: #6b7280;   --blue-2: #4b5563;   --blue-3: #374151;
-  --cyan: #111827; --pink: #6b7280; --amber: #111827;
-  --green: #4b5563; --orange: #4b5563; --red: #111827;
-  --info: #111827; --gold: #111827; --muted: #9ca3af; --danger: #111827; --success: #4b5563;
-  --rev-A: #111827; --rev-B: #4b5563; --rev-C: #9ca3af; --rev-D: #d4d4d8; --rev-E: #e4e4e7;
+  --bg-0: #0a0a0a !important;
+  --bg-1: #111111 !important;
+  --bg-2: #161616 !important;
+  --line:   rgba(255,255,255,0.10) !important;
+  --line-2: rgba(255,255,255,0.18) !important;
+  --line-3: rgba(255,255,255,0.30) !important;
+  --text-1: #ffffff !important;
+  --text-2: rgba(255,255,255,0.72) !important;
+  --text-3: rgba(255,255,255,0.45) !important;
+  --text-4: rgba(255,255,255,0.30) !important;
+
+  /* 기존 변수도 무채색으로 강제 */
+  --purple-1: #ffffff; --purple-2: rgba(255,255,255,0.75); --purple-3: rgba(255,255,255,0.55);
+  --blue-1: rgba(255,255,255,0.70); --blue-2: rgba(255,255,255,0.55); --blue-3: rgba(255,255,255,0.40);
+  --cyan: #ffffff; --pink: rgba(255,255,255,0.55); --amber: #ffffff;
+  --green: rgba(255,255,255,0.70); --orange: rgba(255,255,255,0.55); --red: #ffffff;
+  --info: #ffffff; --gold: #ffffff; --muted: rgba(255,255,255,0.45);
+  --danger: #ffffff; --success: rgba(255,255,255,0.70);
+  --rev-A: #ffffff; --rev-B: rgba(255,255,255,0.78);
+  --rev-C: rgba(255,255,255,0.55); --rev-D: rgba(255,255,255,0.32); --rev-E: rgba(255,255,255,0.20);
 }
 
-/* 전역 배경·글자 */
+/* ─── 전역 배경·글자 ─────────────────────────────────── */
 html, body {
-  background: #ffffff !important;
+  background: #0a0a0a !important;
   background-image: none !important;
-  color: #111827 !important;
+  color: #ffffff !important;
+  font-family: "Pretendard", "Noto Sans KR", "Inter", system-ui, -apple-system, sans-serif !important;
+  letter-spacing: -0.005em !important;
 }
 
-/* 발광·블러·필터 전부 제거 */
+/* ─── 모든 발광·블러·필터·그라데이션 텍스트 제거 ──────── */
 * {
   text-shadow: none !important;
   filter: none !important;
   -webkit-backdrop-filter: none !important;
   backdrop-filter: none !important;
 }
-
-/* box-shadow는 부드러운 그림자만 허용 */
-*[style*="box-shadow"] { box-shadow: 0 1px 2px rgba(0,0,0,0.06) !important; }
-
-/* 그라데이션 텍스트 제거 — 단색으로 */
-.title h1, h1, h2, h3, h4, h5 {
+.title h1, h1, h2, h3, h4, h5, h6 {
   background: none !important;
   background-image: none !important;
   -webkit-background-clip: initial !important;
   background-clip: initial !important;
-  -webkit-text-fill-color: #111827 !important;
-  color: #111827 !important;
+  -webkit-text-fill-color: #ffffff !important;
+  color: #ffffff !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.02em !important;
+}
+.brand-logo { filter: brightness(1.4) contrast(1.2) !important; opacity: 0.95 !important; }
+
+/* ─── 사선 잘림(clip-path) 제거 → 직각 박스로 ─────────── */
+.topbar, .legend, .task-panel, .detail, .hint, .kanban-col,
+.card, .pi-card, .pl-item, .member-chip,
+[class*="pill-"], [class*="badge-"], [class*="chip"],
+button, .v3-link, .v2-link, .ch-sort, .d-actions button,
+.bulk-bar button, .legend-chip, .search-box, .col-head, .col-add,
+.tp-stats .st, .d-expand-btn, .d-owner-sel, .d-rel-add, .rel-chip {
+  clip-path: none !important;
+  border-radius: 0 !important;
 }
 
-/* 브랜드 로고 발광 제거 */
-.brand-logo { filter: none !important; opacity: 1 !important; }
-
-/* 패널·카드·바·칩 솔리드 화이트 배경 */
+/* ─── 패널/카드/바 — 솔리드 다크 배경 + 얇은 라인 ────── */
 .topbar, .topbar > *,
 .legend,
 .task-panel,
 .detail, .detail .d-empty,
 .hint,
 .kanban-col,
-.card, .pi-card, .pl-item, .member-chip,
 .search-box, .search-box input,
 .tp-head, .tp-stats, .tp-body, .tp-foot,
 .col-head, .col-body, .col-add,
 .bulk-bar,
 .col-meta-strip,
 .memo-strip, .memo-strip textarea {
-  background: #ffffff !important;
+  background: #0a0a0a !important;
   background-image: none !important;
-  border-color: #e4e4e7 !important;
-  color: #111827 !important;
+  border-color: rgba(255,255,255,0.10) !important;
+  color: #ffffff !important;
   box-shadow: none !important;
 }
 
-/* 카드에 부드러운 그림자 + 호버 강조 */
+/* ─── 카드 — 약간 밝은 다크 + 얇은 라인 ──────────────── */
 .card, .pi-card, .pl-item, .member-chip {
-  box-shadow: 0 1px 2px rgba(0,0,0,0.04) !important;
-  border: 1px solid #e4e4e7 !important;
+  background: #111111 !important;
+  border: 1px solid rgba(255,255,255,0.10) !important;
+  box-shadow: none !important;
+  padding: 14px !important;
 }
 .card:hover, .pi-card:hover, .pl-item:hover, .member-chip:hover {
-  background: #fafafa !important;
-  border-color: #9ca3af !important;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.08) !important;
-}
-
-/* 칸반 컬럼은 살짝 회색 배경 */
-.kanban-col { background: #fafafa !important; border: 1px solid #e4e4e7 !important; }
-.col-body { background: transparent !important; }
-
-/* 헤더(topbar) 하단 라인 명확하게 */
-.topbar { border-bottom: 1px solid #e4e4e7 !important; }
-
-/* 텍스트 색 강약 */
-.d-title, h1, h2, h3 { color: #111827 !important; font-weight: 800 !important; }
-b, strong { color: #111827 !important; }
-.d-desc, .d-desc b, .d-desc *, .d-row .val, .d-row .val * { color: #1f2937 !important; }
-.d-row .lbl, .legend-rev-head, .role-tag, .pl-by, .meta-when, .d-meta .pill-cat {
-  color: #6b7280 !important;
-}
-
-/* ═══════ Pill 시스템 — 그레이 농도 5단계 ═══════ */
-[class*="pill-rev-A"] { background: #111827 !important; color: #ffffff !important; border-color: #111827 !important; }
-[class*="pill-rev-B"] { background: #4b5563 !important; color: #ffffff !important; border-color: #4b5563 !important; }
-[class*="pill-rev-C"] { background: #9ca3af !important; color: #ffffff !important; border-color: #9ca3af !important; }
-[class*="pill-rev-D"] { background: #e4e4e7 !important; color: #1f2937 !important; border-color: #d4d4d8 !important; }
-[class*="pill-rev-E"] { background: #f4f4f5 !important; color: #6b7280 !important; border-color: #e4e4e7 !important; }
-
-[class*="pill-prio-h"] { background: #111827 !important; color: #ffffff !important; border-color: #111827 !important; }
-[class*="pill-prio-m"] { background: #f4f4f5 !important; color: #1f2937 !important; border-color: #e4e4e7 !important; }
-[class*="pill-prio-l"] { background: #ffffff !important; color: #9ca3af !important; border: 1px dashed #d4d4d8 !important; }
-
-[class*="pill-status-active"] { background: #111827 !important; color: #ffffff !important; border-color: #111827 !important; }
-[class*="pill-status-stop"]   { background: #f4f4f5 !important; color: #9ca3af !important; border-color: #e4e4e7 !important; }
-[class*="pill-cat"]           { background: #ffffff !important; color: #4b5563 !important; border: 1px solid #e4e4e7 !important; }
-[class*="pill-prog"]          { background: #ffffff !important; color: #111827 !important; border: 1px solid #d4d4d8 !important; }
-
-/* 진행도 바·점 — 무채색 */
-[style*="background:#"], [style*="background: #"] { box-shadow: none !important; }
-.dot, .legend .sw { box-shadow: none !important; }
-
-/* 버튼 */
-button {
-  background: #ffffff !important;
-  color: #1f2937 !important;
-  border: 1px solid #d4d4d8 !important;
+  background: #181818 !important;
+  border-color: rgba(255,255,255,0.45) !important;
   box-shadow: none !important;
 }
+
+/* ─── 칸반 컬럼 — 라인으로만 구분, 배경 없음 ─────────── */
+.kanban-col {
+  background: transparent !important;
+  border: 1px solid rgba(255,255,255,0.08) !important;
+  padding: 12px !important;
+}
+.col-body { background: transparent !important; gap: 10px !important; }
+.col-head {
+  background: transparent !important;
+  border-bottom: 1px solid rgba(255,255,255,0.15) !important;
+  padding-bottom: 10px !important;
+  margin-bottom: 12px !important;
+}
+
+/* ─── 상단 바 ────────────────────────────────────────── */
+.topbar {
+  border-bottom: 1px solid rgba(255,255,255,0.10) !important;
+  background: rgba(10,10,10,0.95) !important;
+}
+
+/* ─── 텍스트 강약 ────────────────────────────────────── */
+.d-title, h1, h2, h3 { color: #ffffff !important; }
+b, strong { color: #ffffff !important; font-weight: 800 !important; }
+.d-desc, .d-desc *, .d-row .val, .d-row .val * { color: rgba(255,255,255,0.85) !important; }
+.d-row .lbl, .legend-rev-head, .role-tag, .pl-by, .meta-when {
+  color: rgba(255,255,255,0.45) !important;
+}
+
+/* ─── Pill 시스템 — 화이트 농도 5단계 ────────────────── */
+[class*="pill-rev-A"] {
+  background: #ffffff !important; color: #0a0a0a !important;
+  border: 1px solid #ffffff !important; font-weight: 800 !important;
+}
+[class*="pill-rev-B"] {
+  background: rgba(255,255,255,0.85) !important; color: #0a0a0a !important;
+  border: 1px solid rgba(255,255,255,0.85) !important; font-weight: 800 !important;
+}
+[class*="pill-rev-C"] {
+  background: rgba(255,255,255,0.30) !important; color: #ffffff !important;
+  border: 1px solid rgba(255,255,255,0.30) !important;
+}
+[class*="pill-rev-D"] {
+  background: transparent !important; color: rgba(255,255,255,0.65) !important;
+  border: 1px solid rgba(255,255,255,0.25) !important;
+}
+[class*="pill-rev-E"] {
+  background: transparent !important; color: rgba(255,255,255,0.40) !important;
+  border: 1px dashed rgba(255,255,255,0.20) !important;
+}
+
+[class*="pill-prio-h"] {
+  background: #ffffff !important; color: #0a0a0a !important;
+  border: 1px solid #ffffff !important; font-weight: 800 !important;
+}
+[class*="pill-prio-m"] {
+  background: transparent !important; color: rgba(255,255,255,0.80) !important;
+  border: 1px solid rgba(255,255,255,0.35) !important;
+}
+[class*="pill-prio-l"] {
+  background: transparent !important; color: rgba(255,255,255,0.45) !important;
+  border: 1px dashed rgba(255,255,255,0.20) !important;
+}
+
+[class*="pill-status-active"] {
+  background: #ffffff !important; color: #0a0a0a !important;
+  border: 1px solid #ffffff !important;
+}
+[class*="pill-status-stop"] {
+  background: transparent !important; color: rgba(255,255,255,0.45) !important;
+  border: 1px dashed rgba(255,255,255,0.20) !important;
+}
+[class*="pill-cat"] {
+  background: transparent !important; color: rgba(255,255,255,0.70) !important;
+  border: 1px solid rgba(255,255,255,0.20) !important;
+}
+[class*="pill-prog"] {
+  background: transparent !important; color: #ffffff !important;
+  border: 1px solid rgba(255,255,255,0.40) !important;
+}
+
+/* ─── 버튼·인풋·셀렉트 ──────────────────────────────── */
+button {
+  background: transparent !important;
+  color: rgba(255,255,255,0.85) !important;
+  border: 1px solid rgba(255,255,255,0.30) !important;
+  box-shadow: none !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.02em !important;
+}
 button:hover {
-  background: #f4f4f5 !important;
-  border-color: #6b7280 !important;
-  color: #111827 !important;
+  background: rgba(255,255,255,0.08) !important;
+  border-color: #ffffff !important;
+  color: #ffffff !important;
 }
 button.active, button[aria-pressed="true"] {
-  background: #111827 !important;
-  color: #ffffff !important;
-  border-color: #111827 !important;
-}
-
-/* 인풋·셀렉트·텍스트에어리어 */
-input, select, textarea {
   background: #ffffff !important;
-  color: #111827 !important;
-  border: 1px solid #d4d4d8 !important;
+  color: #0a0a0a !important;
+  border-color: #ffffff !important;
+}
+input, select, textarea {
+  background: transparent !important;
+  color: #ffffff !important;
+  border: 1px solid rgba(255,255,255,0.25) !important;
+  border-radius: 0 !important;
 }
 input:focus, select:focus, textarea:focus {
-  border-color: #111827 !important;
+  border-color: #ffffff !important;
   outline: none !important;
+  background: rgba(255,255,255,0.04) !important;
 }
 
-/* 스크롤바 */
-::-webkit-scrollbar { width: 8px !important; height: 8px !important; }
-::-webkit-scrollbar-thumb { background: #d4d4d8 !important; border-radius: 0 !important; }
-::-webkit-scrollbar-thumb:hover { background: #6b7280 !important; }
+/* ─── 스크롤바 ─────────────────────────────────────── */
+::-webkit-scrollbar { width: 6px !important; height: 6px !important; }
+::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.20) !important; }
+::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.50) !important; }
 ::-webkit-scrollbar-track { background: transparent !important; }
 
-/* 링크 */
-a { color: #111827 !important; }
-a:hover { color: #6b7280 !important; }
-
-/* 헤더 부속 (v3-link, v2-link) */
+/* ─── 링크·헤더 부속 ────────────────────────────────── */
+a { color: #ffffff !important; text-decoration: none !important; }
+a:hover { color: rgba(255,255,255,0.70) !important; }
 .v3-link, .v2-link {
-  background: #ffffff !important;
-  color: #111827 !important;
-  border: 1px solid #d4d4d8 !important;
-  text-shadow: none !important;
+  background: transparent !important;
+  color: #ffffff !important;
+  border: 1px solid rgba(255,255,255,0.30) !important;
+  padding: 6px 14px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.02em !important;
 }
 .v3-link:hover, .v2-link:hover {
-  background: #111827 !important;
-  color: #ffffff !important;
+  background: #ffffff !important;
+  color: #0a0a0a !important;
 }
 
-/* hint·범례 라인 */
+/* ─── 힌트·범례 ────────────────────────────────────── */
 .hint, .legend {
-  border: 1px solid #e4e4e7 !important;
-  background: #fafafa !important;
+  background: transparent !important;
+  border: 1px solid rgba(255,255,255,0.10) !important;
 }
 .hint kbd, kbd {
-  background: #ffffff !important;
-  border: 1px solid #d4d4d8 !important;
-  color: #111827 !important;
+  background: rgba(255,255,255,0.08) !important;
+  border: 1px solid rgba(255,255,255,0.25) !important;
+  color: #ffffff !important;
+  border-radius: 0 !important;
+  padding: 2px 6px !important;
+  font-family: "JetBrains Mono", monospace !important;
 }
 
-/* SVG·선·노드 (와이어 맵 시각 요소) */
-line, path { stroke: #d4d4d8 !important; }
+/* ─── SVG / 와이어 맵 시각 요소 ────────────────────── */
+line, path { stroke: rgba(255,255,255,0.35) !important; }
+line[stroke="none"], path[stroke="none"] { stroke: none !important; }
 .node-rect, .node-frame, [class*="node"] rect {
-  fill: #ffffff !important;
-  stroke: #9ca3af !important;
+  fill: #111111 !important;
+  stroke: rgba(255,255,255,0.30) !important;
 }
-text { fill: #111827 !important; }
+text { fill: #ffffff !important; }
+.dot, .legend .sw {
+  box-shadow: none !important;
+  background: #ffffff !important;
+}
 
-/* clip-path는 그대로 두되 배경만 라이트로 */
-[style*="clip-path"] { background: #ffffff !important; }
+/* ─── 진행도 바 (그레이 음영) ──────────────────────── */
+[style*="background:#"], [style*="background: #"],
+[style*="background-color:#"], [style*="background-color: #"] {
+  box-shadow: none !important;
+}
+
+/* ─── 여백 여유 (v2/v3와 다른 무드) ────────────────── */
+.topbar { padding: 18px 28px !important; }
+.title h1 { font-size: 19px !important; letter-spacing: 0.22em !important; }
+.detail { padding: 18px 22px !important; gap: 22px !important; }
+.col-head { font-size: 13px !important; letter-spacing: 0.18em !important; text-transform: uppercase !important; }
+
+/* ─── 카드 헤드라인 ─────────────────────────────────── */
+.card .card-title, .pi-card .name, .pl-item .pl-title, .member-chip .name,
+.card .name {
+  color: #ffffff !important;
+  font-weight: 800 !important;
+  letter-spacing: -0.005em !important;
+}
+
+/* ─── 최종 정리 — 인라인 box-shadow 무력화 ─────────── */
+*[style*="box-shadow"] { box-shadow: none !important; }
+*[style*="text-shadow"] { text-shadow: none !important; }
 
 </style>
 </head>
@@ -1757,7 +1857,7 @@ text { fill: #111827 !important; }
     <img class="brand-logo" src="https://www.hanasignmall.kr/image/common/hana_logo2.png" alt="HANASIGNMALL" />
 
     <span class="date" id="today"></span>
-    <a class="v3-link" href="hanasm-map-v5.html" title="프로젝트 진행 관리 (V5) — 라이트">📊 프로젝트 진행 관리 V5 →</a>
+    <a class="v3-link" href="hanasm-map-v5.html" title="프로젝트 진행 관리 (V5)">📊 프로젝트 진행 관리 V5 →</a>
   </div>
   <div class="hint">클릭 = 빛 · 더블 = 확대 · 드래그 = 이동 · 휠 = 줌</div>
 </div>
