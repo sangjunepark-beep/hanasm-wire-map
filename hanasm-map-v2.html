@@ -1561,6 +1561,30 @@ body:has(.proj-panel.show) .node .dept-projects-section { display: none !importa
 .cat .cat-h { color: var(--cat-c); }
 .cat .proj-item { border-left-color: var(--cat-c); }
 
+
+/* 프로젝트 진행 관리 iframe 모달 (회의모드에서 풀스크린 유지) */
+.proj-iframe-modal {
+  position: fixed; inset: 0; z-index: 9999;
+  background: #000;
+  display: none;
+}
+.proj-iframe-modal.open { display: block; }
+.proj-iframe-modal-iframe {
+  width: 100%; height: 100%; border: 0; display: block;
+  background: #050614;
+}
+.proj-iframe-modal-close {
+  position: fixed; top: 14px; right: 14px; z-index: 10000;
+  background: rgba(8,9,28,0.92);
+  border: 1px solid rgba(251,191,36,0.50);
+  color: #fbbf24;
+  padding: 7px 14px; font-size: 12.5px;
+  font-family: inherit; font-weight: 800;
+  cursor: pointer;
+  letter-spacing: 0.06em;
+  clip-path: polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px);
+}
+.proj-iframe-modal-close:hover { background: rgba(251,191,36,0.20); color: #fff; }
 </style>
 </head>
 <body>
@@ -1612,6 +1636,14 @@ body:has(.proj-panel.show) .node .dept-projects-section { display: none !importa
   </div>
   <div class="tp-body" id="tpBody"></div>
 </aside>
+
+<!-- 프로젝트 진행 관리 iframe 모달 (회의모드 풀스크린 유지용) -->
+<div class="proj-iframe-modal" id="projIframeModal">
+  <button class="proj-iframe-modal-close" id="projIframeModalClose" title="닫기 (ESC)">✕ 닫기</button>
+  <iframe class="proj-iframe-modal-iframe" id="projIframeModalIframe"
+          allow="fullscreen; clipboard-read; clipboard-write"
+          src="about:blank"></iframe>
+</div>
 
 <script>
 const STAGE_W = 2400, STAGE_H = 1400;
@@ -4553,6 +4585,58 @@ document.getElementById('ppClose').addEventListener('click', () => {
   });
 })();
 
+
+// ⑥ 프로젝트 진행 관리 iframe 모달 — 회의모드에서 풀스크린 유지
+function openProjIframeModal() {
+  const m = document.getElementById('projIframeModal');
+  const f = document.getElementById('projIframeModalIframe');
+  if (!m || !f) return;
+  if (f.src.indexOf('hanasm-map-v3.html') === -1) {
+    f.src = 'hanasm-map-v3.html';
+  }
+  m.classList.add('open');
+}
+function closeProjIframeModal() {
+  const m = document.getElementById('projIframeModal');
+  if (!m) return;
+  m.classList.remove('open');
+}
+// v3-link / aux-link 클릭 시 회의모드면 모달로, 아니면 페이지 이동(기본)
+function _bindProjModalLinks() {
+  document.querySelectorAll('a[href="hanasm-map-v3.html"]').forEach(a => {
+    if (a.dataset.bound) return;
+    a.dataset.bound = '1';
+    a.addEventListener('click', (e) => {
+      if (document.body.classList.contains('meeting-mode')) {
+        e.preventDefault();
+        openProjIframeModal();
+      }
+    });
+  });
+}
+_bindProjModalLinks();
+// aux link는 동적 생성이라 MutationObserver로 감지
+new MutationObserver(_bindProjModalLinks).observe(document.body, { childList: true, subtree: true });
+// 모달 닫기 버튼
+(function(){
+  const b = document.getElementById('projIframeModalClose');
+  if (b) b.addEventListener('click', closeProjIframeModal);
+})();
+// ESC: 모달 열려있으면 모달 먼저 닫기 (회의모드 해제는 두 번째 ESC에서)
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') {
+    const m = document.getElementById('projIframeModal');
+    if (m && m.classList.contains('open')) {
+      e.stopPropagation();
+      closeProjIframeModal();
+    }
+  }
+}, true);
+// iframe 안 v3에서 닫기 요청 받기
+window.addEventListener('message', (e) => {
+  if (e.origin !== location.origin) return;
+  if (e.data && e.data.type === 'closeProjIframeModal') closeProjIframeModal();
+});
 </script>
 
 </body>
