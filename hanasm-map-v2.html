@@ -1664,6 +1664,16 @@ const CX = STAGE_W / 2, CY = STAGE_H / 2;
 
 // ============ TASKS ============
 const TASKS = {
+  shinhr: [
+    { name:"주문건 시안 작업·수정", status:"정기", prio:"h" },
+    { name:"시안 관련 고객 상담 (통화·메일·카톡·문자)", status:"정기", prio:"h" },
+    { name:"시안 확정건 제작실·외주 발주 진행", status:"정기", prio:"h" },
+    { name:"미확정 주문건 체크 (진행 여부 확인)", status:"정기", prio:"h" },
+    { name:"퀵배차건 확인 → 퀵업체 배차 요청", status:"정기", prio:"h" },
+    { name:"신규 상품 디자인 작업", status:"간헐", prio:"m" },
+    { name:"CS팀 요청 — 고객 전달 파일 사용 가능 여부 확인", status:"간헐", prio:"m" },
+    { name:"CS팀 요청 — 게시판 비규격 사이즈 작업", status:"간헐", prio:"m" }
+  ],
   kimsr: [
     { name:"디자인 시안 작업·수정", status:"정기", prio:"h" },
     { name:"디자인 관련 고객 상담 통화", status:"정기", prio:"h" },
@@ -2067,7 +2077,7 @@ const DATA = {
       members:[
         { name:"정예진", role:"대리", title:"디자인", tasks: null },
         { name:"김사랑", role:"대리", title:"디자인", tasks: TASKS.kimsr },
-        { name:"신혜리", role:"주임", title:"디자인", tasks: null },
+        { name:"신혜리", role:"주임", title:"디자인", tasks: TASKS.shinhr },
         { name:"이경민", role:"주임", title:"디자인", tasks: TASKS.leekm },
         { name:"박민진", role:"주임", title:"디자인", tasks: null }
       ]},
