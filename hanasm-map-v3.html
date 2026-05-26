@@ -563,47 +563,32 @@ body.meeting-mode .meeting-toggle {
   color: #fbbf24;
   box-shadow: 0 0 14px rgba(251,191,36,0.45);
 }
-/* 회의모드 — header는 살리되 자식 컨트롤은 숨김, v2-link만 살림 (와이어맵 복귀) */
-body.meeting-mode header.topbar {
-  background: transparent !important;
-  border-bottom: none !important;
-  padding: 8px 14px !important;
-  justify-content: flex-end !important;
-}
-body.meeting-mode header.topbar > *:not(.v2-link) { display: none !important; }
-body.meeting-mode header.topbar .v2-link {
-  display: inline-block !important;
-  background: rgba(8,9,28,0.85) !important;
-  border: 1px solid rgba(251,191,36,0.45) !important;
-  color: #fbbf24 !important;
-  padding: 7px 14px !important;
-  font-weight: 800 !important;
-  letter-spacing: 0.06em !important;
-}
-body.meeting-mode header.topbar .v2-link:hover {
-  background: rgba(251,191,36,0.22) !important; color: #fff !important;
-}
-body.meeting-mode .app { top: 52px !important; padding-top: 4px !important; }
+/* 회의모드 — header 통째 숨김. 와이어맵 복귀는 floating meeting-aux-link로 일원화 */
+body.meeting-mode header.topbar { display: none !important; }
+body.meeting-mode .app { top: 0 !important; padding-top: 8px !important; }
 body.meeting-mode { background: #000 !important; }
 /* 회의모드 보조 링크 (v2로 이동) */
 .meeting-aux-link {
-  position: fixed; top: 14px; right: 130px; z-index: 110;
-  background: rgba(8,9,28,0.85);
-  border: 1px solid rgba(251,191,36,0.40);
+  position: fixed; top: 14px; left: 14px; z-index: 250;
+  background: rgba(8,9,28,0.92);
+  border: 1px solid rgba(251,191,36,0.50);
   color: #fbbf24;
-  padding: 7px 12px; font-size: 12.5px;
-  font-weight: 700; cursor: pointer;
+  padding: 8px 16px; font-size: 13px;
+  font-weight: 800; cursor: pointer;
   letter-spacing: 0.06em; white-space: nowrap;
   text-decoration: none; display: none;
-  clip-path: polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px);
+  font-family: inherit;
+  clip-path: polygon(0 0, calc(100% - 6px) 0, 100% 6px, 100% 100%, 6px 100%, 0 calc(100% - 6px));
 }
-.meeting-aux-link:hover { background: rgba(251,191,36,0.18); color: #fff; }
-body.meeting-mode .meeting-aux-link { display: inline-block; }
+.meeting-aux-link:hover { background: rgba(251,191,36,0.22); color: #fff; }
+body.meeting-mode .meeting-aux-link { display: inline-block !important; }
+/* iframe 안에서도 회의모드면 보임 */
+body.inside-iframe.meeting-mode .meeting-aux-link,
+body.inside-iframe .meeting-aux-link { display: inline-block !important; }
 
-/* iframe 안에서 열렸을 때: 부모(v2)가 회의모드/이동 컨트롤 관리 */
+/* iframe 안에서 열렸을 때: 헤더·v3 자체 토글 숨김. meeting-aux-link는 유지(와이어맵 복귀용) */
 body.inside-iframe header.topbar,
 body.inside-iframe .meeting-toggle,
-body.inside-iframe #meetingAuxLink,
 body.inside-iframe .v2-link,
 body.inside-iframe .v3-link { display: none !important; }
 body.inside-iframe .app { top: 0 !important; padding-top: 10px !important; }
