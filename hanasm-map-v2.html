@@ -1619,6 +1619,13 @@ const CX = STAGE_W / 2, CY = STAGE_H / 2;
 
 // ============ TASKS ============
 const TASKS = {
+  wooyh: [
+    { name:"아크릴 레이저 운용", status:"정기", prio:"h" },
+    { name:"준드 평판컷팅기 운용", status:"정기", prio:"h" },
+    { name:"아크릴·페트·포맥스 합지·제작", status:"정기", prio:"h" },
+    { name:"평판 UV 출력", status:"정기", prio:"h", detail:"재현·KM 2대 운용" },
+    { name:"A형 작업·포장 지원", status:"정기", prio:"m" }
+  ],
   kimmh: [
     { name:"제품 포장", status:"정기", prio:"h" },
     { name:"A형입간판 제작·포장", status:"정기", prio:"h" },
@@ -2041,7 +2048,7 @@ const DATA = {
       links:["cs","erp"],
       members:[
         { name:"이지은", role:"대리", title:"출력·합지·재단·포장 (멀티)", tasks: TASKS.leeje },
-        { name:"우연형", role:"대리", title:"제작", tasks: null },
+        { name:"우연형", role:"대리", title:"제작", tasks: TASKS.wooyh },
         { name:"김동관", role:"대리", title:"제작 일정·시안 분류", tasks: TASKS.kimdg },
         { name:"김민현", role:"주임", title:"제작", tasks: TASKS.kimmh }
       ]}
