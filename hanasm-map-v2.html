@@ -1619,6 +1619,21 @@ const CX = STAGE_W / 2, CY = STAGE_H / 2;
 
 // ============ TASKS ============
 const TASKS = {
+  kimmh: [
+    { name:"제품 포장", status:"정기", prio:"h" },
+    { name:"A형입간판 제작·포장", status:"정기", prio:"h" },
+    { name:"UV 기계 출력", status:"정기", prio:"h" },
+    { name:"준드 재단", status:"정기", prio:"m" },
+    { name:"아크릴 재단", status:"정기", prio:"m" },
+    { name:"출력물 합지작업", status:"정기", prio:"m" }
+  ],
+  leekm: [
+    { name:"당일 담당건 시안 제작·수정", status:"정기", prio:"h" },
+    { name:"시안 확정건 제작실·외주 발주", status:"정기", prio:"h" },
+    { name:"퀵배차건 확인", status:"정기", prio:"h" },
+    { name:"신규 디자인 작업", status:"간헐", prio:"m" },
+    { name:"셀프 디자인 작업", status:"간헐", prio:"m" }
+  ],
   parksj: [
     { name:"네이버 광고 운영·입찰 조정", status:"정기", prio:"h" },
     { name:"SEO 개선 / 검색 노출 최적화", status:"정기", prio:"h" },
@@ -1995,7 +2010,7 @@ const DATA = {
         { name:"정예진", role:"대리", title:"디자인", tasks: null },
         { name:"김사랑", role:"대리", title:"디자인", tasks: null },
         { name:"신혜리", role:"주임", title:"디자인", tasks: null },
-        { name:"이경민", role:"주임", title:"디자인", tasks: null },
+        { name:"이경민", role:"주임", title:"디자인", tasks: TASKS.leekm },
         { name:"박민진", role:"주임", title:"디자인", tasks: null }
       ]},
     { id:"dev", name:"개발팀", color:"#22d3ee", color2:"#3b82f6",
@@ -2030,7 +2045,7 @@ const DATA = {
         { name:"이지은", role:"대리", title:"출력·합지·재단·포장 (멀티)", tasks: TASKS.leeje },
         { name:"우연형", role:"대리", title:"제작", tasks: null },
         { name:"김동관", role:"대리", title:"제작 일정·시안 분류", tasks: TASKS.kimdg },
-        { name:"김민현", role:"주임", title:"제작", tasks: null }
+        { name:"김민현", role:"주임", title:"제작", tasks: TASKS.kimmh }
       ]}
   ]
 };
