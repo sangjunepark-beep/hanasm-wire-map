@@ -581,6 +581,15 @@ body.meeting-mode { background: #000 !important; }
 }
 .meeting-aux-link:hover { background: rgba(251,191,36,0.18); color: #fff; }
 body.meeting-mode .meeting-aux-link { display: inline-block; }
+
+/* iframe 안에서 열렸을 때: 부모(v2)가 회의모드/이동 컨트롤 관리 */
+body.inside-iframe header.topbar,
+body.inside-iframe .meeting-toggle,
+body.inside-iframe #meetingAuxLink,
+body.inside-iframe .v2-link,
+body.inside-iframe .v3-link { display: none !important; }
+body.inside-iframe .app { top: 0 !important; padding-top: 10px !important; }
+body.inside-iframe { background: #050614 !important; }
 </style>
 </head>
 <body>
@@ -1374,31 +1383,18 @@ document.addEventListener('keydown', (e) => {
 (function _iframeCloseShim(){
   if (window.parent === window) return; // 일반 페이지 접근
   document.body.classList.add('inside-iframe');
-  // v2-link를 '닫기'로 바꿈
-  const v2link = document.querySelector('.v2-link');
-  if (v2link) {
-    v2link.textContent = '✕ 닫기';
-    v2link.title = '닫기';
-    v2link.href = '#';
-    v2link.addEventListener('click', (e) => {
-      e.preventDefault();
-      try { parent.postMessage({ type: 'closeProjIframeModal' }, location.origin); } catch(err) {}
-    });
-  }
-  // 보조 링크(meetingAuxLink)도 같게
-  const aux = document.getElementById('meetingAuxLink');
-  if (aux) {
-    aux.textContent = '✕ 닫기';
-    aux.href = '#';
-    aux.addEventListener('click', (e) => {
-      e.preventDefault();
-      try { parent.postMessage({ type: 'closeProjIframeModal' }, location.origin); } catch(err) {}
-    });
-  }
-  // iframe 안에선 풀스크린 시도 X (부모가 이미 풀스크린)
-  // toggleMeetingMode는 그대로 동작하되 풀스크린 API만 차단
+  // iframe 안에선 회의모드 토글/풀스크린 시도/단축키 모두 부모에 위임
+  window.toggleMeetingMode = function(){}; // no-op
   const origReq = HTMLElement.prototype.requestFullscreen;
   if (origReq) HTMLElement.prototype.requestFullscreen = function(){ return Promise.resolve(); };
+  // P 키 무력화 (단, ESC는 부모 ESC 핸들러가 모달 닫음)
+  document.addEventListener('keydown', (e) => {
+    if ((e.key === 'p' || e.key === 'P') && !e.ctrlKey && !e.metaKey && !e.altKey) {
+      const tag = (e.target && e.target.tagName) || '';
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+      e.stopImmediatePropagation();
+    }
+  }, true);
 })();
 </script>
 </body>
