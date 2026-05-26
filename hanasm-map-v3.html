@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
-<title>HANASM V3 · 프로젝트 진행 관리</title>
+<title>프로젝트 진행 관리 — HANASM</title>
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
 :root {
@@ -585,12 +585,11 @@ body.meeting-mode .meeting-aux-link { display: inline-block; }
 </head>
 <body>
 <button class="meeting-toggle" id="meetingToggle" title="회의 모드 — 단축키 P / 해제 ESC">⛶ 회의</button>
-<a class="meeting-aux-link" id="meetingAuxLink" href="hanasm-map-v2.html" title="와이어 맵(V2)으로">← 와이어 맵</a>
+<a class="meeting-aux-link" id="meetingAuxLink" href="hanasm-map-v2.html" title="와이어 맵으로">← 와이어 맵</a>
 
 <header class="topbar">
   <div class="brand">
     <img src="https://www.hanasignmall.kr/image/common/hana_logo2.png" alt="HANASIGNMALL">
-    <span class="ver">V3</span>
     <h1>프로젝트 진행 관리</h1>
   </div>
   <div class="search-wrap">
@@ -1336,9 +1335,29 @@ document.addEventListener('keydown', (e) => {
   const _mBtn = document.getElementById('meetingToggle');
   if (_mBtn) _mBtn.addEventListener('click', () => toggleMeetingMode());
   // 페이지 로드 시 localStorage 상태 자동 복원
+  let __wantsFullscreen = false;
   try {
     if (localStorage.getItem('hanasm.meetingMode') === '1') {
       toggleMeetingMode(true);
+      // 브라우저 보안상 페이지 전환 시 풀스크린 자동 해제됨.
+      // 첫 사용자 제스처(클릭/키)에 풀스크린 재진입.
+      if (!document.fullscreenElement) {
+        __wantsFullscreen = true;
+        const tryFs = () => {
+          if (__wantsFullscreen && !document.fullscreenElement
+              && document.documentElement.requestFullscreen
+              && document.body.classList.contains('meeting-mode')) {
+            document.documentElement.requestFullscreen().catch(() => {});
+            __wantsFullscreen = false;
+          }
+          document.removeEventListener('click', tryFs, true);
+          document.removeEventListener('keydown', tryFs, true);
+          document.removeEventListener('mousedown', tryFs, true);
+        };
+        document.addEventListener('click', tryFs, true);
+        document.addEventListener('keydown', tryFs, true);
+        document.addEventListener('mousedown', tryFs, true);
+      }
     }
   } catch(e) {}
   // 다른 탭/페이지에서 회의모드 토글 시 sync

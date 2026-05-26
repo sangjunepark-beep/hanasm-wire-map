@@ -1570,7 +1570,7 @@ body:has(.proj-panel.show) .node .dept-projects-section { display: none !importa
     <img class="brand-logo" src="https://www.hanasignmall.kr/image/common/hana_logo2.png" alt="HANASIGNMALL" />
 
     <span class="date" id="today"></span>
-    <a class="v3-link" href="hanasm-map-v3.html" title="프로젝트 진행 관리 (V3) — 드래그로 결정">📊 프로젝트 진행 관리 V3 →</a>
+    <a class="v3-link" href="hanasm-map-v3.html" title="프로젝트 진행 관리">📊 프로젝트 진행 관리 →</a>
   </div>
   <div class="hint">클릭 = 빛 · 더블 = 확대 · 드래그 = 이동 · 휠 = 줌</div>
 </div>
@@ -3256,8 +3256,8 @@ function toggleMeetingMode(force) {
     aux = document.createElement('a');
     aux.id = 'meetingAuxLink';
     aux.href = 'hanasm-map-v3.html';
-    aux.textContent = '→ V3 프로젝트';
-    aux.title = '프로젝트 진행 관리 (V3)';
+    aux.textContent = '→ 프로젝트 진행 관리';
+    aux.title = '프로젝트 진행 관리';
     aux.style.cssText = 'position:fixed;top:16px;right:330px;z-index:120;color:#fbbf24;background:rgba(8,9,28,0.85);border:1px solid rgba(251,191,36,0.40);padding:7px 12px;font-size:12.5px;font-weight:700;letter-spacing:0.06em;text-decoration:none;font-family:inherit;clip-path:polygon(6px 0,100% 0,100% calc(100% - 6px),calc(100% - 6px) 100%,0 100%,0 6px);';
     document.body.appendChild(aux);
   }
@@ -3288,9 +3288,29 @@ document.addEventListener('keydown', (e) => {
   const _mBtn = document.getElementById('meetingToggle');
   if (_mBtn) _mBtn.addEventListener('click', () => toggleMeetingMode());
   // 페이지 로드 시 localStorage 상태 자동 복원
+  let __wantsFullscreen = false;
   try {
     if (localStorage.getItem('hanasm.meetingMode') === '1') {
       toggleMeetingMode(true);
+      // 브라우저 보안상 페이지 전환 시 풀스크린 자동 해제됨.
+      // 첫 사용자 제스처(클릭/키)에 풀스크린 재진입.
+      if (!document.fullscreenElement) {
+        __wantsFullscreen = true;
+        const tryFs = () => {
+          if (__wantsFullscreen && !document.fullscreenElement
+              && document.documentElement.requestFullscreen
+              && document.body.classList.contains('meeting-mode')) {
+            document.documentElement.requestFullscreen().catch(() => {});
+            __wantsFullscreen = false;
+          }
+          document.removeEventListener('click', tryFs, true);
+          document.removeEventListener('keydown', tryFs, true);
+          document.removeEventListener('mousedown', tryFs, true);
+        };
+        document.addEventListener('click', tryFs, true);
+        document.addEventListener('keydown', tryFs, true);
+        document.addEventListener('mousedown', tryFs, true);
+      }
     }
   } catch(e) {}
   // 다른 탭/페이지에서 회의모드 토글 시 sync
