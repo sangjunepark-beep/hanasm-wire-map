@@ -1,0 +1,1270 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<title>HANASM V5 · 프로젝트 진행 관리 (라이트)</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --purple-1: #111111; --purple-2: #1a1a1a; --purple-3: #222222;
+  --blue-1: #888888;   --blue-2: #555555;   --blue-3: #444444;
+  --cyan: #111111; --pink: #666666; --amber: #111111;
+  --green: #555555; --orange: #444444; --red: #222222;
+  --bg-0: #ffffff; --bg-1: #fafafa; --bg-2: #f5f5f5;
+  --line: #e5e5e5;
+  --line-2: #d4d4d4;
+  --text-1: #111111; --text-2: #555555; --text-3: #888888;
+}
+html, body {
+  height: 100vh; overflow: hidden;
+  background: var(--bg-0); color: var(--text-1);
+  font-family: "JetBrains Mono", "Inter", "Pretendard", "Noto Sans KR", monospace, system-ui;
+  -webkit-font-smoothing: antialiased; letter-spacing: 0.01em;
+  user-select: none;
+}
+body {
+  background: #ffffff;
+}
+
+/* TOP BAR */
+.topbar {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+  height: 56px; padding: 0 22px;
+  display: flex; align-items: center; gap: 16px;
+  background: rgba(5,6,20,0.92);
+  border-bottom: 1px solid var(--line);
+}
+.brand { display: flex; align-items: center; gap: 10px; }
+.brand img { height: 16px; filter: drop-shadow(0 0 6px rgba(30,30,30,0.5)) brightness(1.15); }
+.brand .ver {
+  font-size: 13.3px; padding: 3px 8px; font-weight: 900;
+  background: rgba(30,30,30,0.15); color: var(--gold);
+  border: 1px solid rgba(30,30,30,0.45);
+  letter-spacing: 0.10em;
+  clip-path: polygon(4px 0, 100% 0, 100% calc(100% - 4px), calc(100% - 4px) 100%, 0 100%, 0 4px);
+}
+.brand h1 {
+  font-size: 16.5px; font-weight: 800; letter-spacing: 0.14em;
+  background: linear-gradient(90deg, #111111, #888888);
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+  text-transform: uppercase;
+}
+.search-wrap { flex: 0 1 280px; position: relative; }
+#search {
+  width: 100%; height: 32px;
+  background: rgba(8,9,28,0.80);
+  border: 1px solid var(--line);
+  color: var(--text-1); font-family: inherit; font-size: 15.2px;
+  padding: 0 12px; outline: none;
+  clip-path: polygon(4px 0, 100% 0, 100% calc(100% - 4px), calc(100% - 4px) 100%, 0 100%, 0 4px);
+}
+#search:focus { border-color: var(--line-strong); background: rgba(8,9,28,0.96); }
+#search::placeholder { color: var(--text-3); }
+.bulk-actions { display: flex; gap: 6px; align-items: center; margin-left: auto; }
+.bulk-actions .bulk-cnt {
+  font-size: 13.3px; font-weight: 800; color: var(--gold);
+  padding: 4px 9px;
+  background: rgba(30,30,30,0.12);
+  border: 1px solid rgba(30,30,30,0.45);
+  clip-path: polygon(3px 0, 100% 0, 100% calc(100% - 3px), calc(100% - 3px) 100%, 0 100%, 0 3px);
+}
+.bulk-actions button {
+  font-family: inherit; cursor: pointer;
+  padding: 5px 10px; font-size: 13.3px; font-weight: 800;
+  letter-spacing: 0.04em;
+  background: rgba(8,9,28,0.80); border: 1px solid var(--line);
+  color: var(--text-2);
+  clip-path: polygon(3px 0, 100% 0, 100% calc(100% - 3px), calc(100% - 3px) 100%, 0 100%, 0 3px);
+}
+.bulk-actions button:hover { color: #ffffff; border-color: var(--info); background: rgba(30,30,30,0.12); }
+.bulk-actions button:disabled { opacity: 0.32; cursor: not-allowed; }
+.v2-link {
+  font-size: 13.9px; font-weight: 800; letter-spacing: 0.10em; text-transform: uppercase;
+  color: var(--info); text-decoration: none;
+  padding: 5px 11px; border: 1px solid rgba(30,30,30,0.45);
+  clip-path: polygon(4px 0, 100% 0, 100% calc(100% - 4px), calc(100% - 4px) 100%, 0 100%, 0 4px);
+}
+.v2-link:hover { background: rgba(30,30,30,0.15); color: #ffffff; }
+
+/* MAIN: grid rows = detail / hint / kanban */
+.app {
+  position: fixed; top: 56px; left: 0; right: 0; bottom: 0;
+  display: grid; grid-template-rows: auto auto 1fr;
+  gap: 8px; padding: 10px 14px 14px;
+}
+
+/* DETAIL (상단 가로 전체) — 3분할: 정보·액션 / desc 텍스트 / 가격표 */
+.detail {
+  position: relative;
+  background: rgba(5,6,20,0.78);
+  border: 1px solid var(--line);
+  padding: 14px 18px;
+  clip-path: polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px);
+  display: flex; gap: 16px; align-items: flex-start;
+  min-height: 130px; max-height: 50vh;
+  overflow: hidden;
+  transition: max-height 0.2s ease;
+}
+.detail.expanded { max-height: 82vh; }
+.detail.empty { min-height: 64px; }
+.detail .d-left {
+  flex: 0 0 300px; max-width: 300px;
+  display: flex; flex-direction: column; gap: 7px;
+  max-height: calc(50vh - 28px); overflow-y: auto;
+  padding-right: 4px;
+}
+.detail.expanded .d-left { max-height: calc(82vh - 28px); }
+.detail .d-right {
+  flex: 1 1 0; overflow-y: auto; max-height: calc(50vh - 28px);
+  padding-right: 6px;
+  user-select: text;
+  min-width: 0;
+}
+.detail.expanded .d-right { max-height: calc(82vh - 28px); }
+.detail .d-pricecol {
+  flex: 0 0 340px; max-width: 340px;
+  overflow-y: auto; max-height: calc(50vh - 28px);
+  padding: 0 4px;
+  user-select: text;
+  display: none;
+}
+.detail.expanded .d-pricecol { max-height: calc(82vh - 28px); }
+/* 펼치기/접기 토글 버튼 */
+.d-expand-btn {
+  position: absolute; top: 8px; right: 10px;
+  z-index: 5;
+  font-family: inherit; cursor: pointer;
+  padding: 3px 9px; font-size: 12.5px; font-weight: 800;
+  background: rgba(8,9,28,0.85); border: 1px solid var(--line);
+  color: var(--text-2);
+  letter-spacing: 0.04em;
+  clip-path: polygon(3px 0, 100% 0, 100% calc(100% - 3px), calc(100% - 3px) 100%, 0 100%, 0 3px);
+}
+.d-expand-btn:hover { color: #ffffff; border-color: var(--info); background: rgba(30,30,30,0.12); }
+.detail.empty .d-expand-btn { display: none; }
+.detail .d-pricecol.show { display: block; }
+/* 가격표가 있을 때 desc 영역과 사이에 구분선 */
+.detail .d-pricecol.show + .d-right {
+  border-left: 1px dashed var(--line);
+  padding-left: 16px;
+}
+.detail .d-pricecol-head {
+  font-size: 12.6px; font-weight: 800; letter-spacing: 0.16em;
+  color: var(--text-2); text-transform: uppercase;
+  margin-bottom: 8px;
+}
+.detail .d-right::-webkit-scrollbar,
+.detail .d-left::-webkit-scrollbar,
+.detail .d-pricecol::-webkit-scrollbar { width: 6px; }
+.detail .d-right::-webkit-scrollbar-thumb,
+.detail .d-left::-webkit-scrollbar-thumb,
+.detail .d-pricecol::-webkit-scrollbar-thumb { background: rgba(30,30,30,0.30); }
+.detail .d-pricecol table {
+  width: 100%; border-collapse: collapse; font-size: 13.9px;
+  background: rgba(0,0,0,0.25); border: 1px solid var(--line);
+}
+.detail .d-pricecol th, .detail .d-pricecol td {
+  border-bottom: 1px dashed var(--line); padding: 6px 8px; text-align: left;
+  white-space: nowrap;
+}
+.detail .d-pricecol th { color: var(--text-1); font-weight: 800; background: rgba(255,255,255,0.04); }
+.detail .d-pricecol td:nth-child(n+2) { text-align: right; }
+.detail .d-pricecol b { color: var(--text-1); }
+.detail .d-empty {
+  width: 100%; text-align: center; padding: 14px;
+  color: var(--text-3); font-size: 15.2px; line-height: 1.7;
+}
+.detail .d-empty b { color: var(--text-1); }
+.detail .d-empty kbd {
+  display: inline-block; padding: 1px 6px; margin: 0 2px;
+  background: rgba(30,30,30,0.10); border: 1px solid rgba(30,30,30,0.30);
+  color: var(--info); font-size: 12.6px;
+}
+.detail .d-title {
+  font-size: 20.2px; font-weight: 900; line-height: 1.3;
+  color: var(--text-1); margin-bottom: 4px;
+  user-select: text;
+}
+.detail .d-meta { display: flex; flex-wrap: wrap; gap: 5px; }
+.detail .d-meta .pill {
+  font-size: 12.6px; font-weight: 800;
+  padding: 3px 8px;
+  border: 1px solid;
+  clip-path: polygon(2px 0, 100% 0, 100% calc(100% - 2px), calc(100% - 2px) 100%, 0 100%, 0 2px);
+}
+.pill-rev-A { color: var(--rev-A); border-color: rgba(30,30,30,0.55); background: rgba(30,30,30,0.12); }
+.pill-rev-B { color: var(--rev-B); border-color: rgba(120,120,120,0.50); background: rgba(120,120,120,0.08); }
+.pill-rev-C { color: var(--rev-C); border-color: rgba(80,80,80,0.50); background: rgba(80,80,80,0.08); }
+.pill-rev-D { color: var(--rev-D); border-color: rgba(60,60,60,0.50); background: rgba(60,60,60,0.08); }
+.pill-rev-E { color: var(--rev-E); border-color: rgba(160,160,160,0.40); background: rgba(160,160,160,0.06); }
+.pill-cat { color: var(--text-2); border-color: var(--line); background: rgba(30,30,30,0.05); }
+.pill-prog { color: var(--info); border-color: rgba(30,30,30,0.40); background: rgba(30,30,30,0.10); }
+.pill-prio-h { color: var(--gold); border-color: rgba(30,30,30,0.40); background: rgba(30,30,30,0.08); }
+.pill-prio-m { color: var(--text-2); border-color: var(--line); background: rgba(255,255,255,0.04); }
+.pill-prio-l { color: var(--text-3); border-color: var(--line); background: rgba(255,255,255,0.02); }
+.pill-status-active { color: var(--info); border-color: rgba(30,30,30,0.30); background: rgba(30,30,30,0.06); }
+.pill-status-stop   { color: var(--muted); border-color: rgba(160,160,160,0.30); background: rgba(160,160,160,0.04); }
+.d-row {
+  display: flex; gap: 8px; font-size: 13.9px;
+  color: var(--text-2); line-height: 1.55; user-select: text;
+}
+.d-row .lbl {
+  flex: 0 0 52px; color: var(--text-3); font-weight: 700;
+  font-size: 12.6px; letter-spacing: 0.08em; text-transform: uppercase;
+  padding-top: 1px;
+}
+.d-row .val { color: var(--text-1); user-select: text; }
+.d-row .val b { color: var(--info); }
+/* 주관/유관 편집 UI */
+.d-row .val.rel-wrap { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; }
+.d-owner-sel, .d-rel-add {
+  font-family: inherit; font-size: 11.5px; font-weight: 700;
+  background: rgba(8,9,28,0.80);
+  border: 1px solid var(--line);
+  color: var(--text-1);
+  padding: 3px 6px;
+  outline: none;
+  clip-path: polygon(2px 0, 100% 0, 100% calc(100% - 2px), calc(100% - 2px) 100%, 0 100%, 0 2px);
+}
+.d-owner-sel { width: 100%; }
+.d-owner-sel:focus, .d-rel-add:focus { border-color: var(--info); }
+.rel-chip {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-size: 11px; font-weight: 700;
+  padding: 2px 6px;
+  background: rgba(30,30,30,0.10);
+  border: 1px solid rgba(30,30,30,0.30);
+  color: var(--text-1);
+  clip-path: polygon(2px 0, 100% 0, 100% calc(100% - 2px), calc(100% - 2px) 100%, 0 100%, 0 2px);
+}
+.rel-chip-x {
+  cursor: pointer; color: var(--text-3); font-weight: 800;
+  font-size: 10px; padding: 0 2px;
+}
+.rel-chip-x:hover { color: var(--danger); }
+.d-actions {
+  display: flex; gap: 5px; flex-wrap: wrap; margin-top: 6px;
+}
+.d-actions button {
+  font-family: inherit; cursor: pointer;
+  padding: 5px 10px; font-size: 13.3px; font-weight: 800;
+  letter-spacing: 0.04em;
+  background: rgba(8,9,28,0.80); border: 1px solid var(--line);
+  color: var(--text-2);
+  clip-path: polygon(3px 0, 100% 0, 100% calc(100% - 3px), calc(100% - 3px) 100%, 0 100%, 0 3px);
+}
+.d-actions button:hover { color: #ffffff; border-color: var(--info); background: rgba(30,30,30,0.10); }
+.d-actions button.active { background: rgba(30,30,30,0.22); color: #ffffff; border-color: var(--info); }
+.d-desc {
+  font-size: 15.2px; line-height: 1.65; color: var(--text-2);
+  user-select: text;
+}
+.d-desc table {
+  width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 13.9px;
+  background: rgba(0,0,0,0.20); border: 1px solid var(--line);
+}
+.d-desc th, .d-desc td { border-bottom: 1px dashed var(--line); padding: 5px 7px; text-align: left; }
+.d-desc th { color: var(--text-2); font-weight: 800; background: rgba(0,0,0,0.30); }
+.d-desc b { color: var(--text-1); }
+
+/* HINT */
+.hint {
+  padding: 6px 14px;
+  background: rgba(8,9,28,0.50);
+  border: 1px solid var(--line);
+  display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+  font-size: 13.3px; color: var(--text-3);
+  clip-path: polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px);
+}
+.hint kbd {
+  display: inline-block;
+  padding: 1px 6px; margin: 0 2px;
+  background: rgba(30,30,30,0.10);
+  border: 1px solid rgba(30,30,30,0.30);
+  color: var(--info); font-size: 12.6px;
+  font-family: inherit;
+}
+.hint .legend { margin-left: auto; display: flex; gap: 8px; align-items: center; }
+.hint .legend-chip {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 2px 8px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid var(--line);
+  font-weight: 700; letter-spacing: 0.04em;
+}
+.hint .legend-chip .sw {
+  width: 8px; height: 8px; background: var(--c); box-shadow: 0 0 4px var(--c);
+}
+
+/* KANBAN (하단 4컬럼) */
+.kanban {
+  display: grid; grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  overflow: hidden;
+  min-height: 0;
+}
+.col {
+  background: rgba(8,9,28,0.60);
+  border: 1px solid var(--line);
+  border-top: 3px solid var(--col-c, var(--muted));
+  display: flex; flex-direction: column;
+  overflow: hidden;
+  clip-path: polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px);
+  position: relative;
+  transition: border-color 0.15s, background 0.15s;
+}
+.col[data-act="first"] { --col-c: var(--gold); }
+.col[data-act="run"]   { --col-c: var(--info); }
+.col[data-act="hold"]  { --col-c: var(--gold); opacity: 0.94; }
+.col[data-act="stop"]  { --col-c: var(--muted); opacity: 0.88; }
+.col.col-drag-ghost { opacity: 0.30; }
+.col.col-drag-chosen { box-shadow: 0 0 0 2px var(--info); }
+.col-head {
+  padding: 11px 13px 9px;
+  border-bottom: 1px solid var(--line);
+  background: rgba(5,6,20,0.85);
+  cursor: grab;
+}
+.col-head:active { cursor: grabbing; }
+.col-head .ch-title {
+  display: flex; align-items: center; gap: 10px;
+  font-size: 17px; font-weight: 900; letter-spacing: 0.06em;
+  color: var(--col-c, var(--text-1));
+}
+.col-head .ch-cnt {
+  margin-left: auto;
+  font-size: 13.9px; font-weight: 800;
+  padding: 2px 7px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid var(--line);
+  color: var(--text-2);
+  clip-path: polygon(3px 0, 100% 0, 100% calc(100% - 3px), calc(100% - 3px) 100%, 0 100%, 0 3px);
+}
+.col-head .ch-grip {
+  font-size: 13.9px; color: var(--text-3); margin-right: 4px;
+  letter-spacing: -1px;
+}
+.col-head .ch-hint {
+  font-size: 12px; color: var(--text-3); letter-spacing: 0.08em;
+  margin-top: 3px; text-transform: uppercase; font-weight: 700;
+}
+.col-head .ch-sort {
+  display: block; width: 100%;
+  margin-top: 6px;
+  font-family: inherit; font-size: 11.5px; font-weight: 700;
+  background: rgba(8,9,28,0.85); border: 1px solid var(--line);
+  color: var(--text-2);
+  padding: 3px 5px; cursor: pointer;
+  outline: none;
+  clip-path: polygon(2px 0, 100% 0, 100% calc(100% - 2px), calc(100% - 2px) 100%, 0 100%, 0 2px);
+}
+.col-head .ch-sort:hover, .col-head .ch-sort:focus { border-color: var(--info); color: var(--text-1); }
+.col-body {
+  flex: 1; overflow-y: auto; padding: 8px;
+  display: flex; flex-direction: column; gap: 6px;
+  scrollbar-width: thin;
+  min-height: 0;
+}
+.col-body::-webkit-scrollbar { width: 6px; }
+.col-body::-webkit-scrollbar-thumb { background: rgba(30,30,30,0.30); }
+.col-empty {
+  margin: 14px 6px; padding: 12px; text-align: center;
+  color: var(--text-3); font-size: 13.3px; line-height: 1.6;
+  border: 1px dashed var(--line);
+}
+.col-body.drag-over {
+  background: rgba(30,30,30,0.06);
+  outline: 1px dashed var(--info);
+  outline-offset: -4px;
+}
+
+/* CARD — 색은 c-rev 배지에만, 나머지는 단색 (혼란 줄임) */
+.card {
+  background: rgba(8,9,28,0.80);
+  border: 1px solid var(--line);
+  border-left: 3px solid rgba(160,160,160,0.30);
+  padding: 8px 10px;
+  cursor: grab;
+  transition: background 0.10s, box-shadow 0.10s, transform 0.05s;
+  clip-path: polygon(5px 0, 100% 0, 100% calc(100% - 5px), calc(100% - 5px) 100%, 0 100%, 0 5px);
+}
+.card:active { cursor: grabbing; }
+/* --c 변수는 c-rev 배지 텍스트 색에만 사용 */
+.card.rev-A { --c: var(--rev-A); }
+.card.rev-B { --c: var(--rev-B); }
+.card.rev-C { --c: var(--rev-C); }
+.card.rev-D { --c: var(--rev-D); }
+.card.rev-E { --c: var(--rev-E); }
+.card:hover {
+  background: rgba(20,22,46,0.90);
+  box-shadow: 0 0 10px rgba(30,30,30,0.10);
+}
+.card.selected {
+  background: rgba(30,30,30,0.10);
+  box-shadow: 0 0 0 1.5px var(--info), 0 0 12px rgba(30,30,30,0.20);
+}
+.card.dim { opacity: 0.22; }
+.card.matched {
+  border-left-width: 5px;
+  box-shadow: 0 0 12px var(--gold);
+}
+.card.sortable-ghost { opacity: 0.30; background: rgba(30,30,30,0.15); }
+.card.sortable-chosen { box-shadow: 0 0 12px rgba(30,30,30,0.40); }
+.card .c-top {
+  display: flex; align-items: center; gap: 6px; margin-bottom: 4px;
+  flex-wrap: wrap;
+}
+.card .c-rev {
+  font-size: 11.4px; font-weight: 800; letter-spacing: 0.04em;
+  padding: 1px 5px; color: var(--c);
+  border: 1px solid var(--c);
+  background: rgba(0,0,0,0.30);
+  clip-path: polygon(2px 0, 100% 0, 100% calc(100% - 2px), calc(100% - 2px) 100%, 0 100%, 0 2px);
+}
+.card .c-cat {
+  font-size: 10.8px; font-weight: 700;
+  color: var(--text-3); letter-spacing: 0.10em;
+  text-transform: uppercase;
+}
+.card .c-prio {
+  font-size: 11.4px; font-weight: 800;
+  padding: 1px 5px;
+  border: 1px solid;
+  clip-path: polygon(2px 0, 100% 0, 100% calc(100% - 2px), calc(100% - 2px) 100%, 0 100%, 0 2px);
+}
+.card .c-prio.h { color: var(--gold); border-color: rgba(30,30,30,0.50); background: rgba(30,30,30,0.10); }
+.card .c-prio.m { color: var(--text-2); border-color: var(--line); }
+.card .c-prio.l { color: var(--text-3); border-color: var(--line); }
+.card .c-name {
+  font-size: 14.5px; font-weight: 800; color: var(--text-1);
+  line-height: 1.30; margin-bottom: 5px;
+}
+.card .c-bottom {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 12.6px; color: var(--text-2);
+}
+.card .c-prog-wrap {
+  flex: 1; height: 4px; background: rgba(255,255,255,0.06);
+  position: relative; overflow: hidden;
+}
+.card .c-prog-bar {
+  height: 100%; background: var(--info);
+}
+.card .c-prog-num {
+  font-size: 13.3px; font-weight: 800; color: var(--text-1);
+  min-width: 32px; text-align: right;
+}
+.card .c-owner {
+  font-size: 12px; color: var(--text-3); margin-top: 3px;
+  letter-spacing: 0.04em;
+  line-height: 1.4;
+}
+.card .c-owner b { color: var(--info); font-weight: 800; }
+
+/* 회의 메모 — v2와 같은 localStorage 키 (hanasm.meetingMemo.v3) 공유 → 양쪽 sync */
+.memo-strip {
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  z-index: 220;
+  height: 38px;
+  background: rgba(8,9,28,0.92);
+  border-top: 1px solid rgba(30,30,30,0.30);
+  display: flex; align-items: center; gap: 12px;
+  padding: 0 18px;
+  transition: height 0.22s ease;
+  overflow: hidden;
+  font-family: inherit;
+}
+.memo-strip:focus-within {
+  height: 95px;
+  background: rgba(8,9,28,0.98);
+  border-top-color: rgba(30,30,30,0.55);
+  align-items: flex-start;
+  padding-top: 8px; padding-bottom: 8px;
+}
+.memo-strip .ms-label {
+  flex: 0 0 auto;
+  font-size: 13px; font-weight: 800;
+  letter-spacing: 0.14em; color: var(--info);
+  white-space: nowrap;
+  padding-top: 1px;
+}
+.memo-strip .ms-cnt {
+  flex: 0 0 auto;
+  font-size: 11px; font-weight: 700;
+  color: var(--text-3); letter-spacing: 0.04em;
+  white-space: nowrap;
+  padding-top: 2px;
+}
+.memo-strip textarea {
+  flex: 1 1 auto;
+  background: transparent;
+  border: none; outline: none;
+  color: var(--text-1);
+  font-family: inherit;
+  font-size: 14px; line-height: 1.55;
+  resize: none;
+  padding: 0;
+  height: 22px;
+  transition: height 0.22s ease;
+  user-select: text;
+}
+.memo-strip:focus-within textarea { height: 78px; }
+.memo-strip textarea::placeholder { color: #666666; }
+/* 메모가 하단 38px 차지하므로 main.app 영역 bottom 보정 */
+main.app { bottom: 38px !important; transition: bottom 0.22s ease; }
+body.memo-expanded main.app { bottom: 95px !important; }
+
+/* LOADING / ERROR */
+.loading {
+  position: fixed; inset: 56px 0 0 0;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--text-3); font-size: 16.5px; letter-spacing: 0.12em;
+}
+.error {
+  color: var(--danger); padding: 24px; max-width: 600px; margin: 80px auto;
+  background: rgba(251,113,133,0.06);
+  border: 1px solid rgba(251,113,133,0.30);
+  font-size: 16.5px; line-height: 1.7;
+}
+.error h3 { font-size: 20.2px; margin-bottom: 12px; color: var(--danger); }
+
+@media (max-width: 1200px) {
+  .kanban { grid-template-columns: repeat(2, 1fr); grid-auto-rows: 1fr; }
+  .detail .d-left { flex: 0 0 240px; }
+  .hint .legend { display: none; }
+}
+@media (max-width: 800px) {
+  .kanban { grid-template-columns: 1fr; }
+  .detail { flex-direction: column; max-height: 50vh; }
+  .detail .d-left { flex: 0 0 auto; max-width: 100%; }
+  .detail .d-right { max-height: none; }
+}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand">
+    <img src="https://www.hanasignmall.kr/image/common/hana_logo2.png" alt="HANASIGNMALL">
+    <span class="ver">V3</span>
+    <h1>프로젝트 진행 관리</h1>
+  </div>
+  <div class="search-wrap">
+    <input id="search" type="text" placeholder="🔍 검색 (Ctrl+K)" autocomplete="off">
+  </div>
+  <div class="bulk-actions">
+    <span class="bulk-cnt" id="bulkCnt">선택 0</span>
+    <button data-bulk="first" disabled>⚡ 우선</button>
+    <button data-bulk="run" disabled>● 진행</button>
+    <button data-bulk="hold" disabled>⏸ 보류</button>
+    <button data-bulk="stop" disabled>⊘ 중단</button>
+    <button data-bulk="clear" disabled>✕ 해제</button>
+  </div>
+  <a class="v2-link" href="hanasm-map-v4.html" title="와이어 맵(V4)으로">← 와이어 맵 V4</a>
+</header>
+
+<main class="app">
+  <!-- 상단: 선택 프로젝트 상세 (가로 전체) -->
+  <section class="detail empty" id="detail">
+    <button class="d-expand-btn" id="detailExpandBtn" title="펼치기/접기 (Alt+E)">▼ 펼치기</button>
+    <div class="d-empty" id="detailEmpty">
+      카드를 <b>클릭</b>하면 여기에 상세가 표시됩니다. ·
+      <kbd>Shift+클릭</kbd> 다중 선택 ·
+      <kbd>드래그</kbd> 컬럼 이동(액션 변경) 또는 컬럼 헤더 드래그(컬럼 순서 변경) ·
+      <kbd>Ctrl+K</kbd> 검색 ·
+      <kbd>ESC</kbd> 해제 ·
+      <kbd>Alt+E</kbd> 상세 펼치기
+    </div>
+    <div class="d-left" id="detailLeft" style="display:none"></div>
+    <div class="d-pricecol" id="detailPriceCol"></div>
+    <div class="d-right" id="detailRight" style="display:none"></div>
+  </section>
+
+  <!-- 힌트 + 범례 -->
+  <div class="hint">
+    <span><b style="color:#555555">컬럼 헤더 드래그</b> = 컬럼 순서 조정 · <b style="color:#555555">카드 드래그</b> = 액션 변경</span>
+    <div class="legend">
+      <span class="legend-chip"><span class="sw" style="--c:#111111"></span>직접</span>
+      <span class="legend-chip"><span class="sw" style="--c:#555555"></span>전환</span>
+      <span class="legend-chip"><span class="sw" style="--c:#555555"></span>CS</span>
+      <span class="legend-chip"><span class="sw" style="--c:#111111"></span>운영</span>
+      <span class="legend-chip"><span class="sw" style="--c:#999999"></span>장기</span>
+    </div>
+  </div>
+
+  <!-- 하단: 4컬럼 (컬럼 순서 조정 가능) -->
+  <div class="kanban" id="kanban">
+    <section class="col" data-act="first">
+      <div class="col-head">
+        <div class="ch-title"><span class="ch-grip">⋮⋮</span>⚡ 우선 <span class="ch-cnt" id="cnt-first">0</span></div>
+        <div class="ch-hint">먼저 풀어야</div>
+        <select class="ch-sort" data-col="first" title="정렬 기준">
+          <option value="rev">매출등급 ↓</option>
+          <option value="rev-asc">매출등급 ↑</option>
+          <option value="prog-desc">진행률 ↓</option>
+          <option value="prog-asc">진행률 ↑</option>
+          <option value="prio">우선도 (상→하)</option>
+          <option value="name">이름 (가나다)</option>
+          <option value="manual">수동 (드래그 저장)</option>
+        </select>
+      </div>
+      <div class="col-body" id="body-first" data-act="first"></div>
+    </section>
+    <section class="col" data-act="run">
+      <div class="col-head">
+        <div class="ch-title"><span class="ch-grip">⋮⋮</span>● 진행 <span class="ch-cnt" id="cnt-run">0</span></div>
+        <div class="ch-hint">계속 진행 중</div>
+        <select class="ch-sort" data-col="run" title="정렬 기준">
+          <option value="rev">매출등급 ↓</option>
+          <option value="rev-asc">매출등급 ↑</option>
+          <option value="prog-desc">진행률 ↓</option>
+          <option value="prog-asc">진행률 ↑</option>
+          <option value="prio">우선도 (상→하)</option>
+          <option value="name">이름 (가나다)</option>
+          <option value="manual">수동 (드래그 저장)</option>
+        </select>
+      </div>
+      <div class="col-body" id="body-run" data-act="run"></div>
+    </section>
+    <section class="col" data-act="hold">
+      <div class="col-head">
+        <div class="ch-title"><span class="ch-grip">⋮⋮</span>⏸ 보류 <span class="ch-cnt" id="cnt-hold">0</span></div>
+        <div class="ch-hint">조건 충족 후 재개</div>
+        <select class="ch-sort" data-col="hold" title="정렬 기준">
+          <option value="rev">매출등급 ↓</option>
+          <option value="rev-asc">매출등급 ↑</option>
+          <option value="prog-desc">진행률 ↓</option>
+          <option value="prog-asc">진행률 ↑</option>
+          <option value="prio">우선도 (상→하)</option>
+          <option value="name">이름 (가나다)</option>
+          <option value="manual">수동 (드래그 저장)</option>
+        </select>
+      </div>
+      <div class="col-body" id="body-hold" data-act="hold"></div>
+    </section>
+    <section class="col" data-act="stop">
+      <div class="col-head">
+        <div class="ch-title"><span class="ch-grip">⋮⋮</span>⊘ 중단 <span class="ch-cnt" id="cnt-stop">0</span></div>
+        <div class="ch-hint">진행하지 않음</div>
+        <select class="ch-sort" data-col="stop" title="정렬 기준">
+          <option value="rev">매출등급 ↓</option>
+          <option value="rev-asc">매출등급 ↑</option>
+          <option value="prog-desc">진행률 ↓</option>
+          <option value="prog-asc">진행률 ↑</option>
+          <option value="prio">우선도 (상→하)</option>
+          <option value="name">이름 (가나다)</option>
+          <option value="manual">수동 (드래그 저장)</option>
+        </select>
+      </div>
+      <div class="col-body" id="body-stop" data-act="stop"></div>
+    </section>
+  </div>
+</main>
+
+<!-- 회의 메모 (v2와 공유) -->
+<div class="memo-strip" id="floatingMemo">
+  <span class="ms-label">📝 회의 메모</span>
+  <textarea id="memoText" placeholder="회의 진행 메모 · 결정 근거 · 후속 액션 — 자동 저장 · v2 와이어 맵과 공유"></textarea>
+  <span class="ms-cnt" id="memoCnt">0자</span>
+</div>
+
+<div class="loading" id="loading">PROJECTS 로딩 중…</div>
+
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+<script>
+async function loadData() {
+  try {
+    const r = await fetch('./hanasm-map-v4.html?t=' + Date.now(), { cache: 'no-store' });
+    if (!r.ok) throw new Error('v2 HTML fetch 실패 (' + r.status + ')');
+    const html = await r.text();
+    const m = html.match(/const PROJECTS = (\{[\s\S]*?\n\});\s*\n\s*const PCATS/);
+    if (!m) throw new Error('PROJECTS 객체 추출 실패');
+    return (new Function('return ' + m[1]))();
+  } catch(e) {
+    document.getElementById('loading').remove();
+    document.body.insertAdjacentHTML('beforeend',
+      '<div class="error"><h3>데이터 로드 실패</h3>' +
+      '<p>' + e.message + '</p>' +
+      '<p style="margin-top:12px;">GitHub Pages를 통해 열어주세요 (file:// 직접 열기는 fetch 제한).<br>' +
+      '<a style="color:#111111" href="hanasm-map-v4.html">→ 와이어 맵(V4)으로 이동</a></p></div>');
+    throw e;
+  }
+}
+
+let ITEMS = [];
+let SELECTED = new Set();
+let SEARCH_Q = '';
+const PCATS_NAMES = { ad:'광고', ai:'AI·자동화', product:'신상품·등록', system:'시스템·자사물', offline:'오프라인·영업' };
+const REV_LABEL = { A:'직접매출', B:'전환개선', C:'CS전환', D:'운영', E:'장기기반' };
+const REV_RANK = { A:5, B:4, C:3, D:2, E:1 };
+const PRIO_RANK = { h:3, m:2, l:1 };
+const PRIO_LABEL = { h:'상', m:'중', l:'하' };
+const ACTION_LABEL = { run:'진행', first:'우선', hold:'보류', stop:'중단', merge:'통합' };
+const STATUS_LABEL = { active:'활성', stop:'중단', done:'완료' };
+const ORDER_KEY = 'hanasm.v3.kanban.order';
+const COL_ORDER_KEY = 'hanasm.v3.kanban.colOrder';
+const ALL_DEPT_IDS = ['web','cs','design','dev','fin','sales','product','factory2'];
+const DEPT_NAME = { web:'웹팀', cs:'CS팀', design:'디자인팀', dev:'개발팀', fin:'경영지원', sales:'외부영업', product:'제작실', factory2:'2공장' };
+
+// v2와 동일 키로 주관/유관 부서 오버라이드 공유
+let PROJECT_OVERRIDES = {};
+try { PROJECT_OVERRIDES = JSON.parse(localStorage.getItem('hanasm.projectOverrides.v3') || '{}'); } catch(e) {}
+function persistOverrides() {
+  try { localStorage.setItem('hanasm.projectOverrides.v3', JSON.stringify(PROJECT_OVERRIDES)); } catch(e) {}
+}
+function getEffective(cat, item) {
+  const k = cat + '::' + item.name;
+  const ovr = PROJECT_OVERRIDES[k] || {};
+  return {
+    ownerDept: (ovr.ownerDept !== undefined) ? ovr.ownerDept : (item.ownerDept || ''),
+    related: (ovr.related !== undefined) ? ovr.related : (item.related || [])
+  };
+}
+function setOwner(cat, name, deptId) {
+  const k = cat + '::' + name;
+  const it = ITEMS.find(x => x.key === k);
+  if (!it) return;
+  const eff = getEffective(cat, it.item);
+  const ovr = Object.assign({}, PROJECT_OVERRIDES[k] || {});
+  ovr.ownerDept = deptId || '';
+  ovr.related = (eff.related || []).filter(d => d !== deptId);
+  PROJECT_OVERRIDES[k] = ovr;
+  persistOverrides();
+}
+function addRel(cat, name, deptId) {
+  const k = cat + '::' + name;
+  const it = ITEMS.find(x => x.key === k);
+  if (!it) return;
+  const eff = getEffective(cat, it.item);
+  if (eff.ownerDept === deptId) return;
+  const rel = (eff.related || []).slice();
+  if (!rel.includes(deptId)) rel.push(deptId);
+  const ovr = Object.assign({}, PROJECT_OVERRIDES[k] || {});
+  ovr.ownerDept = eff.ownerDept;
+  ovr.related = rel;
+  PROJECT_OVERRIDES[k] = ovr;
+  persistOverrides();
+}
+function removeRel(cat, name, deptId) {
+  const k = cat + '::' + name;
+  const it = ITEMS.find(x => x.key === k);
+  if (!it) return;
+  const eff = getEffective(cat, it.item);
+  const ovr = Object.assign({}, PROJECT_OVERRIDES[k] || {});
+  ovr.ownerDept = eff.ownerDept;
+  ovr.related = (eff.related || []).filter(d => d !== deptId);
+  PROJECT_OVERRIDES[k] = ovr;
+  persistOverrides();
+}
+
+function loadProjectState() {
+  try { return JSON.parse(localStorage.getItem('hanasm.projectState.v3') || '{}'); } catch(e) { return {}; }
+}
+function saveProjectState(s) {
+  try { localStorage.setItem('hanasm.projectState.v3', JSON.stringify(s)); } catch(e) {}
+}
+function pushDecisionLog(key, before, after) {
+  const [cat, ...rest] = key.split('::');
+  const name = rest.join('::');
+  let log;
+  try { log = JSON.parse(localStorage.getItem('hanasm.decisionsLog.v3') || '[]'); } catch(e) { log = []; }
+  log.push({ ts: Date.now(), iso: new Date().toISOString(), cat, name, before, after });
+  try { localStorage.setItem('hanasm.decisionsLog.v3', JSON.stringify(log)); } catch(e) {}
+}
+function getAction(key, item) {
+  const st = loadProjectState();
+  const fallback = item.status === 'stop' ? 'stop' : (item.decision === 'hold' || item.decision === 'later' ? 'hold' : 'run');
+  return (st[key] && (st[key].action === 'after' ? 'hold' : st[key].action)) || fallback;
+}
+function setAction(key, action) {
+  const st = loadProjectState();
+  const before = (st[key] && st[key].action) || 'run';
+  if (before === action) return;
+  st[key] = Object.assign({}, st[key] || {}, { action });
+  saveProjectState(st);
+  pushDecisionLog(key, before, action);
+}
+function loadOrder() {
+  try { return JSON.parse(localStorage.getItem(ORDER_KEY) || '{}'); } catch(e) { return {}; }
+}
+function saveOrder(map) {
+  try { localStorage.setItem(ORDER_KEY, JSON.stringify(map)); } catch(e) {}
+}
+function loadColOrder() {
+  try { return JSON.parse(localStorage.getItem(COL_ORDER_KEY) || 'null') || ['first','run','hold','stop']; }
+  catch(e) { return ['first','run','hold','stop']; }
+}
+function saveColOrder(arr) {
+  try { localStorage.setItem(COL_ORDER_KEY, JSON.stringify(arr)); } catch(e) {}
+}
+
+const SORT_KEY = 'hanasm.v3.kanban.sortMode';
+function loadSortMode() {
+  try { return JSON.parse(localStorage.getItem(SORT_KEY) || '{}'); } catch(e) { return {}; }
+}
+function saveSortMode(map) {
+  try { localStorage.setItem(SORT_KEY, JSON.stringify(map)); } catch(e) {}
+}
+function sortItems(arr, savedKeys, mode) {
+  mode = mode || 'rev';
+  // 수동 정렬: 저장된 순서 우선
+  if (mode === 'manual' && savedKeys && savedKeys.length) {
+    arr.sort((a, b) => {
+      const ia = savedKeys.indexOf(a.key);
+      const ib = savedKeys.indexOf(b.key);
+      if (ia >= 0 && ib >= 0) return ia - ib;
+      if (ia >= 0) return -1;
+      if (ib >= 0) return 1;
+      return 0;
+    });
+    return arr;
+  }
+  const cmp = {
+    'rev': (a, b) => {
+      const ra = REV_RANK[a.item.revTier || 'E'], rb = REV_RANK[b.item.revTier || 'E'];
+      if (ra !== rb) return rb - ra;
+      const pa = PRIO_RANK[a.item.prio || 'l'], pb = PRIO_RANK[b.item.prio || 'l'];
+      if (pa !== pb) return pb - pa;
+      return (b.item.progress || 0) - (a.item.progress || 0);
+    },
+    'rev-asc': (a, b) => REV_RANK[a.item.revTier || 'E'] - REV_RANK[b.item.revTier || 'E'],
+    'prog-desc': (a, b) => (b.item.progress || 0) - (a.item.progress || 0),
+    'prog-asc':  (a, b) => (a.item.progress || 0) - (b.item.progress || 0),
+    'prio': (a, b) => (PRIO_RANK[b.item.prio || 'l']) - (PRIO_RANK[a.item.prio || 'l']),
+    'name': (a, b) => (a.item.name || '').localeCompare(b.item.name || '', 'ko')
+  };
+  arr.sort(cmp[mode] || cmp['rev']);
+  return arr;
+}
+
+// 컬럼 순서 적용
+function applyColumnOrder() {
+  const order = loadColOrder();
+  const kanban = document.getElementById('kanban');
+  order.forEach(act => {
+    const col = kanban.querySelector('.col[data-act="' + act + '"]');
+    if (col) kanban.appendChild(col);
+  });
+}
+
+function renderColumns() {
+  const orderMap = loadOrder();
+  const sortMap = loadSortMode();
+  const buckets = { first: [], run: [], hold: [], stop: [] };
+  ITEMS.forEach(e => {
+    let act = getAction(e.key, e.item);
+    if (act === 'merge') act = 'run';
+    if (!buckets[act]) act = 'run';
+    buckets[act].push(e);
+  });
+  Object.keys(buckets).forEach(act => {
+    const savedKeys = orderMap[act] || [];
+    const mode = sortMap[act] || 'rev';
+    sortItems(buckets[act], savedKeys, mode);
+    const body = document.getElementById('body-' + act);
+    const cntEl = document.getElementById('cnt-' + act);
+    cntEl.textContent = buckets[act].length;
+    body.innerHTML = '';
+    if (!buckets[act].length) {
+      body.innerHTML = '<div class="col-empty">여기로 드래그하세요</div>';
+    } else {
+      buckets[act].forEach(e => body.appendChild(renderCard(e)));
+    }
+    // 정렬 select 값 복원
+    const sortSel = document.querySelector('.ch-sort[data-col="' + act + '"]');
+    if (sortSel && sortSel.value !== mode) sortSel.value = mode;
+  });
+  initCardSortables();
+}
+
+function renderCard(e) {
+  const tier = e.item.revTier || 'E';
+  const card = document.createElement('div');
+  card.className = 'card rev-' + tier;
+  card.dataset.key = e.key;
+  if (SELECTED.has(e.key)) card.classList.add('selected');
+  if (SEARCH_Q) {
+    const hay = (e.item.name + ' ' + (e.item.owner || '') + ' ' + (e.item.ownerDept || '') + ' ' + REV_LABEL[tier] + ' ' + PCATS_NAMES[e.cat]).toLowerCase();
+    if (hay.includes(SEARCH_Q.toLowerCase())) card.classList.add('matched');
+    else card.classList.add('dim');
+  }
+  const prog = e.item.progress || 0;
+  const prio = e.item.prio || 'm';
+  const eff = getEffective(e.cat, e.item);
+  const ownerDept = eff.ownerDept ? (DEPT_NAME[eff.ownerDept] || eff.ownerDept) : '';
+  const related = (eff.related || []).map(d => DEPT_NAME[d] || d).join('·');
+  const status = e.item.status || 'active';
+  card.innerHTML =
+    '<div class="c-top">'
+    +   '<span class="c-rev">' + REV_LABEL[tier] + '</span>'
+    +   '<span class="c-cat">' + PCATS_NAMES[e.cat] + '</span>'
+    +   '<span class="c-prio ' + prio + '">' + PRIO_LABEL[prio] + '</span>'
+    +   (status === 'stop' ? '<span class="c-prio l" style="margin-left:auto">중단</span>' : '')
+    + '</div>'
+    + '<div class="c-name">' + escapeHtml(e.item.name) + '</div>'
+    + '<div class="c-bottom">'
+    +   '<div class="c-prog-wrap"><div class="c-prog-bar" style="width:' + prog + '%"></div></div>'
+    +   '<span class="c-prog-num">' + prog + '%</span>'
+    + '</div>'
+    + (e.item.startWhen ? '<div class="c-owner">📅 ' + escapeHtml(e.item.startWhen) + '</div>' : '')
+    + (ownerDept ? '<div class="c-owner">주관 <b style="color:#555555">' + escapeHtml(ownerDept) + '</b>' + (related ? ' · 유관 ' + escapeHtml(related) : '') + (e.item.owner ? ' · 담당 ' + escapeHtml(e.item.owner) : '') + '</div>' : (e.item.owner ? '<div class="c-owner">담당 ' + escapeHtml(e.item.owner) + '</div>' : ''));
+  card.addEventListener('click', (ev) => {
+    ev.stopPropagation();
+    if (ev.shiftKey) {
+      if (SELECTED.has(e.key)) SELECTED.delete(e.key);
+      else SELECTED.add(e.key);
+    } else {
+      SELECTED.clear();
+      SELECTED.add(e.key);
+    }
+    renderColumns();
+    renderDetail();
+    renderBulkActions();
+  });
+  return card;
+}
+
+let _cardSortables = [];
+function initCardSortables() {
+  _cardSortables.forEach(s => s.destroy());
+  _cardSortables = [];
+  document.querySelectorAll('.col-body').forEach(body => {
+    const sortable = Sortable.create(body, {
+      group: 'kanban-cards',
+      animation: 160,
+      ghostClass: 'sortable-ghost',
+      chosenClass: 'sortable-chosen',
+      handle: '.card',
+      onAdd: (evt) => onCardAdd(evt),
+      onUpdate: (evt) => onCardUpdate(evt)
+    });
+    _cardSortables.push(sortable);
+  });
+}
+function onCardAdd(evt) {
+  const card = evt.item;
+  const newCol = evt.to;
+  const newAct = newCol.dataset.act;
+  const key = card.dataset.key;
+  if (!newAct || !key) return;
+  setAction(key, newAct);
+  saveColumnOrder(newAct);
+  setTimeout(() => renderColumns(), 50);
+}
+function onCardUpdate(evt) {
+  const act = evt.from.dataset.act;
+  saveColumnOrder(act);
+}
+function saveColumnOrder(act) {
+  const body = document.getElementById('body-' + act);
+  if (!body) return;
+  const keys = [...body.querySelectorAll('.card')].map(c => c.dataset.key);
+  const map = loadOrder();
+  map[act] = keys;
+  saveOrder(map);
+}
+
+// 컬럼 자체 순서 변경 (Sortable on .kanban)
+let _colSortable = null;
+function initColumnSortable() {
+  if (_colSortable) _colSortable.destroy();
+  _colSortable = Sortable.create(document.getElementById('kanban'), {
+    animation: 200,
+    handle: '.col-head',
+    draggable: '.col',
+    ghostClass: 'col-drag-ghost',
+    chosenClass: 'col-drag-chosen',
+    onEnd: () => {
+      const order = [...document.querySelectorAll('.kanban .col')].map(c => c.dataset.act);
+      saveColOrder(order);
+    }
+  });
+}
+
+function renderDetail() {
+  const detail = document.getElementById('detail');
+  const emptyEl = document.getElementById('detailEmpty');
+  const leftEl = document.getElementById('detailLeft');
+  const rightEl = document.getElementById('detailRight');
+  const priceEl = document.getElementById('detailPriceCol');
+  if (SELECTED.size === 0) {
+    detail.classList.add('empty');
+    emptyEl.style.display = '';
+    leftEl.style.display = 'none';
+    rightEl.style.display = 'none';
+    priceEl.classList.remove('show');
+    return;
+  }
+  detail.classList.remove('empty');
+  emptyEl.style.display = 'none';
+  leftEl.style.display = '';
+  rightEl.style.display = '';
+
+  if (SELECTED.size > 1) {
+    priceEl.classList.remove('show');
+    leftEl.innerHTML =
+      '<div class="d-title">다중 선택 (' + SELECTED.size + '건)</div>'
+      + '<div class="d-row"><span class="lbl">안내</span><span class="val">상단 <b>일괄 액션</b> 버튼으로 한 번에 결정</span></div>';
+    rightEl.innerHTML = '<div class="d-desc"><b>선택된 프로젝트:</b><br>'
+      + Array.from(SELECTED).map(k => {
+        const e = ITEMS.find(x => x.key === k);
+        if (!e) return '';
+        return '• ' + escapeHtml(e.item.name) + ' <span style="color:#999999">[' + REV_LABEL[e.item.revTier || 'E'] + ' · ' + PCATS_NAMES[e.cat] + ' · ' + (e.item.progress || 0) + '%]</span>';
+      }).join('<br>')
+      + '</div>';
+    return;
+  }
+  // 단일 선택 — 풀 데이터 표시
+  const key = Array.from(SELECTED)[0];
+  const e = ITEMS.find(x => x.key === key);
+  if (!e) { return; }
+  const it = e.item;
+  const tier = it.revTier || 'E';
+  const action = getAction(key, it);
+  const prio = it.prio || 'm';
+  const status = it.status || 'active';
+  const split = splitDesc(it.desc || '');
+
+  leftEl.innerHTML =
+    '<div class="d-title">' + escapeHtml(it.name) + '</div>'
+    + '<div class="d-meta">'
+    +   '<span class="pill pill-rev-' + tier + '">' + REV_LABEL[tier] + '</span>'
+    +   '<span class="pill pill-cat">' + PCATS_NAMES[e.cat] + '</span>'
+    +   '<span class="pill pill-prio-' + prio + '">우선 ' + PRIO_LABEL[prio] + '</span>'
+    +   '<span class="pill pill-prog">' + (it.progress || 0) + '%</span>'
+    +   '<span class="pill pill-status-' + status + '">' + (STATUS_LABEL[status] || status) + '</span>'
+    + '</div>'
+    + (it.startWhen ? '<div class="d-row"><span class="lbl">시기</span><span class="val">📅 ' + escapeHtml(it.startWhen) + '</span></div>' : '')
+    + buildOwnerRow(e.cat, it)
+    + buildRelatedRow(e.cat, it)
+    + (it.owner ? '<div class="d-row"><span class="lbl">담당</span><span class="val">' + escapeHtml(it.owner) + '</span></div>' : '')
+    + '<div class="d-row"><span class="lbl">결정</span><span class="val">' + (it.decision || '-') + '</span></div>'
+    + '<div class="d-actions">'
+    +   ['first','run','hold','stop','merge'].map(a => '<button data-act="' + a + '" class="' + (action === a ? 'active' : '') + '">' + ACTION_LABEL[a] + '</button>').join('')
+    + '</div>';
+
+  rightEl.innerHTML =
+    '<div class="d-desc">'
+    +   (split.text || it.desc || '<i style="color:#666666">상세 설명 없음</i>')
+    + '</div>';
+
+  // 가격표(또는 다른 <table>) 분리 표시
+  if (split.tables) {
+    priceEl.classList.add('show');
+    priceEl.innerHTML = '<div class="d-pricecol-head">📋 가격표 / 표</div>' + split.tables;
+  } else {
+    priceEl.classList.remove('show');
+    priceEl.innerHTML = '';
+  }
+
+  leftEl.querySelectorAll('.d-actions button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      setAction(key, btn.dataset.act);
+      renderDetail();
+      renderColumns();
+    });
+  });
+  // 주관 select 변경
+  const ownerSel = leftEl.querySelector('.d-owner-sel');
+  if (ownerSel) ownerSel.addEventListener('change', () => {
+    setOwner(e.cat, it.name, ownerSel.value || '');
+    renderDetail();
+    renderColumns();
+  });
+  // 유관 ✕ 제거
+  leftEl.querySelectorAll('.rel-chip-x').forEach(x => {
+    x.addEventListener('click', () => {
+      removeRel(e.cat, it.name, x.dataset.dept);
+      renderDetail();
+      renderColumns();
+    });
+  });
+  // 유관 추가 select
+  const relAdd = leftEl.querySelector('.d-rel-add');
+  if (relAdd) relAdd.addEventListener('change', () => {
+    if (!relAdd.value) return;
+    addRel(e.cat, it.name, relAdd.value);
+    renderDetail();
+    renderColumns();
+  });
+}
+
+// 주관 select row
+function buildOwnerRow(cat, item) {
+  const eff = getEffective(cat, item);
+  const opts = '<option value="">없음</option>' + ALL_DEPT_IDS.map(d =>
+    '<option value="' + d + '"' + (eff.ownerDept === d ? ' selected' : '') + '>' + DEPT_NAME[d] + '</option>'
+  ).join('');
+  return '<div class="d-row"><span class="lbl">주관</span><span class="val">'
+    + '<select class="d-owner-sel">' + opts + '</select>'
+    + '</span></div>';
+}
+// 유관 칩 + 추가 select
+function buildRelatedRow(cat, item) {
+  const eff = getEffective(cat, item);
+  const rel = eff.related || [];
+  const chips = rel.map(d =>
+    '<span class="rel-chip">' + DEPT_NAME[d] + '<span class="rel-chip-x" data-dept="' + d + '" title="제거">✕</span></span>'
+  ).join('');
+  const used = new Set([eff.ownerDept, ...rel].filter(Boolean));
+  const addOpts = ALL_DEPT_IDS.filter(d => !used.has(d))
+    .map(d => '<option value="' + d + '">' + DEPT_NAME[d] + '</option>').join('');
+  const addUI = addOpts ? '<select class="d-rel-add"><option value="" disabled selected>＋ 추가</option>' + addOpts + '</select>' : '';
+  return '<div class="d-row"><span class="lbl">유관</span><span class="val rel-wrap">'
+    + (chips || '<span style="color:#666666">없음</span>')
+    + addUI
+    + '</span></div>';
+}
+
+function renderBulkActions() {
+  const cnt = SELECTED.size;
+  document.getElementById('bulkCnt').textContent = '선택 ' + cnt;
+  document.querySelectorAll('[data-bulk]').forEach(b => { b.disabled = (cnt === 0); });
+}
+
+function applyBulk(action) {
+  if (action === 'clear') { SELECTED.clear(); }
+  else {
+    SELECTED.forEach(key => {
+      const e = ITEMS.find(x => x.key === key);
+      if (e) setAction(key, action);
+    });
+  }
+  renderColumns();
+  renderDetail();
+  renderBulkActions();
+}
+
+function escapeHtml(s) {
+  return String(s == null ? '' : s).replace(/[&<>"]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));
+}
+// 회의 메모 — v2와 같은 localStorage 키 공유 (hanasm.meetingMemo.v3)
+const MEMO_KEY = 'hanasm.meetingMemo.v3';
+function loadMeetingMemo() {
+  try { return localStorage.getItem(MEMO_KEY) || ''; } catch(e) { return ''; }
+}
+function saveMeetingMemo(v) {
+  try { localStorage.setItem(MEMO_KEY, v); } catch(e) {}
+}
+function bindMemo() {
+  const ta = document.getElementById('memoText');
+  const cnt = document.getElementById('memoCnt');
+  const wrap = document.getElementById('floatingMemo');
+  if (!ta) return;
+  ta.value = loadMeetingMemo();
+  if (cnt) cnt.textContent = (ta.value.length) + '자';
+  let _t = null;
+  ta.addEventListener('input', () => {
+    if (cnt) cnt.textContent = (ta.value.length) + '자';
+    clearTimeout(_t);
+    _t = setTimeout(() => saveMeetingMemo(ta.value), 300);
+  });
+  // focus 시 body 클래스 → app 영역 위로 밀어줌
+  ta.addEventListener('focus', () => document.body.classList.add('memo-expanded'));
+  ta.addEventListener('blur', () => document.body.classList.remove('memo-expanded'));
+  // 다른 탭/창에서 변경 시 sync
+  window.addEventListener('storage', (e) => {
+    if (e.key === MEMO_KEY) {
+      ta.value = e.newValue || '';
+      if (cnt) cnt.textContent = (ta.value.length) + '자';
+    }
+  });
+}
+// desc 안 가격표(<table>) 분리 — 우측 가격표 영역에 표시
+function splitDesc(desc) {
+  if (!desc) return { text: '', tables: '' };
+  const tables = [];
+  const text = desc.replace(/<table[\s\S]*?<\/table>/g, (m) => { tables.push(m); return ''; });
+  return { text: text.trim(), tables: tables.join('\n') };
+}
+
+(async function init() {
+  let PROJECTS;
+  try { PROJECTS = await loadData(); }
+  catch(e) { console.error(e); return; }
+  document.getElementById('loading').remove();
+  ITEMS = [];
+  Object.keys(PROJECTS).forEach(cat => {
+    (PROJECTS[cat].items || []).forEach(item => {
+      ITEMS.push({ cat, key: cat + '::' + item.name, item });
+    });
+  });
+  try {
+    const user = JSON.parse(localStorage.getItem('hanasm.userProjects.v3') || '{}');
+    Object.keys(user).forEach(cat => {
+      (user[cat] || []).forEach(item => {
+        ITEMS.push({ cat, key: cat + '::' + item.name, item });
+      });
+    });
+  } catch(e) {}
+  applyColumnOrder();
+  renderColumns();
+  renderBulkActions();
+  initColumnSortable();
+  bindMemo();
+  const searchEl = document.getElementById('search');
+  searchEl.addEventListener('input', () => {
+    SEARCH_Q = searchEl.value.trim();
+    renderColumns();
+  });
+  document.querySelectorAll('[data-bulk]').forEach(b => {
+    b.addEventListener('click', () => applyBulk(b.dataset.bulk));
+  });
+  // 컬럼별 정렬 select
+  document.querySelectorAll('.ch-sort').forEach(sel => {
+    sel.addEventListener('change', () => {
+      const map = loadSortMode();
+      map[sel.dataset.col] = sel.value;
+      saveSortMode(map);
+      renderColumns();
+    });
+  });
+  // detail 영역 펼치기/접기 토글 — localStorage 저장
+  const detailEl = document.getElementById('detail');
+  const expandBtn = document.getElementById('detailExpandBtn');
+  const EXPAND_KEY = 'hanasm.detailExpanded.v3';
+  function applyExpandState() {
+    const on = localStorage.getItem(EXPAND_KEY) === '1';
+    detailEl.classList.toggle('expanded', on);
+    expandBtn.textContent = on ? '▲ 접기' : '▼ 펼치기';
+  }
+  function toggleExpand() {
+    const cur = localStorage.getItem(EXPAND_KEY) === '1';
+    localStorage.setItem(EXPAND_KEY, cur ? '0' : '1');
+    applyExpandState();
+  }
+  applyExpandState();
+  expandBtn.addEventListener('click', toggleExpand);
+  document.addEventListener('keydown', (e) => {
+    const tag = (e.target && e.target.tagName) || '';
+    if ((e.key === 'k' || e.key === 'K') && (e.metaKey || e.ctrlKey)) {
+      e.preventDefault();
+      searchEl.focus();
+      searchEl.select();
+    }
+    if (e.altKey && (e.key === 'e' || e.key === 'E')) {
+      if (tag !== 'INPUT' && tag !== 'TEXTAREA') {
+        e.preventDefault();
+        toggleExpand();
+      }
+    }
+    if (e.key === 'Escape') {
+      if (tag === 'INPUT') searchEl.blur();
+      else { SELECTED.clear(); renderColumns(); renderDetail(); renderBulkActions(); }
+    }
+  });
+  document.querySelector('.kanban').addEventListener('click', (e) => {
+    if (e.target.closest('.card')) return;
+    SELECTED.clear();
+    renderColumns();
+    renderDetail();
+    renderBulkActions();
+  });
+})();
+</script>
+</body>
+</html>
