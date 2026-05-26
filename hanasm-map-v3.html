@@ -565,7 +565,8 @@ body.meeting-mode .meeting-toggle {
 }
 /* 회의모드 — header 통째 숨김. 와이어맵 복귀는 floating meeting-aux-link로 일원화 */
 body.meeting-mode header.topbar { display: none !important; }
-body.meeting-mode .app { top: 0 !important; padding-top: 8px !important; }
+/* 상단 50px 띠는 meeting-aux-link 영역. 컨텐츠는 그 아래부터 시작 → 디테일과 안 겹침 */
+body.meeting-mode .app { top: 50px !important; padding-top: 4px !important; }
 body.meeting-mode { background: #000 !important; }
 /* 회의모드 보조 링크 (v2로 이동) */
 .meeting-aux-link {
@@ -1429,6 +1430,21 @@ document.addEventListener('keydown', (e) => {
       e.stopImmediatePropagation();
     }
   }, true);
+  // 와이어맵 링크들 클릭 시: 페이지 이동 막고 부모에 모달 닫기 메시지
+  function _hookCloseLink(el) {
+    if (!el || el.dataset.iframeBound) return;
+    el.dataset.iframeBound = '1';
+    el.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      try { parent.postMessage({ type: 'closeProjIframeModal' }, location.origin); } catch(err) {}
+    }, true);
+  }
+  // 정적 + 동적(meetingAuxLink는 정적이지만 안전하게 observer로도)
+  document.querySelectorAll('a[href="hanasm-map-v2.html"], #meetingAuxLink').forEach(_hookCloseLink);
+  new MutationObserver(() => {
+    document.querySelectorAll('a[href="hanasm-map-v2.html"], #meetingAuxLink').forEach(_hookCloseLink);
+  }).observe(document.body, { childList: true, subtree: true });
 })();
 
 // 와이어맵(v2) iframe 모달 — v3 회의모드에서 v2 보기 (페이지 이동 X → 풀스크린 유지)
