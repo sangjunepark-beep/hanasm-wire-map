@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
-<title>HANASM V5 · 프로젝트 진행 관리</title>
+<title>HANASM V5 · PROJECT BOARD [BLUEPRINT]</title>
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
 :root {
@@ -545,52 +545,59 @@ body.memo-expanded main.app { bottom: 95px !important; }
   .detail .d-right { max-height: none; }
 }
 
-/* ═══════════════════════════════════════════════════════════
-   DARK MONOCHROME 2-TONE OVERRIDE — v4/v5
-   톤 1: 블랙 #0a0a0a   |   톤 2: 화이트 #ffffff
-   음영은 모두 rgba(255,255,255, x)의 알파 조절로만 표현
-   v2/v3와 다른 무드: 직각 박스, 글로우 제거, 굵은 타이포, 여백 여유
-   ═══════════════════════════════════════════════════════════ */
+/* ═══════════════════════════════════════════════════════════════
+   BLUEPRINT DARK — 엔지니어링 도면 무드
+   톤: 블랙 #050505 + 화이트 #ffffff (회색은 화이트 알파)
+   ═══════════════════════════════════════════════════════════════ */
 
+/* 1) 컬러·변수 재정의 */
 :root {
-  --bg-0: #0a0a0a !important;
-  --bg-1: #111111 !important;
-  --bg-2: #161616 !important;
-  --line:   rgba(255,255,255,0.10) !important;
-  --line-2: rgba(255,255,255,0.18) !important;
-  --line-3: rgba(255,255,255,0.30) !important;
+  --bg-0: #050505 !important;
+  --bg-1: #0a0a0a !important;
+  --bg-2: #0f0f0f !important;
+  --ink:  #ffffff !important;
+  --ink-2: rgba(255,255,255,0.65) !important;
+  --ink-3: rgba(255,255,255,0.38) !important;
+  --ink-4: rgba(255,255,255,0.20) !important;
+  --grid: rgba(255,255,255,0.04) !important;
+  --line:   rgba(255,255,255,0.18) !important;
+  --line-2: rgba(255,255,255,0.32) !important;
+  --line-3: rgba(255,255,255,0.55) !important;
   --text-1: #ffffff !important;
-  --text-2: rgba(255,255,255,0.72) !important;
-  --text-3: rgba(255,255,255,0.45) !important;
-  --text-4: rgba(255,255,255,0.30) !important;
-
-  /* 기존 변수도 무채색으로 강제 */
-  --purple-1: #ffffff; --purple-2: rgba(255,255,255,0.75); --purple-3: rgba(255,255,255,0.55);
-  --blue-1: rgba(255,255,255,0.70); --blue-2: rgba(255,255,255,0.55); --blue-3: rgba(255,255,255,0.40);
-  --cyan: #ffffff; --pink: rgba(255,255,255,0.55); --amber: #ffffff;
-  --green: rgba(255,255,255,0.70); --orange: rgba(255,255,255,0.55); --red: #ffffff;
-  --info: #ffffff; --gold: #ffffff; --muted: rgba(255,255,255,0.45);
-  --danger: #ffffff; --success: rgba(255,255,255,0.70);
-  --rev-A: #ffffff; --rev-B: rgba(255,255,255,0.78);
-  --rev-C: rgba(255,255,255,0.55); --rev-D: rgba(255,255,255,0.32); --rev-E: rgba(255,255,255,0.20);
+  --text-2: rgba(255,255,255,0.65) !important;
+  --text-3: rgba(255,255,255,0.38) !important;
+  --purple-1: #fff; --purple-2: rgba(255,255,255,0.75); --purple-3: rgba(255,255,255,0.50);
+  --blue-1: rgba(255,255,255,0.75); --blue-2: rgba(255,255,255,0.55); --blue-3: rgba(255,255,255,0.35);
+  --cyan: #fff; --pink: rgba(255,255,255,0.55); --amber: #fff;
+  --green: rgba(255,255,255,0.65); --orange: rgba(255,255,255,0.50); --red: #fff;
+  --info: #fff; --gold: #fff; --muted: rgba(255,255,255,0.40);
+  --danger: #fff; --success: rgba(255,255,255,0.65);
+  --rev-A: #fff; --rev-B: rgba(255,255,255,0.78);
+  --rev-C: rgba(255,255,255,0.50); --rev-D: rgba(255,255,255,0.28); --rev-E: rgba(255,255,255,0.16);
 }
 
-/* ─── 전역 배경·글자 ─────────────────────────────────── */
+/* 2) 전역 — 모노 폰트 + 그리드 종이 배경 */
 html, body {
-  background: #0a0a0a !important;
-  background-image: none !important;
+  background:
+    linear-gradient(rgba(255,255,255,0.035) 1px, transparent 1px) 0 0 / 24px 24px,
+    linear-gradient(90deg, rgba(255,255,255,0.035) 1px, transparent 1px) 0 0 / 24px 24px,
+    #050505 !important;
+  background-attachment: fixed !important;
   color: #ffffff !important;
-  font-family: "Pretendard", "Noto Sans KR", "Inter", system-ui, -apple-system, sans-serif !important;
-  letter-spacing: -0.005em !important;
+  font-family: "JetBrains Mono", "IBM Plex Mono", "D2Coding", "Consolas", "Menlo", monospace !important;
+  letter-spacing: 0 !important;
+  font-weight: 500 !important;
 }
 
-/* ─── 모든 발광·블러·필터·그라데이션 텍스트 제거 ──────── */
+/* 3) 발광·블러·필터·그라데이션 텍스트 박멸 */
 * {
   text-shadow: none !important;
   filter: none !important;
   -webkit-backdrop-filter: none !important;
   backdrop-filter: none !important;
 }
+*[style*="box-shadow"] { box-shadow: none !important; }
+*[style*="text-shadow"] { text-shadow: none !important; }
 .title h1, h1, h2, h3, h4, h5, h6 {
   background: none !important;
   background-image: none !important;
@@ -598,238 +605,307 @@ html, body {
   background-clip: initial !important;
   -webkit-text-fill-color: #ffffff !important;
   color: #ffffff !important;
-  font-weight: 800 !important;
-  letter-spacing: 0.02em !important;
+  font-family: "JetBrains Mono", "IBM Plex Mono", monospace !important;
 }
-.brand-logo { filter: brightness(1.4) contrast(1.2) !important; opacity: 0.95 !important; }
+.brand-logo { filter: invert(1) brightness(1.6) contrast(1.4) !important; opacity: 0.90 !important; }
 
-/* ─── 사선 잘림(clip-path) 제거 → 직각 박스로 ─────────── */
-.topbar, .legend, .task-panel, .detail, .hint, .kanban-col,
-.card, .pi-card, .pl-item, .member-chip,
+/* 4) 사선 잘림(clip-path) 전면 제거 → 직각 박스 + 라운드 0 */
+.topbar, .topbar *,
+.legend, .legend *,
+.task-panel, .task-panel *,
+.detail, .detail *,
+.hint, .hint *,
+.kanban-col, .kanban-col *,
+.card, .card *, .pi-card, .pi-card *, .pl-item, .pl-item *, .member-chip, .member-chip *,
 [class*="pill-"], [class*="badge-"], [class*="chip"],
 button, .v3-link, .v2-link, .ch-sort, .d-actions button,
-.bulk-bar button, .legend-chip, .search-box, .col-head, .col-add,
-.tp-stats .st, .d-expand-btn, .d-owner-sel, .d-rel-add, .rel-chip {
+.bulk-bar, .bulk-bar *,
+.legend-chip, .search-box, .search-box *,
+.col-head, .col-add, .tp-stats, .tp-stats *,
+.d-expand-btn, .d-owner-sel, .d-rel-add, .rel-chip,
+.memo-strip, .memo-strip * {
   clip-path: none !important;
   border-radius: 0 !important;
 }
 
-/* ─── 패널/카드/바 — 솔리드 다크 배경 + 얇은 라인 ────── */
-.topbar, .topbar > *,
-.legend,
-.task-panel,
-.detail, .detail .d-empty,
-.hint,
-.kanban-col,
-.search-box, .search-box input,
-.tp-head, .tp-stats, .tp-body, .tp-foot,
-.col-head, .col-body, .col-add,
-.bulk-bar,
-.col-meta-strip,
-.memo-strip, .memo-strip textarea {
-  background: #0a0a0a !important;
-  background-image: none !important;
-  border-color: rgba(255,255,255,0.10) !important;
-  color: #ffffff !important;
-  box-shadow: none !important;
+/* ═══════════════════════════════════════════════════════════════
+   5) 헤더 — 도면 타이틀블록 무드
+   좌상단 라벨 박스, 작은 메타 텍스트, 굵은 하단 라인
+   ═══════════════════════════════════════════════════════════════ */
+.topbar {
+  background: rgba(5,5,5,0.96) !important;
+  border-bottom: 2px solid #ffffff !important;
+  padding: 14px 32px !important;
+  position: relative;
+}
+.topbar::before {
+  content: "HANASM / SYS-MAP / DARK-MONO" !important;
+  position: absolute; top: 4px; left: 32px;
+  font-size: 9px; letter-spacing: 0.28em;
+  color: rgba(255,255,255,0.38); font-weight: 700;
+}
+.title h1 {
+  font-size: 15px !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.35em !important;
+  text-transform: uppercase !important;
+  border: none !important;
+  padding: 6px 0 0 0 !important;
+}
+.title h1::before {
+  content: "[ " !important; color: rgba(255,255,255,0.40);
+}
+.title h1::after {
+  content: " ]" !important; color: rgba(255,255,255,0.40);
+}
+.title .date {
+  font-size: 10px !important;
+  color: rgba(255,255,255,0.45) !important;
+  letter-spacing: 0.15em !important;
+  text-transform: uppercase !important;
 }
 
-/* ─── 카드 — 약간 밝은 다크 + 얇은 라인 ──────────────── */
+/* ═══════════════════════════════════════════════════════════════
+   6) 카드/패널 = 도면 블록 (코너 마크 + 라벨)
+   ═══════════════════════════════════════════════════════════════ */
 .card, .pi-card, .pl-item, .member-chip {
-  background: #111111 !important;
-  border: 1px solid rgba(255,255,255,0.10) !important;
+  background: rgba(255,255,255,0.025) !important;
+  border: 1px solid rgba(255,255,255,0.18) !important;
+  padding: 16px 18px !important;
+  position: relative !important;
   box-shadow: none !important;
-  padding: 14px !important;
+}
+/* 코너 마크 (좌상·우상·좌하·우하) */
+.card::before, .pi-card::before, .pl-item::before, .member-chip::before {
+  content: "" !important;
+  position: absolute !important;
+  top: -1px; left: -1px;
+  width: 8px; height: 8px;
+  border-top: 2px solid #ffffff;
+  border-left: 2px solid #ffffff;
+  pointer-events: none;
+}
+.card::after, .pi-card::after, .pl-item::after, .member-chip::after {
+  content: "" !important;
+  position: absolute !important;
+  bottom: -1px; right: -1px;
+  width: 8px; height: 8px;
+  border-bottom: 2px solid #ffffff;
+  border-right: 2px solid #ffffff;
+  pointer-events: none;
 }
 .card:hover, .pi-card:hover, .pl-item:hover, .member-chip:hover {
-  background: #181818 !important;
-  border-color: rgba(255,255,255,0.45) !important;
-  box-shadow: none !important;
-}
-
-/* ─── 칸반 컬럼 — 라인으로만 구분, 배경 없음 ─────────── */
-.kanban-col {
-  background: transparent !important;
-  border: 1px solid rgba(255,255,255,0.08) !important;
-  padding: 12px !important;
-}
-.col-body { background: transparent !important; gap: 10px !important; }
-.col-head {
-  background: transparent !important;
-  border-bottom: 1px solid rgba(255,255,255,0.15) !important;
-  padding-bottom: 10px !important;
-  margin-bottom: 12px !important;
-}
-
-/* ─── 상단 바 ────────────────────────────────────────── */
-.topbar {
-  border-bottom: 1px solid rgba(255,255,255,0.10) !important;
-  background: rgba(10,10,10,0.95) !important;
-}
-
-/* ─── 텍스트 강약 ────────────────────────────────────── */
-.d-title, h1, h2, h3 { color: #ffffff !important; }
-b, strong { color: #ffffff !important; font-weight: 800 !important; }
-.d-desc, .d-desc *, .d-row .val, .d-row .val * { color: rgba(255,255,255,0.85) !important; }
-.d-row .lbl, .legend-rev-head, .role-tag, .pl-by, .meta-when {
-  color: rgba(255,255,255,0.45) !important;
-}
-
-/* ─── Pill 시스템 — 화이트 농도 5단계 ────────────────── */
-[class*="pill-rev-A"] {
-  background: #ffffff !important; color: #0a0a0a !important;
-  border: 1px solid #ffffff !important; font-weight: 800 !important;
-}
-[class*="pill-rev-B"] {
-  background: rgba(255,255,255,0.85) !important; color: #0a0a0a !important;
-  border: 1px solid rgba(255,255,255,0.85) !important; font-weight: 800 !important;
-}
-[class*="pill-rev-C"] {
-  background: rgba(255,255,255,0.30) !important; color: #ffffff !important;
-  border: 1px solid rgba(255,255,255,0.30) !important;
-}
-[class*="pill-rev-D"] {
-  background: transparent !important; color: rgba(255,255,255,0.65) !important;
-  border: 1px solid rgba(255,255,255,0.25) !important;
-}
-[class*="pill-rev-E"] {
-  background: transparent !important; color: rgba(255,255,255,0.40) !important;
-  border: 1px dashed rgba(255,255,255,0.20) !important;
-}
-
-[class*="pill-prio-h"] {
-  background: #ffffff !important; color: #0a0a0a !important;
-  border: 1px solid #ffffff !important; font-weight: 800 !important;
-}
-[class*="pill-prio-m"] {
-  background: transparent !important; color: rgba(255,255,255,0.80) !important;
-  border: 1px solid rgba(255,255,255,0.35) !important;
-}
-[class*="pill-prio-l"] {
-  background: transparent !important; color: rgba(255,255,255,0.45) !important;
-  border: 1px dashed rgba(255,255,255,0.20) !important;
-}
-
-[class*="pill-status-active"] {
-  background: #ffffff !important; color: #0a0a0a !important;
-  border: 1px solid #ffffff !important;
-}
-[class*="pill-status-stop"] {
-  background: transparent !important; color: rgba(255,255,255,0.45) !important;
-  border: 1px dashed rgba(255,255,255,0.20) !important;
-}
-[class*="pill-cat"] {
-  background: transparent !important; color: rgba(255,255,255,0.70) !important;
-  border: 1px solid rgba(255,255,255,0.20) !important;
-}
-[class*="pill-prog"] {
-  background: transparent !important; color: #ffffff !important;
-  border: 1px solid rgba(255,255,255,0.40) !important;
-}
-
-/* ─── 버튼·인풋·셀렉트 ──────────────────────────────── */
-button {
-  background: transparent !important;
-  color: rgba(255,255,255,0.85) !important;
-  border: 1px solid rgba(255,255,255,0.30) !important;
-  box-shadow: none !important;
-  font-weight: 700 !important;
-  letter-spacing: 0.02em !important;
-}
-button:hover {
   background: rgba(255,255,255,0.08) !important;
   border-color: #ffffff !important;
+}
+
+/* 7) 컨테이너·패널 — 도면 종이 배경 위에 얇은 라인만 */
+.legend, .task-panel, .detail, .hint {
+  background: rgba(5,5,5,0.85) !important;
+  border: 1px solid rgba(255,255,255,0.22) !important;
   color: #ffffff !important;
+  padding: 16px 18px !important;
+  position: relative !important;
+}
+/* 좌상단 라벨 (도면 섹션 헤더처럼) */
+.legend::before { content: "LEGEND"; position: absolute; top: -8px; left: 12px; background: #050505; padding: 0 6px; font-size: 9px; letter-spacing: 0.22em; color: rgba(255,255,255,0.55); font-weight: 700; }
+.task-panel .tp-head::before { content: "TASKS"; display: block; font-size: 9px; letter-spacing: 0.22em; color: rgba(255,255,255,0.50); margin-bottom: 4px; font-weight: 700; }
+.detail::before { content: "DETAIL / SPEC"; position: absolute; top: -8px; left: 12px; background: #050505; padding: 0 6px; font-size: 9px; letter-spacing: 0.22em; color: rgba(255,255,255,0.55); font-weight: 700; z-index: 6; }
+.hint::before { content: "NOTES"; position: absolute; top: -8px; left: 12px; background: #050505; padding: 0 6px; font-size: 9px; letter-spacing: 0.22em; color: rgba(255,255,255,0.55); font-weight: 700; }
+
+/* ═══════════════════════════════════════════════════════════════
+   8) 칸반 컬럼 = 도면 섹션
+   ═══════════════════════════════════════════════════════════════ */
+.kanban-col {
+  background: transparent !important;
+  border: 1px solid rgba(255,255,255,0.18) !important;
+  padding: 14px !important;
+  position: relative !important;
+}
+.kanban-col::before {
+  content: "" !important;
+  position: absolute; top: -1px; left: -1px;
+  width: 10px; height: 10px;
+  border-top: 2px solid #ffffff;
+  border-left: 2px solid #ffffff;
+}
+.kanban-col::after {
+  content: "" !important;
+  position: absolute; bottom: -1px; right: -1px;
+  width: 10px; height: 10px;
+  border-bottom: 2px solid #ffffff;
+  border-right: 2px solid #ffffff;
+}
+.col-head {
+  background: transparent !important;
+  border-bottom: 1px solid rgba(255,255,255,0.30) !important;
+  padding: 0 0 10px 0 !important;
+  margin-bottom: 14px !important;
+  font-size: 11px !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.28em !important;
+  text-transform: uppercase !important;
+  color: #ffffff !important;
+}
+.col-body { gap: 10px !important; }
+
+/* 9) 본문 텍스트 — 모노, 약간 작게, 줄간격 여유 */
+.d-title, .pi-name, .pl-title, .name, .card-title {
+  color: #ffffff !important;
+  font-weight: 800 !important;
+  font-size: 14px !important;
+  letter-spacing: 0.01em !important;
+  line-height: 1.45 !important;
+}
+.d-desc, .d-desc * {
+  color: rgba(255,255,255,0.85) !important;
+  font-size: 13px !important;
+  line-height: 1.75 !important;
+  font-family: "JetBrains Mono", "Pretendard", "Noto Sans KR", monospace !important;
+}
+.d-row .val, .d-row .val * { color: rgba(255,255,255,0.85) !important; font-size: 12px !important; }
+.d-row .lbl {
+  color: rgba(255,255,255,0.40) !important;
+  font-size: 9px !important;
+  letter-spacing: 0.22em !important;
+  text-transform: uppercase !important;
+  font-weight: 700 !important;
+}
+b, strong { color: #ffffff !important; font-weight: 800 !important; }
+
+/* ═══════════════════════════════════════════════════════════════
+   10) Pill — 화이트 농도 5단계 (직각, 모노)
+   ═══════════════════════════════════════════════════════════════ */
+[class*="pill-"], [class*="badge-"] {
+  font-family: "JetBrains Mono", monospace !important;
+  font-size: 10px !important;
+  letter-spacing: 0.15em !important;
+  padding: 3px 8px !important;
+  border-radius: 0 !important;
+  text-transform: uppercase !important;
+}
+[class*="pill-rev-A"] { background: #ffffff !important; color: #050505 !important; border: 1px solid #ffffff !important; font-weight: 800 !important; }
+[class*="pill-rev-B"] { background: rgba(255,255,255,0.78) !important; color: #050505 !important; border: 1px solid rgba(255,255,255,0.78) !important; font-weight: 800 !important; }
+[class*="pill-rev-C"] { background: transparent !important; color: #fff !important; border: 1px solid #ffffff !important; }
+[class*="pill-rev-D"] { background: transparent !important; color: rgba(255,255,255,0.65) !important; border: 1px solid rgba(255,255,255,0.30) !important; }
+[class*="pill-rev-E"] { background: transparent !important; color: rgba(255,255,255,0.40) !important; border: 1px dashed rgba(255,255,255,0.25) !important; }
+[class*="pill-prio-h"] { background: #ffffff !important; color: #050505 !important; border: 1px solid #ffffff !important; font-weight: 800 !important; }
+[class*="pill-prio-m"] { background: transparent !important; color: #ffffff !important; border: 1px solid rgba(255,255,255,0.40) !important; }
+[class*="pill-prio-l"] { background: transparent !important; color: rgba(255,255,255,0.45) !important; border: 1px dashed rgba(255,255,255,0.20) !important; }
+[class*="pill-status-active"] { background: transparent !important; color: #ffffff !important; border: 1px solid #ffffff !important; }
+[class*="pill-status-stop"]   { background: transparent !important; color: rgba(255,255,255,0.40) !important; border: 1px dashed rgba(255,255,255,0.20) !important; }
+[class*="pill-cat"] { background: transparent !important; color: rgba(255,255,255,0.70) !important; border: 1px solid rgba(255,255,255,0.25) !important; }
+[class*="pill-prog"] { background: transparent !important; color: #ffffff !important; border: 1px solid rgba(255,255,255,0.40) !important; }
+
+/* ═══════════════════════════════════════════════════════════════
+   11) 버튼 — 도면 라벨 무드 (각진 모노)
+   ═══════════════════════════════════════════════════════════════ */
+button, .v3-link, .v2-link {
+  background: transparent !important;
+  color: #ffffff !important;
+  border: 1px solid rgba(255,255,255,0.35) !important;
+  font-family: "JetBrains Mono", monospace !important;
+  font-size: 11px !important;
+  letter-spacing: 0.18em !important;
+  text-transform: uppercase !important;
+  padding: 6px 14px !important;
+  font-weight: 700 !important;
+  box-shadow: none !important;
+}
+button:hover, .v3-link:hover, .v2-link:hover {
+  background: #ffffff !important;
+  color: #050505 !important;
+  border-color: #ffffff !important;
 }
 button.active, button[aria-pressed="true"] {
   background: #ffffff !important;
-  color: #0a0a0a !important;
+  color: #050505 !important;
   border-color: #ffffff !important;
 }
 input, select, textarea {
-  background: transparent !important;
+  background: rgba(255,255,255,0.04) !important;
   color: #ffffff !important;
   border: 1px solid rgba(255,255,255,0.25) !important;
-  border-radius: 0 !important;
+  font-family: "JetBrains Mono", monospace !important;
+  font-size: 12px !important;
+  padding: 6px 10px !important;
 }
 input:focus, select:focus, textarea:focus {
   border-color: #ffffff !important;
+  background: rgba(255,255,255,0.08) !important;
   outline: none !important;
-  background: rgba(255,255,255,0.04) !important;
 }
 
-/* ─── 스크롤바 ─────────────────────────────────────── */
-::-webkit-scrollbar { width: 6px !important; height: 6px !important; }
-::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.20) !important; }
-::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.50) !important; }
+/* 12) 스크롤바 — 얇고 흰색 */
+::-webkit-scrollbar { width: 4px !important; height: 4px !important; }
+::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.30) !important; border-radius: 0 !important; }
+::-webkit-scrollbar-thumb:hover { background: #ffffff !important; }
 ::-webkit-scrollbar-track { background: transparent !important; }
 
-/* ─── 링크·헤더 부속 ────────────────────────────────── */
-a { color: #ffffff !important; text-decoration: none !important; }
-a:hover { color: rgba(255,255,255,0.70) !important; }
-.v3-link, .v2-link {
-  background: transparent !important;
-  color: #ffffff !important;
-  border: 1px solid rgba(255,255,255,0.30) !important;
-  padding: 6px 14px !important;
-  font-weight: 700 !important;
-  letter-spacing: 0.02em !important;
-}
-.v3-link:hover, .v2-link:hover {
-  background: #ffffff !important;
-  color: #0a0a0a !important;
-}
+/* 13) 링크 */
+a { color: #ffffff !important; text-decoration: none !important; border-bottom: 1px dashed rgba(255,255,255,0.30); }
+a:hover { border-bottom-color: #ffffff !important; }
 
-/* ─── 힌트·범례 ────────────────────────────────────── */
-.hint, .legend {
-  background: transparent !important;
-  border: 1px solid rgba(255,255,255,0.10) !important;
-}
+/* 14) 힌트 안 kbd — 도면 단축 라벨 */
 .hint kbd, kbd {
   background: rgba(255,255,255,0.08) !important;
-  border: 1px solid rgba(255,255,255,0.25) !important;
+  border: 1px solid rgba(255,255,255,0.35) !important;
   color: #ffffff !important;
-  border-radius: 0 !important;
-  padding: 2px 6px !important;
   font-family: "JetBrains Mono", monospace !important;
+  font-size: 10px !important;
+  padding: 1px 6px !important;
+  letter-spacing: 0.08em !important;
 }
 
-/* ─── SVG / 와이어 맵 시각 요소 ────────────────────── */
-line, path { stroke: rgba(255,255,255,0.35) !important; }
+/* 15) SVG — 도면 선 */
+line, path { stroke: rgba(255,255,255,0.45) !important; stroke-width: 1 !important; }
 line[stroke="none"], path[stroke="none"] { stroke: none !important; }
 .node-rect, .node-frame, [class*="node"] rect {
-  fill: #111111 !important;
-  stroke: rgba(255,255,255,0.30) !important;
+  fill: rgba(255,255,255,0.04) !important;
+  stroke: rgba(255,255,255,0.50) !important;
+  stroke-width: 1.2 !important;
 }
-text { fill: #ffffff !important; }
+text { fill: #ffffff !important; font-family: "JetBrains Mono", monospace !important; }
 .dot, .legend .sw {
   box-shadow: none !important;
   background: #ffffff !important;
+  width: 6px !important; height: 6px !important;
+  border-radius: 0 !important;
 }
 
-/* ─── 진행도 바 (그레이 음영) ──────────────────────── */
-[style*="background:#"], [style*="background: #"],
-[style*="background-color:#"], [style*="background-color: #"] {
-  box-shadow: none !important;
+/* 16) detail 영역 padding 키움 + 본문 모노 텍스트 */
+.detail { padding: 20px 24px !important; gap: 24px !important; }
+.detail .d-left { padding-right: 8px !important; }
+
+/* 17) 측정 라벨 느낌 — 패널 우하단에 페이지 코드 */
+.task-panel::after, .detail::after, .legend::after {
+  content: "" !important;
 }
 
-/* ─── 여백 여유 (v2/v3와 다른 무드) ────────────────── */
-.topbar { padding: 18px 28px !important; }
-.title h1 { font-size: 19px !important; letter-spacing: 0.22em !important; }
-.detail { padding: 18px 22px !important; gap: 22px !important; }
-.col-head { font-size: 13px !important; letter-spacing: 0.18em !important; text-transform: uppercase !important; }
+/* 18) hover/selected 강조 */
+.card.selected, .pi-card.selected, .pl-item.selected {
+  background: rgba(255,255,255,0.12) !important;
+  border-color: #ffffff !important;
+  border-left: 3px solid #ffffff !important;
+}
 
-/* ─── 카드 헤드라인 ─────────────────────────────────── */
-.card .card-title, .pi-card .name, .pl-item .pl-title, .member-chip .name,
-.card .name {
+/* 19) 메모 영역 (v3 하단) */
+.memo-strip {
+  background: rgba(5,5,5,0.92) !important;
+  border-top: 1px solid rgba(255,255,255,0.20) !important;
+  padding: 10px 18px !important;
+}
+.memo-strip textarea {
+  background: transparent !important;
+  border: 1px dashed rgba(255,255,255,0.20) !important;
   color: #ffffff !important;
-  font-weight: 800 !important;
-  letter-spacing: -0.005em !important;
+  font-family: "JetBrains Mono", monospace !important;
 }
 
-/* ─── 최종 정리 — 인라인 box-shadow 무력화 ─────────── */
-*[style*="box-shadow"] { box-shadow: none !important; }
-*[style*="text-shadow"] { text-shadow: none !important; }
+/* 20) 최종 — 인라인 배경 그라데이션 무력화 */
+[style*="linear-gradient"], [style*="radial-gradient"] {
+  background-image: none !important;
+}
 
 </style>
 </head>
@@ -839,7 +915,7 @@ text { fill: #ffffff !important; }
   <div class="brand">
     <img src="https://www.hanasignmall.kr/image/common/hana_logo2.png" alt="HANASIGNMALL">
     <span class="ver">V3</span>
-    <h1>프로젝트 진행 관리 (V5)</h1>
+    <h1>PROJECT BOARD V5</h1>
   </div>
   <div class="search-wrap">
     <input id="search" type="text" placeholder="🔍 검색 (Ctrl+K)" autocomplete="off">
@@ -852,7 +928,7 @@ text { fill: #ffffff !important; }
     <button data-bulk="stop" disabled>⊘ 중단</button>
     <button data-bulk="clear" disabled>✕ 해제</button>
   </div>
-  <a class="v2-link" href="hanasm-map-v4.html" title="와이어 맵(V4)으로">← 와이어 맵 V4</a>
+  <a class="v2-link" href="hanasm-map-v4.html" title="와이어 맵(V4)으로">← MAP V4</a>
 </header>
 
 <main class="app">
@@ -978,7 +1054,7 @@ async function loadData() {
       '<div class="error"><h3>데이터 로드 실패</h3>' +
       '<p>' + e.message + '</p>' +
       '<p style="margin-top:12px;">GitHub Pages를 통해 열어주세요 (file:// 직접 열기는 fetch 제한).<br>' +
-      '<a style="color:#22d3ee" href="hanasm-map-v4.html">→ 와이어 맵(V4)으로 이동</a></p></div>');
+      '<a style="color:#22d3ee" href="hanasm-map-v4.html">→ MAP V4로 이동</a></p></div>');
     throw e;
   }
 }
