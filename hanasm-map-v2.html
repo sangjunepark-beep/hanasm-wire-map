@@ -1585,6 +1585,13 @@ body:has(.proj-panel.show) .node .dept-projects-section { display: none !importa
   clip-path: polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px);
 }
 .proj-iframe-modal-close:hover { background: rgba(251,191,36,0.22); color: #fff; }
+
+/* v2가 iframe 안에 있을 때(v3 회의모드 → v2 모달): 헤더 컨트롤 일부 숨김 */
+body.inside-iframe .meeting-toggle,
+body.inside-iframe #meetingAuxLink,
+body.inside-iframe .v3-link,
+body.inside-iframe #editToggle,
+body.inside-iframe #undoBtn { display: none !important; }
 </style>
 </head>
 <body>
@@ -4637,6 +4644,31 @@ window.addEventListener('message', (e) => {
   if (e.origin !== location.origin) return;
   if (e.data && e.data.type === 'closeProjIframeModal') closeProjIframeModal();
 });
+
+// v2가 iframe 안에 있을 때(v3 → v2 모달): 헤더 정리 + 와이어맵 직접 작업만 허용
+(function _v2IframeShim(){
+  if (window.parent === window) return; // 일반 페이지 접근
+  document.body.classList.add('inside-iframe');
+  // 회의모드 토글/풀스크린은 부모(v3)가 관리
+  window.toggleMeetingMode = function(){};
+  const origReq = HTMLElement.prototype.requestFullscreen;
+  if (origReq) HTMLElement.prototype.requestFullscreen = function(){ return Promise.resolve(); };
+  // P 키 무력화
+  document.addEventListener('keydown', (e) => {
+    if ((e.key === 'p' || e.key === 'P') && !e.ctrlKey && !e.metaKey && !e.altKey) {
+      const tag = (e.target && e.target.tagName) || '';
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+      e.stopImmediatePropagation();
+    }
+  }, true);
+  // v3-link 클릭 시 (만약 살아있다면) — 부모에게 메시지로 모달 닫기 요청
+  document.querySelectorAll('a[href="hanasm-map-v3.html"]').forEach(a => {
+    a.addEventListener('click', (e) => {
+      e.preventDefault();
+      try { parent.postMessage({ type: 'closeMapIframeModal' }, location.origin); } catch(err) {}
+    }, true);
+  });
+})();
 </script>
 
 </body>

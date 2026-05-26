@@ -593,9 +593,40 @@ body.inside-iframe .v2-link,
 body.inside-iframe .v3-link { display: none !important; }
 body.inside-iframe .app { top: 0 !important; padding-top: 10px !important; }
 body.inside-iframe { background: #050614 !important; }
+
+/* 와이어맵(v2) iframe 모달 — v3 회의모드에서 v2 보기 (페이지 이동 X) */
+.map-iframe-modal {
+  position: fixed; inset: 0; z-index: 9999;
+  background: #000;
+  display: none;
+}
+.map-iframe-modal.open { display: block; }
+.map-iframe-modal-iframe {
+  width: 100%; height: 100%; border: 0; display: block;
+  background: #050614;
+}
+.map-iframe-modal-close {
+  position: fixed; top: 14px; right: 18px; z-index: 10000;
+  background: rgba(8,9,28,0.92);
+  border: 1px solid rgba(251,191,36,0.50);
+  color: #fbbf24;
+  padding: 8px 16px; font-size: 13px;
+  font-family: inherit; font-weight: 800;
+  cursor: pointer;
+  letter-spacing: 0.06em;
+  clip-path: polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px);
+}
+.map-iframe-modal-close:hover { background: rgba(251,191,36,0.22); color: #fff; }
 </style>
 </head>
 <body>
+<!-- 와이어맵 iframe 모달 (v3 회의모드에서 v2 보기) -->
+<div class="map-iframe-modal" id="mapIframeModal">
+  <button class="map-iframe-modal-close" id="mapIframeModalClose" title="닫기 (ESC)">✕ 닫기</button>
+  <iframe class="map-iframe-modal-iframe" id="mapIframeModalIframe"
+          allow="fullscreen; clipboard-read; clipboard-write"
+          src="about:blank"></iframe>
+</div>
 <button class="meeting-toggle" id="meetingToggle" title="회의 모드 — 단축키 P / 해제 ESC">⛶ 회의</button>
 <a class="meeting-aux-link" id="meetingAuxLink" href="hanasm-map-v2.html" title="와이어 맵으로">← 와이어 맵</a>
 
@@ -1398,6 +1429,53 @@ document.addEventListener('keydown', (e) => {
       e.stopImmediatePropagation();
     }
   }, true);
+})();
+
+// 와이어맵(v2) iframe 모달 — v3 회의모드에서 v2 보기 (페이지 이동 X → 풀스크린 유지)
+function openMapIframeModal() {
+  const m = document.getElementById('mapIframeModal');
+  const f = document.getElementById('mapIframeModalIframe');
+  if (!m || !f) return;
+  if (f.src.indexOf('hanasm-map-v2.html') === -1) {
+    f.src = 'hanasm-map-v2.html';
+  }
+  m.classList.add('open');
+}
+function closeMapIframeModal() {
+  const m = document.getElementById('mapIframeModal');
+  if (!m) return;
+  m.classList.remove('open');
+}
+// meeting-aux-link 클릭 시 회의모드면 모달, 아니면 페이지 이동(기본)
+(function bindMapModal(){
+  const aux = document.getElementById('meetingAuxLink');
+  if (aux) {
+    aux.addEventListener('click', (e) => {
+      // iframe 안에서 열린 v3은 부모에게 닫기 메시지 (_iframeCloseShim에서 처리)
+      if (window.parent !== window) return;
+      if (document.body.classList.contains('meeting-mode')) {
+        e.preventDefault();
+        openMapIframeModal();
+      }
+    });
+  }
+  const close = document.getElementById('mapIframeModalClose');
+  if (close) close.addEventListener('click', closeMapIframeModal);
+  // ESC: 모달 열려있으면 모달 먼저 닫기
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      const m = document.getElementById('mapIframeModal');
+      if (m && m.classList.contains('open')) {
+        e.stopPropagation();
+        closeMapIframeModal();
+      }
+    }
+  }, true);
+  // iframe 안 v2에서 닫기 메시지
+  window.addEventListener('message', (e) => {
+    if (e.origin !== location.origin) return;
+    if (e.data && e.data.type === 'closeMapIframeModal') closeMapIframeModal();
+  });
 })();
 </script>
 </body>
