@@ -1688,10 +1688,11 @@ button, .v3-link, .v2-link, .ch-sort, .d-actions button,
 .card, .pi-card, .pl-item, .member-chip {
   background: rgba(255,255,255,0.025) !important;
   border: 1px solid rgba(255,255,255,0.18) !important;
-  padding: 16px 18px !important;
-  position: relative !important;
+  padding: 14px 16px !important;
   box-shadow: none !important;
+  /* position: relative — v2가 이미 부여하고 있으면 유지, 아니면 추가 */
 }
+.card, .pi-card, .pl-item, .member-chip { position: relative; }
 /* 코너 마크 (좌상·우상·좌하·우하) */
 .card::before, .pi-card::before, .pl-item::before, .member-chip::before {
   content: "" !important;
@@ -1716,28 +1717,39 @@ button, .v3-link, .v2-link, .ch-sort, .d-actions button,
   border-color: #ffffff !important;
 }
 
-/* 7) 컨테이너·패널 — 도면 종이 배경 위에 얇은 라인만 */
+/* 7) 컨테이너·패널 — 도면 종이 배경 위에 얇은 라인만
+   ※ position 절대 강제하지 않음 (v2의 fixed 레이아웃 보존) */
 .legend, .task-panel, .detail, .hint {
-  background: rgba(5,5,5,0.85) !important;
+  background: rgba(5,5,5,0.92) !important;
   border: 1px solid rgba(255,255,255,0.22) !important;
   color: #ffffff !important;
-  padding: 16px 18px !important;
-  position: relative !important;
 }
-/* 좌상단 라벨 (도면 섹션 헤더처럼) */
-.legend::before { content: "LEGEND"; position: absolute; top: -8px; left: 12px; background: #050505; padding: 0 6px; font-size: 9px; letter-spacing: 0.22em; color: rgba(255,255,255,0.55); font-weight: 700; }
-.task-panel .tp-head::before { content: "TASKS"; display: block; font-size: 9px; letter-spacing: 0.22em; color: rgba(255,255,255,0.50); margin-bottom: 4px; font-weight: 700; }
-.detail::before { content: "DETAIL / SPEC"; position: absolute; top: -8px; left: 12px; background: #050505; padding: 0 6px; font-size: 9px; letter-spacing: 0.22em; color: rgba(255,255,255,0.55); font-weight: 700; z-index: 6; }
-.hint::before { content: "NOTES"; position: absolute; top: -8px; left: 12px; background: #050505; padding: 0 6px; font-size: 9px; letter-spacing: 0.22em; color: rgba(255,255,255,0.55); font-weight: 700; }
+/* 좌상단 라벨 — v2가 fixed/relative 무엇이든 부모를 위치 컨텍스트로 활용 */
+.legend::before, .detail::before, .hint::before {
+  position: absolute; top: -8px; left: 12px;
+  background: #050505; padding: 0 6px;
+  font-size: 9px; letter-spacing: 0.22em;
+  color: rgba(255,255,255,0.55); font-weight: 700;
+  z-index: 10;
+  font-family: "JetBrains Mono", monospace;
+}
+.legend::before { content: "LEGEND"; }
+.detail::before { content: "DETAIL / SPEC"; }
+.hint::before { content: "NOTES"; }
+.task-panel .tp-head::before {
+  content: "TASKS"; display: block; font-size: 9px;
+  letter-spacing: 0.22em; color: rgba(255,255,255,0.50);
+  margin-bottom: 4px; font-weight: 700;
+  font-family: "JetBrains Mono", monospace;
+}
 
 /* ═══════════════════════════════════════════════════════════════
-   8) 칸반 컬럼 = 도면 섹션
+   8) 칸반 컬럼 = 도면 섹션 (position 강제 X — 부모 grid 보존)
    ═══════════════════════════════════════════════════════════════ */
 .kanban-col {
   background: transparent !important;
   border: 1px solid rgba(255,255,255,0.18) !important;
   padding: 14px !important;
-  position: relative !important;
 }
 .kanban-col::before {
   content: "" !important;
