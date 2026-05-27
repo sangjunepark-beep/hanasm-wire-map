@@ -669,6 +669,107 @@ body.inside-iframe { background: #050614 !important; }
   gap: 10px;
   letter-spacing: 0.04em;
 }
+
+/* 디테일/칸반 사이 가로 리사이즈 핸들 */
+.detail-resize-handle {
+  height: 6px;
+  background: rgba(167,139,250,0.10);
+  border-top: 1px solid rgba(167,139,250,0.20);
+  border-bottom: 1px solid rgba(167,139,250,0.20);
+  cursor: row-resize;
+  position: relative;
+  transition: background 0.15s ease;
+  user-select: none;
+}
+.detail-resize-handle:hover,
+.detail-resize-handle.dragging {
+  background: rgba(167,139,250,0.30);
+}
+.detail-resize-handle::before {
+  content: '';
+  position: absolute;
+  left: 50%; top: 50%;
+  transform: translate(-50%, -50%);
+  width: 40px; height: 2px;
+  background: rgba(255,255,255,0.40);
+}
+body.meeting-mode .detail-resize-handle { display: none; }
+
+/* 신규 추가 버튼 (헤더 안) */
+.add-proj-btn {
+  background: rgba(167,139,250,0.15);
+  border: 1px solid rgba(167,139,250,0.45);
+  color: #c084fc;
+  padding: 7px 12px; font-size: 12.5px;
+  font-family: inherit; font-weight: 700; cursor: pointer;
+  letter-spacing: 0.06em; white-space: nowrap;
+  clip-path: polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px);
+}
+.add-proj-btn:hover { background: rgba(167,139,250,0.30); color: #fff; }
+
+/* 추가 모달 */
+.add-proj-overlay {
+  position: fixed; inset: 0; z-index: 9998;
+  background: rgba(0,0,0,0.72);
+  display: none; align-items: center; justify-content: center;
+}
+.add-proj-overlay.show { display: flex; }
+.add-proj-modal {
+  background: #0a0a1c;
+  border: 1px solid rgba(167,139,250,0.45);
+  padding: 22px 26px;
+  width: 480px; max-width: 92vw;
+  clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px);
+}
+.add-proj-modal h2 {
+  font-size: 17px; font-weight: 800;
+  color: #fff; margin-bottom: 16px;
+  letter-spacing: 0.08em;
+}
+.add-proj-modal .field { margin-bottom: 12px; }
+.add-proj-modal label {
+  display: block; font-size: 11px; font-weight: 800;
+  color: rgba(255,255,255,0.55);
+  letter-spacing: 0.16em; text-transform: uppercase;
+  margin-bottom: 4px;
+}
+.add-proj-modal input,
+.add-proj-modal select,
+.add-proj-modal textarea {
+  width: 100%;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.18);
+  color: #fff;
+  font-family: inherit; font-size: 14px;
+  padding: 7px 10px;
+  outline: none;
+}
+.add-proj-modal input:focus,
+.add-proj-modal select:focus,
+.add-proj-modal textarea:focus {
+  border-color: rgba(167,139,250,0.65);
+}
+.add-proj-modal textarea { min-height: 70px; resize: vertical; }
+.add-proj-modal .row2 { display: flex; gap: 10px; }
+.add-proj-modal .row2 > .field { flex: 1; }
+.add-proj-modal .actions {
+  display: flex; gap: 10px; justify-content: flex-end;
+  margin-top: 18px;
+}
+.add-proj-modal .actions button {
+  padding: 8px 16px; font-size: 13px; font-weight: 800;
+  letter-spacing: 0.06em; cursor: pointer;
+  background: transparent; color: #fff;
+  border: 1px solid rgba(255,255,255,0.30);
+  font-family: inherit;
+}
+.add-proj-modal .actions button.primary {
+  background: rgba(167,139,250,0.25);
+  border-color: rgba(167,139,250,0.55);
+  color: #fff;
+}
+.add-proj-modal .actions button:hover { background: rgba(167,139,250,0.20); }
+.add-proj-modal .actions button.primary:hover { background: rgba(167,139,250,0.45); }
 </style>
 </head>
 <body>
@@ -699,6 +800,7 @@ body.inside-iframe { background: #050614 !important; }
     <button data-bulk="clear" disabled>✕ 해제</button>
   </div>
   <button class="meeting-toggle" id="meetingToggle" title="회의 모드 — 단축키 P / 해제 ESC">⛶ 회의</button>
+  <button class="add-proj-btn" id="addProjBtn" title="신규 프로젝트 추가">＋ 신규</button>
   <a class="v2-link" href="hanasm-map-v2.html" title="와이어 맵으로">← 와이어 맵</a>
 </header>
 
@@ -718,6 +820,7 @@ body.inside-iframe { background: #050614 !important; }
     <div class="d-pricecol" id="detailPriceCol"></div>
     <div class="d-right" id="detailRight" style="display:none"></div>
   </section>
+  <div class="detail-resize-handle" id="detailResizeHandle" title="드래그로 디테일 영역 크기 조절"></div>
 
   <!-- 힌트 + 범례 -->
   <div class="hint">
@@ -1599,6 +1702,190 @@ function closeMapIframeModal() {
     if (e.data && e.data.type === 'closeMapIframeModal') closeMapIframeModal();
   });
 })();
+
+// ─── 디테일 영역 리사이즈 (드래그) ────────────────────
+(function bindDetailResize(){
+  const handle = document.getElementById('detailResizeHandle');
+  const detail = document.getElementById('detail');
+  if (!handle || !detail) return;
+  const KEY = 'hanasm.detailHeight.v3';
+  // 저장된 크기 복원
+  try {
+    const saved = localStorage.getItem(KEY);
+    if (saved) {
+      detail.style.maxHeight = saved + 'px';
+      // .detail의 d-left/d-right/d-pricecol max-height도 같이
+      const inner = parseInt(saved) - 28;
+      ['detailLeft','detailRight','detailPriceCol'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.style.maxHeight = inner + 'px';
+      });
+    }
+  } catch(e) {}
+  let dragging = false, startY = 0, startH = 0;
+  handle.addEventListener('mousedown', (e) => {
+    dragging = true;
+    startY = e.clientY;
+    startH = detail.getBoundingClientRect().height;
+    handle.classList.add('dragging');
+    e.preventDefault();
+  });
+  document.addEventListener('mousemove', (e) => {
+    if (!dragging) return;
+    const newH = Math.max(120, Math.min(window.innerHeight - 200, startH + (e.clientY - startY)));
+    detail.style.maxHeight = newH + 'px';
+    const inner = newH - 28;
+    ['detailLeft','detailRight','detailPriceCol'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.style.maxHeight = inner + 'px';
+    });
+  });
+  document.addEventListener('mouseup', () => {
+    if (!dragging) return;
+    dragging = false;
+    handle.classList.remove('dragging');
+    try {
+      const h = detail.getBoundingClientRect().height;
+      localStorage.setItem(KEY, Math.round(h));
+    } catch(e) {}
+  });
+})();
+
+// ─── 신규 프로젝트 추가 모달 ──────────────────────────
+function openAddProjModal() {
+  const ov = document.getElementById('addProjOverlay');
+  if (!ov) return;
+  // 필드 초기화
+  ['apf-name','apf-when','apf-owner','apf-desc'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+  document.getElementById('apf-prog').value = '0';
+  document.getElementById('apf-cat').value = 'system';
+  document.getElementById('apf-tier').value = 'B';
+  document.getElementById('apf-prio').value = 'm';
+  ov.classList.add('show');
+  setTimeout(() => document.getElementById('apf-name').focus(), 50);
+}
+function closeAddProjModal() {
+  const ov = document.getElementById('addProjOverlay');
+  if (ov) ov.classList.remove('show');
+}
+function saveNewProject() {
+  const name = document.getElementById('apf-name').value.trim();
+  if (!name) { alert('이름은 필수입니다'); return; }
+  const cat = document.getElementById('apf-cat').value;
+  const tier = document.getElementById('apf-tier').value;
+  const prio = document.getElementById('apf-prio').value;
+  const prog = parseInt(document.getElementById('apf-prog').value) || 0;
+  const when = document.getElementById('apf-when').value.trim();
+  const owner = document.getElementById('apf-owner').value.trim();
+  const desc = document.getElementById('apf-desc').value.trim();
+  const item = {
+    name, prio, progress: prog, status: 'active', revTier: tier,
+    ownerDept: 'web', related: [], decision: 'go',
+    startWhen: when || '미정',
+    desc: desc || '',
+    owner: owner || '',
+    _userAdded: true
+  };
+  // localStorage 'hanasm.userProjects.v3'에 저장
+  let user = {};
+  try { user = JSON.parse(localStorage.getItem('hanasm.userProjects.v3') || '{}'); } catch(e) {}
+  if (!user[cat]) user[cat] = [];
+  user[cat].push(item);
+  try { localStorage.setItem('hanasm.userProjects.v3', JSON.stringify(user)); } catch(e) {}
+  // ITEMS에도 즉시 추가
+  if (typeof ITEMS !== 'undefined') {
+    ITEMS.push({ cat, key: cat + '::' + name, item });
+  }
+  if (typeof renderColumns === 'function') renderColumns();
+  closeAddProjModal();
+}
+(function bindAddProj(){
+  const btn = document.getElementById('addProjBtn');
+  if (btn) btn.addEventListener('click', openAddProjModal);
+  const cancel = document.getElementById('apf-cancel');
+  if (cancel) cancel.addEventListener('click', closeAddProjModal);
+  const save = document.getElementById('apf-save');
+  if (save) save.addEventListener('click', saveNewProject);
+  const ov = document.getElementById('addProjOverlay');
+  if (ov) ov.addEventListener('click', (e) => {
+    if (e.target === ov) closeAddProjModal();
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      const ov = document.getElementById('addProjOverlay');
+      if (ov && ov.classList.contains('show')) {
+        e.stopPropagation();
+        closeAddProjModal();
+      }
+    }
+  }, true);
+})();
 </script>
+
+<!-- 신규 프로젝트 추가 모달 -->
+<div class="add-proj-overlay" id="addProjOverlay">
+  <div class="add-proj-modal">
+    <h2>＋ 신규 프로젝트</h2>
+    <div class="field">
+      <label>이름 (필수)</label>
+      <input type="text" id="apf-name" placeholder="예: 신규 결제 API 검토">
+    </div>
+    <div class="row2">
+      <div class="field">
+        <label>카테고리</label>
+        <select id="apf-cat">
+          <option value="ad">광고</option>
+          <option value="ai">인공지능·자동화</option>
+          <option value="product">신상품·등록</option>
+          <option value="system" selected>시스템·자사몰</option>
+          <option value="offline">오프라인·영업</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>매출 등급</label>
+        <select id="apf-tier">
+          <option value="A">A (직접)</option>
+          <option value="B" selected>B (전환)</option>
+          <option value="C">C (CS)</option>
+          <option value="D">D (운영)</option>
+          <option value="E">E (장기)</option>
+        </select>
+      </div>
+    </div>
+    <div class="row2">
+      <div class="field">
+        <label>우선도</label>
+        <select id="apf-prio">
+          <option value="h">상</option>
+          <option value="m" selected>중</option>
+          <option value="l">하</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>진행률 (%)</label>
+        <input type="number" id="apf-prog" min="0" max="100" value="0">
+      </div>
+    </div>
+    <div class="field">
+      <label>시기 / 일정</label>
+      <input type="text" id="apf-when" placeholder="예: 진행 중 / 6월 초 / 미정">
+    </div>
+    <div class="field">
+      <label>담당자</label>
+      <input type="text" id="apf-owner" placeholder="예: 박상준 / 홍재이 / 임정민">
+    </div>
+    <div class="field">
+      <label>상세 설명</label>
+      <textarea id="apf-desc" placeholder="배경, 세부 내용, 담당/일정 등 자유 입력"></textarea>
+    </div>
+    <div class="actions">
+      <button id="apf-cancel">취소</button>
+      <button class="primary" id="apf-save">저장</button>
+    </div>
+  </div>
+</div>
 </body>
 </html>
