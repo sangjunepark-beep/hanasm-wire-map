@@ -1,0 +1,680 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Cache-Control" content="no-store">
+<title>2시 미팅 안건 — 하나사인몰</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: "Pretendard", "Noto Sans KR", "Apple SD Gothic Neo", system-ui, sans-serif;
+    background: #f5f7fa;
+    color: #1a1f2e;
+    line-height: 1.6;
+    padding: 32px 24px;
+  }
+  .wrap { max-width: 1180px; margin: 0 auto; }
+
+  /* 헤더 */
+  .header {
+    background: #fff;
+    border-left: 6px solid #7c3aed;
+    padding: 28px 32px;
+    margin-bottom: 24px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  }
+  .header .meta-row { display: flex; align-items: center; gap: 16px; margin-bottom: 8px; }
+  .header .time-pill {
+    background: #7c3aed; color: #fff;
+    padding: 5px 14px; font-weight: 800;
+    font-size: 13px; letter-spacing: 0.04em;
+  }
+  .header .date { font-size: 13px; color: #64748b; font-weight: 500; }
+  .header h1 {
+    font-size: 26px; font-weight: 900;
+    letter-spacing: -0.01em; color: #0f172a;
+  }
+  .header .sub {
+    font-size: 14px; color: #475569; margin-top: 6px;
+  }
+  .header .count {
+    display: inline-block;
+    background: #ede9fe; color: #5b21b6;
+    padding: 3px 10px; font-size: 12px; font-weight: 800;
+    margin-left: 8px; letter-spacing: 0.04em;
+  }
+
+  /* 안건 목차 */
+  .toc {
+    background: #fff;
+    padding: 16px 24px;
+    margin-bottom: 24px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 8px 16px;
+  }
+  .toc .toc-item {
+    font-size: 13px; color: #334155;
+    padding: 6px 10px;
+    border-left: 3px solid #ede9fe;
+    text-decoration: none;
+  }
+  .toc .toc-item:hover {
+    background: #f8fafc;
+    border-left-color: #7c3aed;
+  }
+  .toc .toc-num {
+    display: inline-block; width: 22px;
+    color: #7c3aed; font-weight: 800;
+  }
+
+  /* 안건 카드 */
+  .agenda {
+    background: #fff;
+    margin-bottom: 18px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    overflow: hidden;
+  }
+  .agenda-head {
+    padding: 16px 22px 12px;
+    border-bottom: 1px solid #e2e8f0;
+    display: flex; gap: 12px; align-items: flex-start;
+  }
+  .agenda-num {
+    background: #0f172a;
+    color: #fff;
+    width: 34px; height: 34px;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 900; font-size: 15px;
+    flex-shrink: 0;
+  }
+  .agenda-title { flex: 1; }
+  .agenda-title h2 {
+    font-size: 17.5px; font-weight: 800;
+    color: #0f172a; margin-bottom: 5px;
+    letter-spacing: -0.005em;
+  }
+  .agenda-pills { display: flex; gap: 5px; flex-wrap: wrap; }
+  .pill {
+    font-size: 10.5px; font-weight: 800;
+    padding: 2px 8px;
+    letter-spacing: 0.02em;
+  }
+  .pill-cat { background: #e0e7ff; color: #3730a3; }
+  .pill-tier-A { background: #fef3c7; color: #92400e; }
+  .pill-tier-B { background: #d1fae5; color: #065f46; }
+  .pill-tier-C { background: #dbeafe; color: #1e40af; }
+  .pill-tier-D { background: #ede9fe; color: #5b21b6; }
+  .pill-tier-E { background: #f1f5f9; color: #475569; }
+  .pill-prio-h { background: #fee2e2; color: #991b1b; }
+  .pill-prio-m { background: #fef3c7; color: #92400e; }
+  .pill-prio-l { background: #f1f5f9; color: #475569; }
+
+  /* 진행률 */
+  .progress-wrap {
+    padding: 10px 22px;
+    background: #f8fafc;
+    display: flex; align-items: center; gap: 12px;
+    border-bottom: 1px solid #e2e8f0;
+    font-size: 12.5px;
+    flex-wrap: wrap;
+  }
+  .progress-wrap .label { color: #64748b; font-weight: 700; min-width: 50px; }
+  .progress-wrap .owner { color: #0f172a; font-weight: 800; min-width: 70px; }
+  .progress-bar {
+    flex: 1; min-width: 140px; height: 7px; background: #e2e8f0;
+    position: relative; overflow: hidden;
+  }
+  .progress-fill { height: 100%; background: linear-gradient(90deg, #7c3aed, #a855f7); }
+  .progress-pct {
+    font-weight: 800; font-size: 12.5px;
+    color: #7c3aed; min-width: 36px; text-align: right;
+  }
+  .progress-when {
+    color: #475569; font-weight: 600;
+    padding-left: 12px; border-left: 1px solid #cbd5e1;
+  }
+
+  /* 본문 */
+  .agenda-body { padding: 16px 22px 20px; }
+  .agenda-body section { margin-bottom: 14px; }
+  .agenda-body section:last-child { margin-bottom: 0; }
+  .agenda-body h3 {
+    font-size: 11px; font-weight: 800;
+    color: #7c3aed; text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 6px;
+    padding-left: 8px; border-left: 3px solid #7c3aed;
+  }
+  .agenda-body p { color: #334155; font-size: 13.5px; line-height: 1.7; }
+  .agenda-body ul { margin-left: 20px; color: #334155; font-size: 13.5px; line-height: 1.7; }
+  .agenda-body li { margin-bottom: 3px; }
+  .agenda-body ol { margin-left: 20px; color: #334155; font-size: 13.5px; line-height: 1.7; }
+  .agenda-body ol li { margin-bottom: 4px; }
+  .agenda-body b { color: #0f172a; font-weight: 800; }
+
+  /* 단계 박스 */
+  .step-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 8px;
+    margin-top: 8px;
+  }
+  .step {
+    background: #f8fafc;
+    border-left: 3px solid #7c3aed;
+    padding: 10px 14px;
+    font-size: 13px;
+  }
+  .step .num {
+    color: #7c3aed; font-weight: 800;
+    font-size: 11px; letter-spacing: 0.1em;
+    display: block; margin-bottom: 4px;
+  }
+  .step b { color: #0f172a; }
+
+  .check-box {
+    background: #fff7ed;
+    border: 1px solid #fed7aa;
+    border-left: 4px solid #ea580c;
+    padding: 10px 14px;
+    color: #7c2d12; font-size: 13.5px; font-weight: 600;
+    margin-top: 12px;
+  }
+  .check-box .lbl { color: #ea580c; font-weight: 800; font-size: 10.5px; letter-spacing: 0.1em; display: block; margin-bottom: 3px; }
+
+  /* 인쇄 */
+  @media print {
+    body { background: #fff; padding: 12px; }
+    .agenda { break-inside: avoid; box-shadow: none; border: 1px solid #cbd5e1; }
+    .header { box-shadow: none; }
+    .toc { box-shadow: none; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="header">
+    <div class="meta-row">
+      <span class="time-pill">⏰ 2:00 PM</span>
+      <span class="date">2026. 05. 28 (수)</span>
+    </div>
+    <h1>2시 미팅 안건 <span class="count">10건</span></h1>
+    <div class="sub">하나사인몰 · 박상준 차장 주관 · CS·개발·디자인 협업 회의</div>
+  </div>
+
+  <!-- 목차 -->
+  <div class="toc">
+    <a href="#a1" class="toc-item"><span class="toc-num">01.</span>대형 단지 신청 폼</a>
+    <a href="#a2" class="toc-item"><span class="toc-num">02.</span>CS 통화 후 신규몰 카톡 링크 발송</a>
+    <a href="#a3" class="toc-item"><span class="toc-num">03.</span>A형입간판 시안 카톡 발송</a>
+    <a href="#a4" class="toc-item"><span class="toc-num">04.</span>퀵 주문 폼 / 단계별 주문 UI</a>
+    <a href="#a5" class="toc-item"><span class="toc-num">05.</span>견적 요청 흐름 (개인 코드)</a>
+    <a href="#a6" class="toc-item"><span class="toc-num">06.</span>인공지능 챗봇 / RAG 앵커DB</a>
+    <a href="#a7" class="toc-item"><span class="toc-num">07.</span>재구매자/신규 분리 DM</a>
+    <a href="#a8" class="toc-item"><span class="toc-num">08.</span>ERP 공정 매칭 자동화</a>
+    <a href="#a9" class="toc-item"><span class="toc-num">09.</span>디자인팀 CS 발주 미스 페널티제</a>
+    <a href="#a10" class="toc-item"><span class="toc-num">10.</span>자사몰 자료실 (정부공개자료)</a>
+  </div>
+
+  <!-- 1 -->
+  <div class="agenda" id="a1">
+    <div class="agenda-head">
+      <div class="agenda-num">1</div>
+      <div class="agenda-title">
+        <h2>대형 단지 신청 폼 (자사몰)</h2>
+        <div class="agenda-pills">
+          <span class="pill pill-cat">채널</span>
+          <span class="pill pill-tier-A">매출 A</span>
+          <span class="pill pill-prio-m">우선도 中</span>
+        </div>
+      </div>
+    </div>
+    <div class="progress-wrap">
+      <span class="label">담당</span><span class="owner">개발팀</span>
+      <div class="progress-bar"><div class="progress-fill" style="width:5%"></div></div>
+      <span class="progress-pct">5%</span>
+      <span class="progress-when">📅 기획 후</span>
+    </div>
+    <div class="agenda-body">
+      <section>
+        <h3>배경</h3>
+        <p>오픈마켓 페이지는 개인·빌라·소규모 단지에 최적화 → 500세대 이상 신축 아파트는 옵션으로 처리하기 어려운 구조.</p>
+      </section>
+      <section>
+        <h3>흐름</h3>
+        <ol>
+          <li>대형 단지 신청 폼(자사몰) <b>별도 링크</b></li>
+          <li>폼 접수</li>
+          <li>응대 전화 동선 <i>(성안에드피아 샘플 신청 형식 참고)</i></li>
+        </ol>
+      </section>
+      <section>
+        <h3>필요 작업</h3>
+        <ul>
+          <li>개발팀 폼 페이지 제작 + DB 연동</li>
+          <li>CS와 기획 작업</li>
+        </ul>
+      </section>
+      <div class="check-box">
+        <span class="lbl">결정 사항</span>
+        폼 필드 정의 / DB 연동 범위 / CS 응대 시나리오 확정
+      </div>
+    </div>
+  </div>
+
+  <!-- 2 -->
+  <div class="agenda" id="a2">
+    <div class="agenda-head">
+      <div class="agenda-num">2</div>
+      <div class="agenda-title">
+        <h2>CS 통화 후 신규몰 카톡 링크 발송</h2>
+        <div class="agenda-pills">
+          <span class="pill pill-cat">운영</span>
+          <span class="pill pill-tier-B">매출 B</span>
+          <span class="pill pill-prio-h">우선도 高</span>
+        </div>
+      </div>
+    </div>
+    <div class="progress-wrap">
+      <span class="label">담당</span><span class="owner">정현주 과장</span>
+      <div class="progress-bar"><div class="progress-fill" style="width:50%"></div></div>
+      <span class="progress-pct">50%</span>
+      <span class="progress-when">📅 즉시 운영</span>
+    </div>
+    <div class="agenda-body">
+      <section>
+        <h3>배경</h3>
+        <p>신규몰 회원가입 <b>일평균 5~6명</b> → CS 통화 직후 카톡 발송이 부담이 가장 적다는 판단.</p>
+      </section>
+      <section>
+        <h3>발송 내용</h3>
+        <ul>
+          <li>문구: "공공기관 쓰실 만한 상품들 편하게 모여 있으니 참고해보세요"</li>
+          <li>신규몰 링크 첨부</li>
+          <li>포인트 지급 → 회원가입 동기 강화</li>
+        </ul>
+      </section>
+      <div class="check-box">
+        <span class="lbl">결정 사항</span>
+        포인트 금액 / 발송 트리거 조건 / CS팀 SOP 확정
+      </div>
+    </div>
+  </div>
+
+  <!-- 3 -->
+  <div class="agenda" id="a3">
+    <div class="agenda-head">
+      <div class="agenda-num">3</div>
+      <div class="agenda-title">
+        <h2>A형입간판 시안 카톡 발송 (ERP 연계)</h2>
+        <div class="agenda-pills">
+          <span class="pill pill-cat">시스템</span>
+          <span class="pill pill-tier-B">매출 B</span>
+          <span class="pill pill-prio-h">우선도 高</span>
+        </div>
+      </div>
+    </div>
+    <div class="progress-wrap">
+      <span class="label">담당</span><span class="owner">개발팀</span>
+      <div class="progress-bar"><div class="progress-fill" style="width:30%"></div></div>
+      <span class="progress-pct">30%</span>
+      <span class="progress-when">📅 진행 중</span>
+    </div>
+    <div class="agenda-body">
+      <section>
+        <h3>목적</h3>
+        <p>A형입간판 시안을 <b>카톡으로 자동 발송</b>.</p>
+      </section>
+      <section>
+        <h3>연계</h3>
+        <p>ERP 공정 매칭 흐름 (안건 8)과 연계되어 함께 진행 중.</p>
+      </section>
+      <div class="check-box">
+        <span class="lbl">결정 사항</span>
+        카톡 비즈 채널 / 발송 트리거 시점 / 시안 자동 첨부 방식
+      </div>
+    </div>
+  </div>
+
+  <!-- 4 -->
+  <div class="agenda" id="a4">
+    <div class="agenda-head">
+      <div class="agenda-num">4</div>
+      <div class="agenda-title">
+        <h2>퀵 주문 폼 / 단계별 주문 UI</h2>
+        <div class="agenda-pills">
+          <span class="pill pill-cat">시스템</span>
+          <span class="pill pill-tier-B">매출 B</span>
+          <span class="pill pill-prio-h">우선도 高</span>
+        </div>
+      </div>
+    </div>
+    <div class="progress-wrap">
+      <span class="label">담당</span><span class="owner">박상준 → 민지</span>
+      <div class="progress-bar"><div class="progress-fill" style="width:10%"></div></div>
+      <span class="progress-pct">10%</span>
+      <span class="progress-when">📅 주차스티커 1순위</span>
+    </div>
+    <div class="agenda-body">
+      <section>
+        <h3>배경</h3>
+        <p>CS 문의 최다 유형이 <b>"어떻게 주문하죠?"</b> + 긴 상세페이지에서 필요 정보 찾기 어려움 → 주문 전환 병목.</p>
+      </section>
+      <section>
+        <h3>6단계 폼</h3>
+        <div class="step-grid">
+          <div class="step"><span class="num">STEP 1</span><b>원단</b></div>
+          <div class="step"><span class="num">STEP 2</span><b>사이즈</b></div>
+          <div class="step"><span class="num">STEP 3</span><b>수량</b></div>
+          <div class="step"><span class="num">STEP 4</span><b>디자인</b> (시안 썸네일·의뢰·파일 업로드)</div>
+          <div class="step"><span class="num">STEP 5</span><b>후가공</b></div>
+          <div class="step"><span class="num">STEP 6</span><b>주문자 정보</b></div>
+        </div>
+      </section>
+      <section>
+        <h3>부가 장치</h3>
+        <ul>
+          <li>폼 하단 <b>"○○개 구매하시면 됩니다"</b> 자동 안내</li>
+          <li>1,000원 미끼 상품 연동</li>
+        </ul>
+      </section>
+      <div class="check-box">
+        <span class="lbl">결정 사항</span>
+        프로토타입 일정 / 첫 적용 카테고리(주차스티커 확정) / 디자인 통일 방향
+      </div>
+    </div>
+  </div>
+
+  <!-- 5 -->
+  <div class="agenda" id="a5">
+    <div class="agenda-head">
+      <div class="agenda-num">5</div>
+      <div class="agenda-title">
+        <h2>견적 요청 흐름 (개인 코드 발급)</h2>
+        <div class="agenda-pills">
+          <span class="pill pill-cat">시스템</span>
+          <span class="pill pill-tier-B">매출 B</span>
+          <span class="pill pill-prio-m">우선도 中</span>
+        </div>
+      </div>
+    </div>
+    <div class="progress-wrap">
+      <span class="label">담당</span><span class="owner">강두원 팀장</span>
+      <div class="progress-bar"><div class="progress-fill" style="width:0%"></div></div>
+      <span class="progress-pct">0%</span>
+      <span class="progress-when">📅 기술 검토 후</span>
+    </div>
+    <div class="agenda-body">
+      <section>
+        <h3>문제</h3>
+        <p>견적 협의가 <b>전화/메일로 흩어져</b> 고객·내부 모두 시간 낭비.</p>
+      </section>
+      <section>
+        <h3>흐름</h3>
+        <ol>
+          <li>고객별 <b>개인 코드 생성</b></li>
+          <li>고객이 주문서 작성</li>
+          <li>내부 견적가 수정</li>
+          <li>알림 발송</li>
+          <li>수정된 금액으로 결제</li>
+        </ol>
+      </section>
+      <section>
+        <h3>버튼 배치</h3>
+        <p>주문 페이지 하단에 <b>"바로 결제하기"</b> / <b>"상담 견적 요청하기"</b> 버튼 분리.</p>
+      </section>
+      <section>
+        <h3>검토 필요</h3>
+        <ul>
+          <li>강팀장 기술 검토</li>
+          <li>견적서 자동 출력 가능 구조</li>
+        </ul>
+      </section>
+      <div class="check-box">
+        <span class="lbl">결정 사항</span>
+        개인 코드 구조 / 견적서 양식 통일 / 알림 채널(SMS·카톡·이메일)
+      </div>
+    </div>
+  </div>
+
+  <!-- 6 -->
+  <div class="agenda" id="a6">
+    <div class="agenda-head">
+      <div class="agenda-num">6</div>
+      <div class="agenda-title">
+        <h2>인공지능 챗봇 / RAG 앵커DB (전상품 DB화)</h2>
+        <div class="agenda-pills">
+          <span class="pill pill-cat">AI · 자동화</span>
+          <span class="pill pill-tier-C">매출 C</span>
+          <span class="pill pill-prio-h">우선도 高</span>
+        </div>
+      </div>
+    </div>
+    <div class="progress-wrap">
+      <span class="label">담당</span><span class="owner">박상준 차장</span>
+      <div class="progress-bar"><div class="progress-fill" style="width:30%"></div></div>
+      <span class="progress-pct">30%</span>
+      <span class="progress-when">📅 진행 중</span>
+    </div>
+    <div class="agenda-body">
+      <section>
+        <h3>목적</h3>
+        <p>하나사인몰 <b>전상품 DB화</b> → 외주 챗봇 DB로 투입.</p>
+      </section>
+      <section>
+        <h3>현 진행</h3>
+        <ul>
+          <li>✅ 게시판 카테고리 완료 (대표 보고)</li>
+          <li>✅ 입간판 카테고리 완료</li>
+          <li>⏳ 주차스티커 정리 중</li>
+        </ul>
+      </section>
+      <section>
+        <h3>작업 방식</h3>
+        <p>모든 상품 데이터 엑셀 정리 중 → 완료된 카테고리부터 노드데이터화 → 외주 챗봇 DB 투입.</p>
+      </section>
+      <div class="check-box">
+        <span class="lbl">결정 사항</span>
+        다음 카테고리 순서 / 외주 챗봇 DB 투입 일정 / 노드 구조 표준
+      </div>
+    </div>
+  </div>
+
+  <!-- 7 -->
+  <div class="agenda" id="a7">
+    <div class="agenda-head">
+      <div class="agenda-num">7</div>
+      <div class="agenda-title">
+        <h2>재구매자 / 신규 분리 DM</h2>
+        <div class="agenda-pills">
+          <span class="pill pill-cat">운영</span>
+          <span class="pill pill-tier-C">매출 C</span>
+          <span class="pill pill-prio-m">우선도 中</span>
+        </div>
+      </div>
+    </div>
+    <div class="progress-wrap">
+      <span class="label">담당</span><span class="owner">CS팀</span>
+      <div class="progress-bar"><div class="progress-fill" style="width:0%"></div></div>
+      <span class="progress-pct">0%</span>
+      <span class="progress-when">📅 검토</span>
+    </div>
+    <div class="agenda-body">
+      <section>
+        <h3>목적</h3>
+        <p>재구매자와 신규를 분리해 <b>맞춤 DM 발송</b> → 효율 향상.</p>
+      </section>
+      <section>
+        <h3>분리</h3>
+        <ul>
+          <li>기존 구매자 중 재구매</li>
+          <li>신규 구매 진입자</li>
+          <li>→ 각 그룹별 맞춤 링크로 DM 발송</li>
+        </ul>
+      </section>
+      <section>
+        <h3>확장</h3>
+        <ul>
+          <li>단상품이 아닌 <b>관련 상품 묶음</b> 노출</li>
+          <li><b>6개월·1년 미구매 업체 리스팅</b></li>
+          <li>시기별 자동 이벤트 페이지 발송</li>
+        </ul>
+      </section>
+      <section>
+        <h3>기반</h3>
+        <p>업체별 판매현황 시트 활용 필터링 → 자동 페이지 작성 제작 검토.</p>
+      </section>
+      <div class="check-box">
+        <span class="lbl">결정 사항</span>
+        분리 기준 / DM 채널 / 첫 캠페인 카테고리 / 자동화 범위
+      </div>
+    </div>
+  </div>
+
+  <!-- 8 -->
+  <div class="agenda" id="a8">
+    <div class="agenda-head">
+      <div class="agenda-num">8</div>
+      <div class="agenda-title">
+        <h2>ERP 공정 매칭 자동화 (4단계)</h2>
+        <div class="agenda-pills">
+          <span class="pill pill-cat">시스템</span>
+          <span class="pill pill-tier-D">매출 D</span>
+          <span class="pill pill-prio-h">우선도 高</span>
+        </div>
+      </div>
+    </div>
+    <div class="progress-wrap">
+      <span class="label">담당</span><span class="owner">개발팀</span>
+      <div class="progress-bar"><div class="progress-fill" style="width:40%"></div></div>
+      <span class="progress-pct">40%</span>
+      <span class="progress-when">📅 진행 중</span>
+    </div>
+    <div class="agenda-body">
+      <section>
+        <h3>수신</h3>
+        <p>주문 들어오면 <b>플레이오토 API</b>로 주문정보 수신.</p>
+      </section>
+      <section>
+        <h3>공정 매칭 4단계</h3>
+        <div class="step-grid">
+          <div class="step"><span class="num">STEP 1 · 등록 품목 매칭</span>신규몰/ERP 선작업 · 오픈몰 코드·품목·기계 기록</div>
+          <div class="step"><span class="num">STEP 2 · 디자인</span>디자이너 배정 · 구매자 소통 URL · 확정 파일 ERP 저장</div>
+          <div class="step"><span class="num">STEP 3 · 제작</span>결정 디자인으로 작업 · 품목 코스대로 출력기별 출력 · 자동 기록</div>
+          <div class="step"><span class="num">STEP 4 · 출고</span>주문자 기준 출고 · 판매처 주문상태값 변경</div>
+        </div>
+      </section>
+      <section>
+        <h3>데이터 통합</h3>
+        <p>모든 데이터가 <b>상품제작 진행상황 URL 한 곳</b>에 모이도록 진행.</p>
+      </section>
+      <div class="check-box">
+        <span class="lbl">결정 사항</span>
+        통합 URL 구조 / 단계별 상태 코드 / 외부 노출 범위 / 다음 단계 일정
+      </div>
+    </div>
+  </div>
+
+  <!-- 9 -->
+  <div class="agenda" id="a9">
+    <div class="agenda-head">
+      <div class="agenda-num">9</div>
+      <div class="agenda-title">
+        <h2>디자인팀 CS 발주 미스 페널티제</h2>
+        <div class="agenda-pills">
+          <span class="pill pill-cat">조직</span>
+          <span class="pill pill-tier-D">매출 D</span>
+          <span class="pill pill-prio-h">우선도 高</span>
+        </div>
+      </div>
+    </div>
+    <div class="progress-wrap">
+      <span class="label">담당</span><span class="owner">디자인팀</span>
+      <div class="progress-bar"><div class="progress-fill" style="width:15%"></div></div>
+      <span class="progress-pct">15%</span>
+      <span class="progress-when">📅 즉시 집계</span>
+    </div>
+    <div class="agenda-body">
+      <section>
+        <h3>배경</h3>
+        <p>CS → 디자인팀 발주 정보 부정확 → <b>일이 2~3번 반복</b>되는 만성 이슈.</p>
+      </section>
+      <section>
+        <h3>4단계 진행</h3>
+        <div class="step-grid">
+          <div class="step"><span class="num">STEP 1 · 즉시</span>잘못된 발주 건 <b>체크·집계</b></div>
+          <div class="step"><span class="num">STEP 2 · 5월 초</span>보름치 집계 후 <b>개선사항 논의</b></div>
+          <div class="step"><span class="num">STEP 3 · 6월 초</span>개선 후 <b>1달 모니터링</b></div>
+          <div class="step"><span class="num">STEP 4 · 6월 이후</span>개선율 낮으면 <b>페널티 적용</b></div>
+        </div>
+      </section>
+      <div class="check-box">
+        <span class="lbl">결정 사항</span>
+        집계 양식 / 개선 기준치 / 페널티 형태 (반복 시) / 회의 주기
+      </div>
+    </div>
+  </div>
+
+  <!-- 10 -->
+  <div class="agenda" id="a10">
+    <div class="agenda-head">
+      <div class="agenda-num">10</div>
+      <div class="agenda-title">
+        <h2>자사몰 자료실 (정부공개자료 허브화)</h2>
+        <div class="agenda-pills">
+          <span class="pill pill-cat">시스템</span>
+          <span class="pill pill-tier-E">매출 E</span>
+          <span class="pill pill-prio-m">우선도 中</span>
+        </div>
+      </div>
+    </div>
+    <div class="progress-wrap">
+      <span class="label">담당</span><span class="owner">박상준 차장</span>
+      <div class="progress-bar"><div class="progress-fill" style="width:0%"></div></div>
+      <span class="progress-pct">0%</span>
+      <span class="progress-when">📅 중기 로드맵</span>
+    </div>
+    <div class="agenda-body">
+      <section>
+        <h3>전략</h3>
+        <p><b>환경부·교통부·경찰청</b> 등 정부 공개자료가 흩어져 있음 → 공공기관 담당자 자료 검색 시 자사몰이 노출되도록 <b>허브화</b>.</p>
+      </section>
+      <section>
+        <h3>카테고리</h3>
+        <ul>
+          <li>주택관리</li>
+          <li>분리수거</li>
+          <li>교통안전</li>
+          <li>학교안전</li>
+          <li>행정복지</li>
+        </ul>
+      </section>
+      <section>
+        <h3>운영 순서</h3>
+        <ol>
+          <li>블로그 먼저 구축</li>
+          <li>이후 자사몰 자료실로 이전 확장</li>
+        </ol>
+      </section>
+      <section>
+        <h3>확인 필요</h3>
+        <p><b>국가플랫폼 API</b> 사용 가능 여부.</p>
+      </section>
+      <div class="check-box">
+        <span class="lbl">결정 사항</span>
+        국가플랫폼 API 사용 가능 여부 / 블로그 카테고리 우선순위 / 콘텐츠 작성 담당
+      </div>
+    </div>
+  </div>
+
+  <div style="text-align: center; margin-top: 32px; color: #94a3b8; font-size: 12px; letter-spacing: 0.06em;">
+    HANASIGNMALL · 박상준 차장 · 회의 진행안 v1 · 2026-05-28
+  </div>
+
+</div>
+</body>
+</html>
