@@ -2747,5 +2747,25 @@ function openBackupMenu() {
 })();
 </script>
 
+<script>
+// ─── 응급 핸들러 강제 재등록 — 미팅 직전 저장 보장 (2026-05-27) ───
+// 어떤 IIFE 충돌이든 무관하게 페이지 로드 후 핸들러 보장
+window.addEventListener('load', () => {
+  setTimeout(() => {
+    function rebind(id, fn) {
+      const el = document.getElementById(id);
+      if (!el || typeof fn !== 'function') return;
+      const fresh = el.cloneNode(true);
+      el.parentNode.replaceChild(fresh, el);
+      fresh.addEventListener('click', (e) => { e.preventDefault(); try { fn(); } catch(err) { console.error('[v3 응급] handler error:', err); alert('저장 중 오류: ' + err.message); } });
+    }
+    rebind('apf-save', window.saveNewProject);
+    rebind('apf-cancel', window.closeAddProjModal);
+    rebind('addProjBtn', window.openAddProjModal);
+    console.log('[v3] 응급 핸들러 강제 재등록 완료');
+  }, 800);
+});
+</script>
+
 </body>
 </html>
