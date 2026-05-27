@@ -1787,8 +1787,14 @@ function closeMapIframeModal() {
 
 // ─── 신규 프로젝트 추가 모달 ──────────────────────────
 function openAddProjModal() {
+  if (typeof _editingKey !== 'undefined') _editingKey = null;  // 신규 모드 진입
   const ov = document.getElementById('addProjOverlay');
   if (!ov) return;
+  // 모달 신규 모드로 리셋 (편집 모드에서 닫힌 후에도 정상 복원)
+  const h2 = ov.querySelector('h2');
+  if (h2) h2.textContent = '＋ 신규 프로젝트';
+  const saveBtn = document.getElementById('apf-save');
+  if (saveBtn) saveBtn.textContent = '저장';
   // 필드 초기화
   ['apf-name','apf-when','apf-owner','apf-desc'].forEach(id => {
     const el = document.getElementById(id);
@@ -1796,6 +1802,7 @@ function openAddProjModal() {
   });
   document.getElementById('apf-prog').value = '0';
   document.getElementById('apf-cat').value = 'system';
+  document.getElementById('apf-cat').disabled = false;
   document.getElementById('apf-tier').value = 'B';
   document.getElementById('apf-prio').value = 'm';
   ov.classList.add('show');
@@ -1815,6 +1822,50 @@ function saveNewProject() {
   const when = document.getElementById('apf-when').value.trim();
   const owner = document.getElementById('apf-owner').value.trim();
   const desc = document.getElementById('apf-desc').value.trim();
+
+  // ─── 편집 모드 ────────────────────────────────────
+  if (typeof _editingKey !== 'undefined' && _editingKey) {
+    const entry = ITEMS.find(x => x.key === _editingKey);
+    if (!entry) { _editingKey = null; closeAddProjModal(); return; }
+    const origName = entry.item.name;
+    entry.item.name = name;
+    entry.item.prio = prio;
+    entry.item.progress = prog;
+    entry.item.revTier = tier;
+    entry.item.startWhen = when;
+    entry.item.owner = owner;
+    entry.item.desc = desc;
+
+    if (entry.item._userAdded) {
+      // 사용자 추가 항목 — userProjects 업데이트
+      let user = {};
+      try { user = JSON.parse(localStorage.getItem('hanasm.userProjects.v3') || '{}'); } catch(e) {}
+      const arr = user[cat] || [];
+      const idx = arr.findIndex(x => x.name === origName);
+      if (idx >= 0) arr[idx] = entry.item; else arr.push(entry.item);
+      user[cat] = arr;
+      try { localStorage.setItem('hanasm.userProjects.v3', JSON.stringify(user)); } catch(e) {}
+    } else {
+      // 기본 항목 — PROJECT_OVERRIDES에 저장
+      const k = cat + '::' + origName;
+      const ovr = Object.assign({}, PROJECT_OVERRIDES[k] || {});
+      ovr.prio = prio;
+      ovr.progress = prog;
+      ovr.revTier = tier;
+      ovr.startWhen = when;
+      ovr.owner = owner;
+      ovr.desc = desc;
+      PROJECT_OVERRIDES[k] = ovr;
+      persistOverrides();
+    }
+    _editingKey = null;
+    if (typeof renderColumns === 'function') renderColumns();
+    if (typeof renderDetail === 'function') renderDetail();
+    closeAddProjModal();
+    return;
+  }
+
+  // ─── 신규 추가 모드 ──────────────────────────────
   const item = {
     name, prio, progress: prog, status: 'active', revTier: tier,
     ownerDept: 'web', related: [], decision: 'go',
@@ -1823,13 +1874,11 @@ function saveNewProject() {
     owner: owner || '',
     _userAdded: true
   };
-  // localStorage 'hanasm.userProjects.v3'에 저장
   let user = {};
   try { user = JSON.parse(localStorage.getItem('hanasm.userProjects.v3') || '{}'); } catch(e) {}
   if (!user[cat]) user[cat] = [];
   user[cat].push(item);
   try { localStorage.setItem('hanasm.userProjects.v3', JSON.stringify(user)); } catch(e) {}
-  // ITEMS에도 즉시 추가
   if (typeof ITEMS !== 'undefined') {
     ITEMS.push({ cat, key: cat + '::' + name, item });
   }
@@ -1879,72 +1928,10 @@ function openEditProjModal(cat, item) {
   ov.classList.add('show');
   setTimeout(() => document.getElementById('apf-name').focus(), 50);
 }
-// 기존 openAddProjModal 보강 — 편집 상태 리셋
-const _origOpenAdd = openAddProjModal;
-openAddProjModal = function() {
-  _editingKey = null;
-  _origOpenAdd();
-  const ov = document.getElementById('addProjOverlay');
-  ov.querySelector('h2').textContent = '＋ 신규 프로젝트';
-  document.getElementById('apf-cat').disabled = false;
-  document.getElementById('apf-save').textContent = '저장';
-};
+// openAddProjModal 본체에 신규 모드 리셋 직접 통합됨 — wrapper 불필요
 
-// saveNewProject 보강 — 편집 모드일 땐 update
-const _origSaveNew = saveNewProject;
-saveNewProject = function() {
-  if (!_editingKey) { _origSaveNew(); return; }
-  // 편집 모드
-  const name = document.getElementById('apf-name').value.trim();
-  if (!name) { alert('이름은 필수입니다'); return; }
-  const cat = document.getElementById('apf-cat').value;
-  const tier = document.getElementById('apf-tier').value;
-  const prio = document.getElementById('apf-prio').value;
-  const prog = parseInt(document.getElementById('apf-prog').value) || 0;
-  const when = document.getElementById('apf-when').value.trim();
-  const owner = document.getElementById('apf-owner').value.trim();
-  const desc = document.getElementById('apf-desc').value.trim();
-
-  const item = ITEMS.find(x => x.key === _editingKey);
-  if (!item) { closeAddProjModal(); return; }
-
-  // 변경 적용
-  item.item.name = name;  // 이름 변경은 key도 바꿔야 하지만 일단 visual만
-  item.item.prio = prio;
-  item.item.progress = prog;
-  item.item.revTier = tier;
-  item.item.startWhen = when;
-  item.item.owner = owner;
-  item.item.desc = desc;
-
-  if (item.item._userAdded) {
-    // 사용자 추가 항목 — userProjects에서 update
-    let user = {};
-    try { user = JSON.parse(localStorage.getItem('hanasm.userProjects.v3') || '{}'); } catch(e) {}
-    const arr = user[cat] || [];
-    const idx = arr.findIndex(x => x.name === item.item.name || x.name === _editingKey.split('::')[1]);
-    if (idx >= 0) arr[idx] = item.item;
-    user[cat] = arr;
-    try { localStorage.setItem('hanasm.userProjects.v3', JSON.stringify(user)); } catch(e) {}
-  } else {
-    // 기본 항목 — PROJECT_OVERRIDES에 저장
-    const k = cat + '::' + _editingKey.split('::')[1];  // 원본 키 (이름 바꿔도)
-    const ovr = Object.assign({}, PROJECT_OVERRIDES[k] || {});
-    ovr.prio = prio;
-    ovr.progress = prog;
-    ovr.revTier = tier;
-    ovr.startWhen = when;
-    ovr.owner = owner;
-    ovr.desc = desc;
-    PROJECT_OVERRIDES[k] = ovr;
-    persistOverrides();
-  }
-
-  _editingKey = null;
-  if (typeof renderColumns === 'function') renderColumns();
-  if (typeof renderDetail === 'function') renderDetail();
-  closeAddProjModal();
-};
+// saveNewProject 본체에 편집 분기 직접 통합됨 (위 saveNewProject 함수 참조)
+// 별도 wrapper 불필요 — _editingKey 변수만 공유
 
 // 삭제 (사용자 추가 항목만)
 function deleteUserProject(cat, name) {
