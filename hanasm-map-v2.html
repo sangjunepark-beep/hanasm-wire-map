@@ -3059,7 +3059,7 @@ window.addEventListener('resize', () => { drawAllWires(); });
 
 <button class="proj-toggle" id="undoBtn" style="right: 360px; display: none;">↶ 되돌리기 <span id="undoCnt" style="opacity:0.7;">0</span></button>
 <button class="proj-toggle" id="editToggle" style="right: 290px;">✎ 편집</button>
-<a class="v2-meeting-aux" id="v2MeetingAux" href="hanasm-map-v3.html" title="프로젝트 진행 관리">📊 프로젝트 진행 관리</a>
+<button class="v2-meeting-aux" id="v2MeetingAux" type="button" title="프로젝트 진행 관리">📊 프로젝트 진행 관리</button>
 <button class="meeting-toggle" id="meetingToggle" title="회의 모드 — 단축키 P / 해제 ESC">⛶ 회의</button>
 <button class="proj-toggle" id="projToggle">≡ 신규 프로젝트</button>
 <aside class="proj-panel" id="projPanel">
@@ -3332,15 +3332,22 @@ function toggleMeetingMode(force) {
   document.body.classList.toggle('meeting-mode', on);
   const btn = document.getElementById('meetingToggle');
   if (btn) btn.innerHTML = on ? '✕ 회의모드 해제' : '⛶ 회의 모드';
-  // 회의모드 보조 링크 (v3로 이동) — 동적 생성
+  // 회의모드 보조 링크 (v3로 이동) — 동적 생성. button으로 만들어 페이지 이동 자체를 차단
   let aux = document.getElementById('meetingAuxLink');
   if (on && !aux) {
-    aux = document.createElement('a');
+    aux = document.createElement('button');
     aux.id = 'meetingAuxLink';
-    aux.href = 'hanasm-map-v3.html';
+    aux.type = 'button';
     aux.textContent = '→ 프로젝트 진행 관리';
     aux.title = '프로젝트 진행 관리';
-    aux.style.cssText = 'position:fixed;top:16px;right:330px;z-index:120;color:#fbbf24;background:rgba(8,9,28,0.85);border:1px solid rgba(251,191,36,0.40);padding:7px 12px;font-size:12.5px;font-weight:700;letter-spacing:0.06em;text-decoration:none;font-family:inherit;clip-path:polygon(6px 0,100% 0,100% calc(100% - 6px),calc(100% - 6px) 100%,0 100%,0 6px);';
+    aux.style.cssText = 'position:fixed;top:16px;right:330px;z-index:120;color:#fbbf24;background:rgba(8,9,28,0.85);border:1px solid rgba(251,191,36,0.40);padding:7px 12px;font-size:12.5px;font-weight:800;letter-spacing:0.06em;font-family:inherit;cursor:pointer;clip-path:polygon(6px 0,100% 0,100% calc(100% - 6px),calc(100% - 6px) 100%,0 100%,0 6px);';
+    aux.addEventListener('click', () => {
+      if (document.body.classList.contains('meeting-mode')) {
+        if (typeof openProjIframeModal === 'function') openProjIframeModal();
+      } else {
+        location.href = 'hanasm-map-v3.html';
+      }
+    });
     document.body.appendChild(aux);
   }
   if (aux) aux.style.display = on ? 'inline-block' : 'none';
@@ -4718,10 +4725,13 @@ window.addEventListener('message', (e) => {
   const aux = document.getElementById('v2MeetingAux');
   if (!aux) return;
   aux.addEventListener('click', (e) => {
+    e.preventDefault();
     if (document.body.classList.contains('meeting-mode')) {
       // 회의모드면 iframe 모달로 (페이지 이동 X → 풀스크린 유지)
-      e.preventDefault();
       if (typeof openProjIframeModal === 'function') openProjIframeModal();
+    } else {
+      // 일반 화면이면 v3 페이지로 이동
+      location.href = 'hanasm-map-v3.html';
     }
   });
 })();
