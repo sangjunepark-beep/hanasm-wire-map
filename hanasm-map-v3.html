@@ -614,8 +614,9 @@ body.inside-iframe { background: #050614 !important; }
   width: 100%; height: 100%; border: 0; display: block;
   background: #050614;
 }
-.map-iframe-modal-close {
-  position: fixed; top: 14px; right: 18px; z-index: 10000;
+.map-iframe-modal-close,
+.map-iframe-modal-meeting {
+  position: fixed; top: 14px; z-index: 10000;
   background: rgba(8,9,28,0.92);
   border: 1px solid rgba(251,191,36,0.50);
   color: #fbbf24;
@@ -625,7 +626,10 @@ body.inside-iframe { background: #050614 !important; }
   letter-spacing: 0.06em;
   clip-path: polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px);
 }
-.map-iframe-modal-close:hover { background: rgba(251,191,36,0.22); color: #fff; }
+.map-iframe-modal-close { right: 18px; }
+.map-iframe-modal-meeting { left: 18px; }
+.map-iframe-modal-close:hover,
+.map-iframe-modal-meeting:hover { background: rgba(251,191,36,0.22); color: #fff; }
 
 /* 프로젝트별 메모 박스 (d-right 안 desc 아래) */
 .d-memo-box {
@@ -670,7 +674,8 @@ body.inside-iframe { background: #050614 !important; }
 <body>
 <!-- 와이어맵 iframe 모달 (v3 회의모드에서 v2 보기) -->
 <div class="map-iframe-modal" id="mapIframeModal">
-  <button class="map-iframe-modal-close" id="mapIframeModalClose" title="닫기 (ESC)">✕ 닫기</button>
+  <button class="map-iframe-modal-meeting" id="mapIframeModalMeeting" title="회의모드 해제 (P)">⛶ 회의 해제</button>
+  <button class="map-iframe-modal-close" id="mapIframeModalClose" title="프로젝트 진행 관리로 돌아가기 (ESC)">↩ 프로젝트 진행 관리</button>
   <iframe class="map-iframe-modal-iframe" id="mapIframeModalIframe"
           allow="fullscreen; clipboard-read; clipboard-write"
           src="about:blank"></iframe>
@@ -1570,6 +1575,12 @@ function closeMapIframeModal() {
   }
   const close = document.getElementById('mapIframeModalClose');
   if (close) close.addEventListener('click', closeMapIframeModal);
+  // 회의 해제 버튼 — 회의모드 끄고 모달도 닫음
+  const meeting = document.getElementById('mapIframeModalMeeting');
+  if (meeting) meeting.addEventListener('click', () => {
+    if (typeof toggleMeetingMode === 'function') toggleMeetingMode(false);
+    closeMapIframeModal();
+  });
   // ESC: 모달 열려있으면 모달 먼저 닫기
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
