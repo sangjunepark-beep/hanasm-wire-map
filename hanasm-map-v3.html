@@ -865,6 +865,48 @@ body.meeting-mode .detail-resize-handle { display: none; }
   margin-top: 3px; display: inline-block;
 }
 .apf-img-clear:hover { color: var(--danger); }
+
+/* 다중 이미지 컬럼 — 세로 스크롤 */
+.d-image-col .d-image-thumb {
+  margin-bottom: 8px;
+  max-height: 240px;
+}
+.d-image-col .d-image-thumb:last-child { margin-bottom: 0; }
+.d-image-col-empty {
+  font-size: 12px; color: var(--text-3);
+  text-align: center; padding: 20px 0;
+}
+
+/* 모달 폼 — 이미지 리스트 (썸네일 칩) */
+.apf-img-list {
+  display: flex; flex-wrap: wrap; gap: 6px;
+  margin-top: 6px;
+  max-height: 150px;
+  overflow-y: auto;
+}
+.apf-img-chip {
+  position: relative;
+  width: 72px; height: 72px;
+  background: rgba(0,0,0,0.40);
+  border: 1px solid rgba(167,139,250,0.30);
+  overflow: hidden;
+}
+.apf-img-chip img {
+  width: 100%; height: 100%; object-fit: cover; display: block;
+}
+.apf-img-chip-x {
+  position: absolute; top: 1px; right: 1px;
+  width: 18px; height: 18px;
+  background: rgba(220,38,38,0.85); color: #fff;
+  border: 0; font-size: 11px; font-weight: 800;
+  cursor: pointer; line-height: 1;
+}
+.apf-img-chip-x:hover { background: #ef4444; }
+.apf-img-hint {
+  font-size: 10.5px; color: var(--text-3);
+  margin-top: 3px; display: block;
+  letter-spacing: 0.04em;
+}
 </style>
 </head>
 <body>
@@ -1066,14 +1108,14 @@ body.meeting-mode .detail-resize-handle { display: none; }
       <input type="text" id="apf-owner" placeholder="예: 박상준 / 홍재이 / 임정민">
     </div>
     <div class="field">
-      <label>이미지 (URL 또는 파일)</label>
+      <label>이미지 (여러 개 가능, 각 3MB 이하)</label>
       <div class="apf-img-row">
-        <input type="text" id="apf-image" placeholder="https://... 또는 파일 선택">
+        <input type="text" id="apf-image-url" placeholder="URL 입력 후 Enter / 파일 선택 (다중)">
         <button type="button" class="apf-img-pick" id="apf-img-pick-btn">📎 파일</button>
-        <input type="file" id="apf-img-file" accept="image/*" style="display:none">
+        <input type="file" id="apf-img-file" accept="image/*" multiple style="display:none">
       </div>
-      <div class="apf-img-preview" id="apf-img-preview"><img id="apf-img-preview-img" alt=""></div>
-      <span class="apf-img-clear" id="apf-img-clear">✕ 이미지 제거</span>
+      <div class="apf-img-list" id="apf-img-list"></div>
+      <span class="apf-img-hint">URL은 Enter로 추가 · 파일은 여러 개 선택 가능 · 3MB 초과 파일은 거부</span>
     </div>
     <div class="field">
       <label>상세 설명</label>
@@ -1143,7 +1185,8 @@ function getEffective(cat, item) {
     decision: (ovr.decision !== undefined) ? ovr.decision : (item.decision || 'go'),
     desc: (ovr.desc !== undefined) ? ovr.desc : (item.desc || ''),
     status: (ovr.status !== undefined) ? ovr.status : (item.status || 'active'),
-    image: (ovr.image !== undefined) ? ovr.image : (item.image || '')
+    image: (ovr.image !== undefined) ? ovr.image : (item.image || ''),
+    images: (ovr.images !== undefined) ? ovr.images : (item.images || [])
   };
 }
 
@@ -1161,7 +1204,7 @@ function applyOverridesToProjects(PROJECTS) {
     if (!item) return;
     const ovr = PROJECT_OVERRIDES[k];
     // 편집 가능 필드만 적용
-    ['ownerDept','related','prio','progress','revTier','startWhen','owner','decision','desc','status','image']
+    ['ownerDept','related','prio','progress','revTier','startWhen','owner','decision','desc','status','image','images']
       .forEach(f => { if (ovr[f] !== undefined) item[f] = ovr[f]; });
   });
 }
@@ -1537,16 +1580,20 @@ function renderDetail() {
     + '</div>';
   // desc 안 링크 처리: 기존 <a>에 target="_blank" + plain text URL 자동 linkify
   linkifyDescArea(rightEl.querySelector('.d-desc'));
-  // 이미지가 있으면 별도 우측 컬럼(d-image-col)에 렌더 — desc 안 가림
-  if (_imgSrc && imageColEl) {
+  // 이미지 — 다중 지원, 별도 우측 컬럼(d-image-col)에 세로 나열 + 스크롤
+  const _imgList = (Array.isArray(it.images) && it.images.length) ? it.images : (it.image ? [it.image] : []);
+  if (_imgList.length && imageColEl) {
     imageColEl.innerHTML =
-      '<div class="d-image-col-head">📷 이미지</div>'
-      + '<img class="d-image-thumb" src="' + escapeHtml(_imgSrc) + '" alt="" onerror="this.style.display=\'none\'">'
+      '<div class="d-image-col-head">📷 이미지 (' + _imgList.length + ')</div>'
+      + _imgList.map(src =>
+          '<img class="d-image-thumb" src="' + escapeHtml(src) + '" alt="" onerror="this.style.display=\'none\'">'
+        ).join('')
       + '<div class="d-image-caption">클릭하면 원본 크기로 보기</div>';
     imageColEl.classList.add('show');
     imageColEl.style.display = 'block';
-    const _thumb = imageColEl.querySelector('.d-image-thumb');
-    if (_thumb) _thumb.addEventListener('click', () => openImgLightbox(_imgSrc));
+    imageColEl.querySelectorAll('.d-image-thumb').forEach((thumb, i) => {
+      thumb.addEventListener('click', () => openImgLightbox(_imgList[i]));
+    });
   }
   // 메모 textarea 바인딩
   const _memoTa = rightEl.querySelector('.d-project-memo');
@@ -2061,16 +2108,18 @@ function openAddProjModal() {
   const saveBtn = document.getElementById('apf-save');
   if (saveBtn) saveBtn.textContent = '저장';
   // 필드 초기화
-  ['apf-name','apf-when','apf-owner','apf-desc','apf-image'].forEach(id => {
+  ['apf-name','apf-when','apf-owner','apf-desc','apf-image-url'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.value = '';
   });
+  apfImages = [];
+  if (typeof renderApfImgList === 'function') renderApfImgList();
   document.getElementById('apf-prog').value = '0';
   document.getElementById('apf-cat').value = 'system';
   document.getElementById('apf-cat').disabled = false;
   document.getElementById('apf-tier').value = 'B';
   document.getElementById('apf-prio').value = 'm';
-  if (typeof _apfImgRefreshPreview === 'function') _apfImgRefreshPreview();
+
   ov.classList.add('show');
   setTimeout(() => document.getElementById('apf-name').focus(), 50);
 }
@@ -2088,7 +2137,8 @@ function saveNewProject() {
   const when = document.getElementById('apf-when').value.trim();
   const owner = document.getElementById('apf-owner').value.trim();
   const desc = plainToHtml(document.getElementById('apf-desc').value.trim());
-  const image = document.getElementById('apf-image').value.trim();
+  const images = apfImages.slice();
+  const image = images[0] || '';  // backward compat: 첫 번째 이미지를 image로도 저장
 
   // ─── 편집 모드 ────────────────────────────────────
   if (typeof _editingKey !== 'undefined' && _editingKey) {
@@ -2103,6 +2153,7 @@ function saveNewProject() {
     entry.item.owner = owner;
     entry.item.desc = desc;
     entry.item.image = image;
+    entry.item.images = images;
 
     if (entry.item._userAdded) {
       // 사용자 추가 항목 — userProjects 업데이트
@@ -2124,6 +2175,7 @@ function saveNewProject() {
       ovr.owner = owner;
       ovr.desc = desc;
       ovr.image = image;
+      ovr.images = images;
       PROJECT_OVERRIDES[k] = ovr;
       persistOverrides();
     }
@@ -2142,6 +2194,7 @@ function saveNewProject() {
     desc: desc || '',
     owner: owner || '',
     image: image || '',
+    images: images,
     _userAdded: true
   };
   let user = {};
@@ -2195,8 +2248,15 @@ function openEditProjModal(cat, item) {
   document.getElementById('apf-when').value = item.startWhen || '';
   document.getElementById('apf-owner').value = item.owner || '';
   document.getElementById('apf-desc').value = htmlToPlain(item.desc || '');
-  document.getElementById('apf-image').value = item.image || '';
-  _apfImgRefreshPreview();
+  // 다중 이미지 채우기 (backward compat: item.image 단일 → 배열로 변환)
+  if (Array.isArray(item.images) && item.images.length) {
+    apfImages = item.images.slice();
+  } else if (item.image) {
+    apfImages = [item.image];
+  } else {
+    apfImages = [];
+  }
+  renderApfImgList();
   document.getElementById('apf-save').textContent = '수정 저장';
   ov.classList.add('show');
   setTimeout(() => document.getElementById('apf-name').focus(), 50);
@@ -2307,6 +2367,73 @@ function _apfImgRefreshPreview() {
     document.getElementById('apf-image').value = '';
     _apfImgRefreshPreview();
   });
+})();
+
+// ─── 모달 폼 다중 이미지 관리 ──────────────────────────
+let apfImages = [];  // 현재 모달의 이미지 배열
+const APF_MAX_SIZE = 3 * 1024 * 1024;  // 3MB
+
+function renderApfImgList() {
+  const list = document.getElementById('apf-img-list');
+  if (!list) return;
+  list.innerHTML = apfImages.map((src, i) =>
+    '<div class="apf-img-chip" data-idx="' + i + '">'
+    + '<img src="' + src.replace(/"/g, '&quot;') + '" alt="">'
+    + '<button type="button" class="apf-img-chip-x" data-idx="' + i + '" title="제거">✕</button>'
+    + '</div>'
+  ).join('');
+  list.querySelectorAll('.apf-img-chip-x').forEach(x => {
+    x.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const idx = parseInt(x.dataset.idx);
+      if (!isNaN(idx)) {
+        apfImages.splice(idx, 1);
+        renderApfImgList();
+      }
+    });
+  });
+  list.querySelectorAll('.apf-img-chip img').forEach((img, i) => {
+    img.style.cursor = 'zoom-in';
+    img.addEventListener('click', () => openImgLightbox(apfImages[i]));
+  });
+}
+
+(function bindMultiImg(){
+  const urlInput = document.getElementById('apf-image-url');
+  if (urlInput) {
+    urlInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        const v = urlInput.value.trim();
+        if (v) {
+          apfImages.push(v);
+          renderApfImgList();
+          urlInput.value = '';
+        }
+      }
+    });
+  }
+  const pick = document.getElementById('apf-img-pick-btn');
+  const file = document.getElementById('apf-img-file');
+  if (pick && file) {
+    pick.addEventListener('click', () => file.click());
+    file.addEventListener('change', () => {
+      const files = Array.from(file.files || []);
+      files.forEach(f => {
+        if (f.size > APF_MAX_SIZE) {
+          alert('파일 "' + f.name + '"이 3MB를 초과합니다 (' + (f.size / 1024 / 1024).toFixed(2) + 'MB). 거부됨.');
+          return;
+        }
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+          apfImages.push(ev.target.result);
+          renderApfImgList();
+        };
+        reader.readAsDataURL(f);
+      });
+      file.value = '';  // 같은 파일 다시 선택 가능하게
+    });
+  }
 })();
 </script>
 
