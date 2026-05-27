@@ -1419,6 +1419,8 @@ function renderDetail() {
     +     '<span class="d-memo-cnt">' + _memoText.length + '자</span>'
     +   '</div>'
     + '</div>';
+  // desc 안 링크 처리: 기존 <a>에 target="_blank" + plain text URL 자동 linkify
+  linkifyDescArea(rightEl.querySelector('.d-desc'));
   // 메모 textarea 바인딩
   const _memoTa = rightEl.querySelector('.d-project-memo');
   const _memoCnt = rightEl.querySelector('.d-memo-cnt');
@@ -1555,6 +1557,44 @@ function bindMemo() {
   });
 }
 // desc 안 가격표(<table>) 분리 — 우측 가격표 영역에 표시
+// desc 안 링크 처리: 기존 <a>에 target/rel 추가 + plain text URL 자동 linkify
+function linkifyDescArea(root) {
+  if (!root) return;
+  // 1) 기존 <a> 모두 새 창으로
+  root.querySelectorAll('a').forEach(a => {
+    a.target = '_blank';
+    a.rel = 'noopener noreferrer';
+  });
+  // 2) plain text URL → <a> 자동 변환 (이미 <a> 안에 있는 텍스트는 제외)
+  const urlRe = /https?:\/\/[^\s<>"'()]+/g;
+  function walk(node) {
+    if (node.nodeType === 3) {  // TEXT_NODE
+      const t = node.textContent;
+      if (!urlRe.test(t)) return;
+      urlRe.lastIndex = 0;
+      const frag = document.createDocumentFragment();
+      let last = 0, m;
+      while ((m = urlRe.exec(t)) !== null) {
+        if (m.index > last) frag.appendChild(document.createTextNode(t.slice(last, m.index)));
+        const a = document.createElement('a');
+        a.href = m[0];
+        a.target = '_blank';
+        a.rel = 'noopener noreferrer';
+        a.textContent = m[0];
+        a.style.color = '#67e8f9';
+        a.style.textDecoration = 'underline';
+        frag.appendChild(a);
+        last = m.index + m[0].length;
+      }
+      if (last < t.length) frag.appendChild(document.createTextNode(t.slice(last)));
+      node.parentNode.replaceChild(frag, node);
+    } else if (node.nodeType === 1 && node.tagName !== 'A') {
+      Array.from(node.childNodes).forEach(walk);
+    }
+  }
+  Array.from(root.childNodes).forEach(walk);
+}
+
 function splitDesc(desc) {
   if (!desc) return { text: '', tables: '' };
   const tables = [];
