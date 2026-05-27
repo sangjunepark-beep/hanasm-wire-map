@@ -1100,6 +1100,16 @@ body.meeting-mode .detail-resize-handle { display: none; }
       </div>
     </div>
     <div class="field">
+      <label>액션 (보드 위치)</label>
+      <select id="apf-action">
+        <option value="first">⚡ 우선</option>
+        <option value="run" selected>● 진행</option>
+        <option value="hold">⏸ 보류</option>
+        <option value="stop">⊘ 중단</option>
+        <option value="merge">⤴ 통합</option>
+      </select>
+    </div>
+    <div class="field">
       <label>시기 / 일정 <span style="font-size:10px;color:var(--text-3);font-weight:400;">(클릭하여 선택 또는 직접 입력)</span></label>
       <input type="text" id="apf-when" list="apf-when-list" placeholder="클릭해서 선택 / 직접 입력">
       <datalist id="apf-when-list">
@@ -2146,6 +2156,7 @@ function openAddProjModal() {
   document.getElementById('apf-cat').disabled = false;
   document.getElementById('apf-tier').value = 'B';
   document.getElementById('apf-prio').value = 'm';
+  document.getElementById('apf-action').value = 'run';
 
   ov.classList.add('show');
   setTimeout(() => document.getElementById('apf-name').focus(), 50);
@@ -2166,6 +2177,7 @@ function saveNewProject() {
   const desc = plainToHtml(document.getElementById('apf-desc').value.trim());
   const images = apfImages.slice();
   const image = images[0] || '';  // backward compat: 첫 번째 이미지를 image로도 저장
+  const action = document.getElementById('apf-action').value || 'run';
 
   // ─── 편집 모드 ────────────────────────────────────
   if (typeof _editingKey !== 'undefined' && _editingKey) {
@@ -2206,6 +2218,8 @@ function saveNewProject() {
       PROJECT_OVERRIDES[k] = ovr;
       persistOverrides();
     }
+    // 액션(보드 위치) 저장
+    if (typeof setAction === 'function') setAction(_editingKey, action);
     _editingKey = null;
     if (typeof renderColumns === 'function') renderColumns();
     if (typeof renderDetail === 'function') renderDetail();
@@ -2232,6 +2246,8 @@ function saveNewProject() {
   if (typeof ITEMS !== 'undefined') {
     ITEMS.push({ cat, key: cat + '::' + name, item });
   }
+  // 신규 카드 액션(보드 위치) 저장
+  if (typeof setAction === 'function') setAction(cat + '::' + name, action);
   if (typeof renderColumns === 'function') renderColumns();
   closeAddProjModal();
 }
@@ -2271,6 +2287,7 @@ function openEditProjModal(cat, item) {
   document.getElementById('apf-cat').disabled = true;  // 카테고리 이동은 별도
   document.getElementById('apf-tier').value = item.revTier || 'E';
   document.getElementById('apf-prio').value = item.prio || 'm';
+  document.getElementById('apf-action').value = getAction(cat + '::' + item.name, item) || 'run';
   document.getElementById('apf-prog').value = item.progress || 0;
   document.getElementById('apf-when').value = item.startWhen || '';
   document.getElementById('apf-owner').value = item.owner || '';
