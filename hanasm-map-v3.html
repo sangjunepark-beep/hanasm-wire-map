@@ -770,9 +770,93 @@ body.meeting-mode .detail-resize-handle { display: none; }
 }
 .add-proj-modal .actions button:hover { background: rgba(167,139,250,0.20); }
 .add-proj-modal .actions button.primary:hover { background: rgba(167,139,250,0.45); }
+
+/* d-right 상단 이미지 썸네일 */
+.d-image-wrap {
+  display: block;
+  margin-bottom: 12px;
+  text-align: center;
+}
+.d-image-thumb {
+  display: block;
+  width: 100%;
+  max-height: 280px;
+  object-fit: contain;
+  background: rgba(0,0,0,0.40);
+  border: 1px solid rgba(167,139,250,0.30);
+  cursor: zoom-in;
+  transition: border-color 0.15s ease;
+}
+.d-image-thumb:hover {
+  border-color: rgba(167,139,250,0.70);
+}
+.d-image-caption {
+  font-size: 10.8px;
+  color: var(--text-3);
+  margin-top: 4px;
+  letter-spacing: 0.06em;
+}
+
+/* 이미지 라이트박스 (풀스크린) */
+.img-lightbox {
+  position: fixed; inset: 0; z-index: 99999;
+  background: rgba(0,0,0,0.96);
+  display: none;
+  align-items: center; justify-content: center;
+  cursor: zoom-out;
+}
+.img-lightbox.show { display: flex; }
+.img-lightbox img {
+  max-width: 95vw; max-height: 95vh;
+  object-fit: contain;
+  box-shadow: 0 0 40px rgba(0,0,0,0.6);
+}
+.img-lightbox-close {
+  position: fixed; top: 18px; right: 24px; z-index: 100000;
+  background: rgba(8,9,28,0.92);
+  border: 1px solid rgba(251,191,36,0.55);
+  color: #fbbf24;
+  padding: 8px 16px; font-size: 13px;
+  font-weight: 800; cursor: pointer;
+  letter-spacing: 0.08em;
+  clip-path: polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px);
+}
+.img-lightbox-close:hover { background: rgba(251,191,36,0.22); color: #fff; }
+
+/* 모달 폼의 이미지 필드 */
+.apf-img-row { display: flex; gap: 8px; align-items: stretch; }
+.apf-img-row input[type="text"] { flex: 1; }
+.apf-img-row .apf-img-pick {
+  background: rgba(167,139,250,0.15);
+  border: 1px solid rgba(167,139,250,0.45);
+  color: #c084fc;
+  padding: 7px 12px; font-size: 12px;
+  font-weight: 800; cursor: pointer;
+  letter-spacing: 0.04em;
+}
+.apf-img-row .apf-img-pick:hover { background: rgba(167,139,250,0.30); color: #fff; }
+.apf-img-preview {
+  margin-top: 6px;
+  max-height: 120px;
+  border: 1px dashed rgba(167,139,250,0.30);
+  padding: 4px;
+  display: none;
+}
+.apf-img-preview.show { display: block; }
+.apf-img-preview img { max-width: 100%; max-height: 110px; object-fit: contain; display: block; margin: 0 auto; }
+.apf-img-clear {
+  font-size: 10.5px; color: var(--text-3); cursor: pointer;
+  margin-top: 3px; display: inline-block;
+}
+.apf-img-clear:hover { color: var(--danger); }
 </style>
 </head>
 <body>
+<!-- 이미지 라이트박스 (썸네일 클릭 시 원본 크기) -->
+<div class="img-lightbox" id="imgLightbox">
+  <button class="img-lightbox-close" id="imgLightboxClose" title="닫기 (ESC)">✕ 닫기</button>
+  <img id="imgLightboxImg" src="" alt="">
+</div>
 <!-- 와이어맵 iframe 모달 (v3 회의모드에서 v2 보기) -->
 <div class="map-iframe-modal" id="mapIframeModal">
   <button class="map-iframe-modal-meeting" id="mapIframeModalMeeting" title="회의모드 해제 (P)">⛶ 회의 해제</button>
@@ -965,6 +1049,16 @@ body.meeting-mode .detail-resize-handle { display: none; }
       <input type="text" id="apf-owner" placeholder="예: 박상준 / 홍재이 / 임정민">
     </div>
     <div class="field">
+      <label>이미지 (URL 또는 파일)</label>
+      <div class="apf-img-row">
+        <input type="text" id="apf-image" placeholder="https://... 또는 파일 선택">
+        <button type="button" class="apf-img-pick" id="apf-img-pick-btn">📎 파일</button>
+        <input type="file" id="apf-img-file" accept="image/*" style="display:none">
+      </div>
+      <div class="apf-img-preview" id="apf-img-preview"><img id="apf-img-preview-img" alt=""></div>
+      <span class="apf-img-clear" id="apf-img-clear">✕ 이미지 제거</span>
+    </div>
+    <div class="field">
       <label>상세 설명</label>
       <textarea id="apf-desc" placeholder="배경, 세부 내용, 담당/일정 등 자유 입력"></textarea>
     </div>
@@ -1031,7 +1125,8 @@ function getEffective(cat, item) {
     owner: (ovr.owner !== undefined) ? ovr.owner : (item.owner || ''),
     decision: (ovr.decision !== undefined) ? ovr.decision : (item.decision || 'go'),
     desc: (ovr.desc !== undefined) ? ovr.desc : (item.desc || ''),
-    status: (ovr.status !== undefined) ? ovr.status : (item.status || 'active')
+    status: (ovr.status !== undefined) ? ovr.status : (item.status || 'active'),
+    image: (ovr.image !== undefined) ? ovr.image : (item.image || '')
   };
 }
 
@@ -1049,7 +1144,7 @@ function applyOverridesToProjects(PROJECTS) {
     if (!item) return;
     const ovr = PROJECT_OVERRIDES[k];
     // 편집 가능 필드만 적용
-    ['ownerDept','related','prio','progress','revTier','startWhen','owner','decision','desc','status']
+    ['ownerDept','related','prio','progress','revTier','startWhen','owner','decision','desc','status','image']
       .forEach(f => { if (ovr[f] !== undefined) item[f] = ovr[f]; });
   });
 }
@@ -1407,8 +1502,10 @@ function renderDetail() {
     + '</div>';
 
   const _memoText = getProjectMemo(key);
+  const _imgSrc = it.image || '';
   rightEl.innerHTML =
-    '<div class="d-desc">'
+    (_imgSrc ? ('<div class="d-image-wrap"><img class="d-image-thumb" src="' + escapeHtml(_imgSrc) + '" alt="" onerror="this.style.display=\'none\'"><div class="d-image-caption">클릭하면 원본 크기로 보기</div></div>') : '')
+    + '<div class="d-desc">'
     +   (split.text || it.desc || '<i style="color:#6b7280">상세 설명 없음</i>')
     + '</div>'
     + '<div class="d-memo-box">'
@@ -1419,6 +1516,9 @@ function renderDetail() {
     +     '<span class="d-memo-cnt">' + _memoText.length + '자</span>'
     +   '</div>'
     + '</div>';
+  // 썸네일 클릭 → 라이트박스
+  const _thumb = rightEl.querySelector('.d-image-thumb');
+  if (_thumb) _thumb.addEventListener('click', () => openImgLightbox(_imgSrc));
   // desc 안 링크 처리: 기존 <a>에 target="_blank" + plain text URL 자동 linkify
   linkifyDescArea(rightEl.querySelector('.d-desc'));
   // 메모 textarea 바인딩
@@ -1899,7 +1999,7 @@ function openAddProjModal() {
   const saveBtn = document.getElementById('apf-save');
   if (saveBtn) saveBtn.textContent = '저장';
   // 필드 초기화
-  ['apf-name','apf-when','apf-owner','apf-desc'].forEach(id => {
+  ['apf-name','apf-when','apf-owner','apf-desc','apf-image'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.value = '';
   });
@@ -1908,6 +2008,7 @@ function openAddProjModal() {
   document.getElementById('apf-cat').disabled = false;
   document.getElementById('apf-tier').value = 'B';
   document.getElementById('apf-prio').value = 'm';
+  if (typeof _apfImgRefreshPreview === 'function') _apfImgRefreshPreview();
   ov.classList.add('show');
   setTimeout(() => document.getElementById('apf-name').focus(), 50);
 }
@@ -1925,6 +2026,7 @@ function saveNewProject() {
   const when = document.getElementById('apf-when').value.trim();
   const owner = document.getElementById('apf-owner').value.trim();
   const desc = document.getElementById('apf-desc').value.trim();
+  const image = document.getElementById('apf-image').value.trim();
 
   // ─── 편집 모드 ────────────────────────────────────
   if (typeof _editingKey !== 'undefined' && _editingKey) {
@@ -1938,6 +2040,7 @@ function saveNewProject() {
     entry.item.startWhen = when;
     entry.item.owner = owner;
     entry.item.desc = desc;
+    entry.item.image = image;
 
     if (entry.item._userAdded) {
       // 사용자 추가 항목 — userProjects 업데이트
@@ -1958,6 +2061,7 @@ function saveNewProject() {
       ovr.startWhen = when;
       ovr.owner = owner;
       ovr.desc = desc;
+      ovr.image = image;
       PROJECT_OVERRIDES[k] = ovr;
       persistOverrides();
     }
@@ -1975,6 +2079,7 @@ function saveNewProject() {
     startWhen: when || '미정',
     desc: desc || '',
     owner: owner || '',
+    image: image || '',
     _userAdded: true
   };
   let user = {};
@@ -2028,6 +2133,8 @@ function openEditProjModal(cat, item) {
   document.getElementById('apf-when').value = item.startWhen || '';
   document.getElementById('apf-owner').value = item.owner || '';
   document.getElementById('apf-desc').value = item.desc || '';
+  document.getElementById('apf-image').value = item.image || '';
+  _apfImgRefreshPreview();
   document.getElementById('apf-save').textContent = '수정 저장';
   ov.classList.add('show');
   setTimeout(() => document.getElementById('apf-name').focus(), 50);
@@ -2069,6 +2176,76 @@ document.addEventListener('click', (e) => {
     if (idx > 0) deleteUserProject(key.slice(0, idx), key.slice(idx + 2));
   }
 });
+
+// ─── 이미지 라이트박스 ──────────────────────────────
+function openImgLightbox(src) {
+  const lb = document.getElementById('imgLightbox');
+  const img = document.getElementById('imgLightboxImg');
+  if (!lb || !img) return;
+  img.src = src;
+  lb.classList.add('show');
+}
+function closeImgLightbox() {
+  const lb = document.getElementById('imgLightbox');
+  if (lb) lb.classList.remove('show');
+}
+(function bindLightbox(){
+  const lb = document.getElementById('imgLightbox');
+  const close = document.getElementById('imgLightboxClose');
+  if (close) close.addEventListener('click', closeImgLightbox);
+  if (lb) lb.addEventListener('click', (e) => {
+    if (e.target === lb) closeImgLightbox();
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      const l = document.getElementById('imgLightbox');
+      if (l && l.classList.contains('show')) {
+        e.stopPropagation();
+        closeImgLightbox();
+      }
+    }
+  }, true);
+})();
+
+// ─── 모달 폼 이미지 필드 처리 (URL + 파일) ───────────
+function _apfImgRefreshPreview() {
+  const urlEl = document.getElementById('apf-image');
+  const prev = document.getElementById('apf-img-preview');
+  const prevImg = document.getElementById('apf-img-preview-img');
+  if (!urlEl || !prev || !prevImg) return;
+  const v = urlEl.value.trim();
+  if (v) {
+    prevImg.src = v;
+    prev.classList.add('show');
+  } else {
+    prev.classList.remove('show');
+    prevImg.src = '';
+  }
+}
+(function bindImgField(){
+  const url = document.getElementById('apf-image');
+  if (url) url.addEventListener('input', _apfImgRefreshPreview);
+  const pick = document.getElementById('apf-img-pick-btn');
+  const file = document.getElementById('apf-img-file');
+  if (pick && file) {
+    pick.addEventListener('click', () => file.click());
+    file.addEventListener('change', () => {
+      const f = file.files && file.files[0];
+      if (!f) return;
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        document.getElementById('apf-image').value = e.target.result;
+        _apfImgRefreshPreview();
+      };
+      reader.readAsDataURL(f);
+    });
+  }
+  const clear = document.getElementById('apf-img-clear');
+  if (clear) clear.addEventListener('click', () => {
+    document.getElementById('apf-image').value = '';
+    _apfImgRefreshPreview();
+  });
+})();
 </script>
 
 </body>
