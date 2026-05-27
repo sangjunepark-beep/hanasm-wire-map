@@ -899,6 +899,66 @@ body.meeting-mode .detail-resize-handle { display: none; }
   text-align: center; padding: 20px 0;
 }
 
+/* ─── 첨부 파일 (PDF/HTML/링크) ──────────────────── */
+/* 디테일 좌측 메타 안 첨부 버튼 그룹 */
+.d-attach-list {
+  margin-top: 10px;
+  display: flex; flex-wrap: wrap; gap: 6px;
+}
+.d-attach-btn {
+  display: inline-flex; align-items: center; gap: 5px;
+  background: rgba(34,211,238,0.10);
+  border: 1px solid rgba(34,211,238,0.40);
+  color: #67e8f9;
+  padding: 5px 10px; font-size: 12px;
+  font-weight: 700; text-decoration: none;
+  letter-spacing: 0.02em;
+  clip-path: polygon(4px 0, 100% 0, 100% calc(100% - 4px), calc(100% - 4px) 100%, 0 100%, 0 4px);
+  max-width: 240px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  transition: all 0.15s ease;
+}
+.d-attach-btn:hover {
+  background: rgba(34,211,238,0.22);
+  color: #fff;
+  border-color: rgba(34,211,238,0.70);
+}
+.d-attach-btn .d-attach-icon { font-size: 13px; flex-shrink: 0; }
+
+/* 모달 폼 — 첨부 칩 리스트 */
+.apf-attach-list {
+  display: flex; flex-direction: column; gap: 4px;
+  margin-top: 6px;
+  max-height: 150px;
+  overflow-y: auto;
+}
+.apf-attach-chip {
+  display: flex; align-items: center; gap: 6px;
+  background: rgba(34,211,238,0.06);
+  border: 1px solid rgba(34,211,238,0.30);
+  padding: 5px 8px; font-size: 12px;
+}
+.apf-attach-chip .apf-attach-icon { font-size: 13px; flex-shrink: 0; }
+.apf-attach-chip .apf-attach-name {
+  flex: 1; color: var(--text-1);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.apf-attach-chip .apf-attach-kind {
+  font-size: 10.5px; color: var(--text-3);
+  text-transform: uppercase; letter-spacing: 0.08em;
+}
+.apf-attach-chip .apf-attach-x {
+  background: transparent; border: 0;
+  color: var(--text-3); cursor: pointer;
+  font-size: 14px; padding: 0 4px;
+}
+.apf-attach-chip .apf-attach-x:hover { color: var(--danger); }
+.apf-attach-hint {
+  font-size: 10.5px; color: var(--text-3);
+  margin-top: 4px; display: block;
+  letter-spacing: 0.02em;
+}
+
 /* 모달 폼 — 이미지 리스트 (썸네일 칩) */
 .apf-img-list {
   display: flex; flex-wrap: wrap; gap: 6px;
@@ -1311,6 +1371,16 @@ body.meeting-mode .detail-resize-handle { display: none; }
       </div>
       <div class="apf-img-list" id="apf-img-list"></div>
       <span class="apf-img-hint">URL Enter로 추가 · 파일 다중 선택 · 캡쳐 후 Ctrl+V 붙여넣기 · 3MB 초과 거부</span>
+    </div>
+    <div class="field">
+      <label>첨부 (PDF · HTML · 링크) — 여러 개 가능</label>
+      <div class="apf-img-row">
+        <input type="text" id="apf-attach-url" placeholder="URL 입력 후 Enter (Figma · Notion · Drive · YouTube 등 모두)">
+        <button type="button" class="apf-img-pick" id="apf-attach-pick-btn">📎 파일</button>
+        <input type="file" id="apf-attach-file" accept=".pdf,.html,.htm,application/pdf,text/html" multiple style="display:none">
+      </div>
+      <div class="apf-attach-list" id="apf-attach-list"></div>
+      <span class="apf-attach-hint">URL Enter로 추가 · 파일은 PDF/HTML 3MB 이하 · 디테일에 버튼으로 표시되어 새 탭에서 열림</span>
     </div>
     <div class="field">
       <label>상세 설명</label>
@@ -1786,6 +1856,19 @@ function renderDetail() {
     + '<div class="d-actions">'
     +   ['first','run','hold','stop','merge'].map(a => '<button data-act="' + a + '" class="' + (action === a ? 'active' : '') + '">' + ACTION_LABEL[a] + '</button>').join('')
     + '</div>'
+    + (Array.isArray(it.attachments) && it.attachments.length
+        ? '<div class="d-attach-list">'
+          + it.attachments.map(a => {
+              const icon = ATTACH_KIND_ICON[a.kind] || ATTACH_KIND_ICON.link;
+              const nameSafe = (a.name || autoAttachName(a.url, a.kind, '')).replace(/</g, '&lt;').replace(/>/g, '&gt;');
+              const urlSafe = (a.url || '').replace(/"/g, '&quot;');
+              return '<a class="d-attach-btn" href="' + urlSafe + '" target="_blank" rel="noopener" title="' + urlSafe + '">'
+                + '<span class="d-attach-icon">' + icon + '</span>'
+                + nameSafe
+                + '</a>';
+            }).join('')
+          + '</div>'
+        : '')
     + '<div class="d-actions" style="margin-top:8px;">'
     +   '<button class="d-edit-btn" title="이 프로젝트 내용 수정">✎ 편집</button>'
     +   '<button class="d-delete-btn" title="이 프로젝트 삭제">🗑 삭제</button>'
@@ -2345,12 +2428,14 @@ function openAddProjModal() {
   const saveBtn = document.getElementById('apf-save');
   if (saveBtn) saveBtn.textContent = '저장';
   // 필드 초기화
-  ['apf-name','apf-when','apf-owner','apf-desc','apf-image-url'].forEach(id => {
+  ['apf-name','apf-when','apf-owner','apf-desc','apf-image-url','apf-attach-url'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.value = '';
   });
   apfImages = [];
+  apfAttachments = [];
   if (typeof renderApfImgList === 'function') renderApfImgList();
+  if (typeof renderApfAttachList === 'function') renderApfAttachList();
   document.getElementById('apf-prog').value = '0';
   document.getElementById('apf-cat').value = 'system';
   document.getElementById('apf-cat').disabled = false;
@@ -2377,6 +2462,7 @@ function saveNewProject() {
   const desc = plainToHtml(document.getElementById('apf-desc').value.trim());
   const images = apfImages.slice();
   const image = images[0] || '';  // backward compat: 첫 번째 이미지를 image로도 저장
+  const attachments = apfAttachments.slice();
   const action = getApfAction();
 
   // ─── 편집 모드 ────────────────────────────────────
@@ -2393,6 +2479,7 @@ function saveNewProject() {
     entry.item.desc = desc;
     entry.item.image = image;
     entry.item.images = images;
+    entry.item.attachments = attachments;
 
     if (entry.item._userAdded) {
       // 사용자 추가 항목 — userProjects 업데이트
@@ -2415,6 +2502,7 @@ function saveNewProject() {
       ovr.desc = desc;
       ovr.image = image;
       ovr.images = images;
+      ovr.attachments = attachments;
       PROJECT_OVERRIDES[k] = ovr;
       persistOverrides();
     }
@@ -2438,6 +2526,7 @@ function saveNewProject() {
     owner: owner || '',
     image: image || '',
     images: images,
+    attachments: attachments,
     _userAdded: true
   };
   let user = {};
@@ -2505,6 +2594,9 @@ function openEditProjModal(cat, item) {
     apfImages = [];
   }
   renderApfImgList();
+  // 첨부(PDF/HTML/링크) 채우기
+  apfAttachments = Array.isArray(item.attachments) ? item.attachments.slice() : [];
+  if (typeof renderApfAttachList === 'function') renderApfAttachList();
   document.getElementById('apf-save').textContent = '수정 저장';
   ov.classList.add('show');
   setTimeout(() => document.getElementById('apf-name').focus(), 50);
@@ -2670,7 +2762,40 @@ function _apfImgRefreshPreview() {
 
 // ─── 모달 폼 다중 이미지 관리 ──────────────────────────
 let apfImages = [];  // 현재 모달의 이미지 배열
+let apfAttachments = [];  // 현재 모달의 첨부(PDF/HTML/링크) 배열 — 각 항목: {url, name, kind}
 const APF_MAX_SIZE = 3 * 1024 * 1024;  // 3MB
+
+// ─── 첨부 종류 자동 판별 ──────────────────────────────
+const ATTACH_KIND_ICON = {
+  pdf:'📄', html:'🌐', figma:'🎨', notion:'📝',
+  google:'📊', youtube:'🎬', github:'💻', link:'🔗'
+};
+function detectAttachKind(url, mimeType) {
+  const u = (url || '').toLowerCase();
+  const m = (mimeType || '').toLowerCase();
+  if (u.startsWith('data:application/pdf') || m === 'application/pdf' || /\.pdf(\?|#|$)/.test(u)) return 'pdf';
+  if (u.startsWith('data:text/html') || m === 'text/html' || /\.html?(\?|#|$)/.test(u)) return 'html';
+  if (u.includes('figma.com')) return 'figma';
+  if (u.includes('notion.so') || u.includes('notion.site')) return 'notion';
+  if (u.includes('docs.google') || u.includes('drive.google') || u.includes('sheets.google') || u.includes('slides.google')) return 'google';
+  if (u.includes('youtube.com') || u.includes('youtu.be')) return 'youtube';
+  if (u.includes('github.com')) return 'github';
+  return 'link';
+}
+function autoAttachName(url, kind, fallback) {
+  if (fallback) return fallback;
+  if (!url) return '첨부';
+  // data URL 은 종류로
+  if (url.startsWith('data:')) return ({pdf:'PDF 파일', html:'HTML 파일'}[kind] || '파일');
+  try {
+    const u = new URL(url);
+    const last = u.pathname.split('/').filter(Boolean).pop();
+    if (last && last.length < 40) return decodeURIComponent(last);
+    return u.hostname.replace(/^www\./, '');
+  } catch(e) {
+    return url.slice(0, 40);
+  }
+}
 
 function renderApfImgList() {
   const list = document.getElementById('apf-img-list');
@@ -2761,6 +2886,72 @@ function renderApfImgList() {
     }
     if (handled) e.preventDefault();
   });
+})();
+
+// ─── 모달 폼 첨부(PDF/HTML/링크) 관리 ──────────────────
+function renderApfAttachList() {
+  const list = document.getElementById('apf-attach-list');
+  if (!list) return;
+  list.innerHTML = apfAttachments.map((a, i) => {
+    const icon = ATTACH_KIND_ICON[a.kind] || ATTACH_KIND_ICON.link;
+    const nameSafe = (a.name || '').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    return '<div class="apf-attach-chip" data-idx="' + i + '">'
+      + '<span class="apf-attach-icon">' + icon + '</span>'
+      + '<span class="apf-attach-name" title="' + (a.url || '').replace(/"/g, '&quot;') + '">' + nameSafe + '</span>'
+      + '<span class="apf-attach-kind">' + (a.kind || '') + '</span>'
+      + '<button type="button" class="apf-attach-x" data-idx="' + i + '" title="제거">✕</button>'
+      + '</div>';
+  }).join('');
+  list.querySelectorAll('.apf-attach-x').forEach(x => {
+    x.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const idx = parseInt(x.dataset.idx);
+      if (!isNaN(idx)) {
+        apfAttachments.splice(idx, 1);
+        renderApfAttachList();
+      }
+    });
+  });
+}
+
+(function bindAttachField(){
+  const urlInput = document.getElementById('apf-attach-url');
+  if (urlInput) {
+    urlInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        const v = urlInput.value.trim();
+        if (!v) return;
+        const kind = detectAttachKind(v, '');
+        const name = autoAttachName(v, kind, '');
+        apfAttachments.push({ url: v, name: name, kind: kind });
+        renderApfAttachList();
+        urlInput.value = '';
+      }
+    });
+  }
+  const pick = document.getElementById('apf-attach-pick-btn');
+  const file = document.getElementById('apf-attach-file');
+  if (pick && file) {
+    pick.addEventListener('click', () => file.click());
+    file.addEventListener('change', () => {
+      const files = Array.from(file.files || []);
+      files.forEach(f => {
+        if (f.size > APF_MAX_SIZE) {
+          alert('파일 "' + f.name + '"이 3MB를 초과합니다 (' + (f.size / 1024 / 1024).toFixed(2) + 'MB). 거부됨.');
+          return;
+        }
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+          const kind = detectAttachKind(ev.target.result, f.type);
+          apfAttachments.push({ url: ev.target.result, name: f.name, kind: kind });
+          renderApfAttachList();
+        };
+        reader.readAsDataURL(f);
+      });
+      file.value = '';
+    });
+  }
 })();
 
 // ─── 응급 백업 시스템 ────────────────────────────────
