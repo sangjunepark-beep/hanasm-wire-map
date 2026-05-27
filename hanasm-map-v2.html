@@ -4095,24 +4095,7 @@ function renderProjects() {
       }
       el.classList.toggle('open');
     });
-    // ① 카드 hover → 맵 부서 노드 미리 강조 (카메라 이동 X)
-    el.addEventListener('mouseenter', () => {
-      clearTimeout(window.__projHoverTimer);
-      _lastHoverEl = el;
-      const owner = el.dataset.owner;
-      const related = (el.dataset.related || '').split(',').filter(Boolean);
-      focusProjectRelation(owner, related, { skipZoom: true });
-    });
-    el.addEventListener('mouseleave', () => {
-      // 120ms debounce — 인접 카드로 빠르게 이동 시 깜빡임 방지
-      window.__projHoverTimer = setTimeout(() => {
-        if (_lastHoverEl === el) {
-          _lastHoverEl = null;
-          // 잠긴 카드 있으면 그 카드 강조 복원, 없으면 해제
-          _restoreLockedHighlight();
-        }
-      }, 120);
-    });
+    // ① 카드 hover 강조 비활성화 — 클릭(잠금 토글) 시에만 강조 (사용자 요청, 2026-05-27)
   });
   // 주관 select change
   document.querySelectorAll('.de-owner-sel').forEach(sel => {
