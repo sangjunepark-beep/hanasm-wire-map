@@ -11,8 +11,9 @@
     font-family: "Pretendard", "Noto Sans KR", "Apple SD Gothic Neo", system-ui, sans-serif;
     background: #f5f7fa;
     color: #1a1f2e;
-    line-height: 1.7;
-    padding: 32px 24px;
+    line-height: 1.75;
+    padding: 36px 28px;
+    font-size: 16px;
   }
   .wrap { max-width: 1080px; margin: 0 auto; }
 
@@ -27,16 +28,16 @@
   .header .meta-row { display: flex; align-items: center; gap: 16px; margin-bottom: 8px; }
   .header .time-pill {
     background: #2563eb; color: #fff;
-    padding: 5px 14px; font-weight: 800;
-    font-size: 13px; letter-spacing: 0.04em;
+    padding: 7px 18px; font-weight: 800;
+    font-size: 16px; letter-spacing: 0.04em;
   }
-  .header .date { font-size: 13px; color: #64748b; font-weight: 500; }
+  .header .date { font-size: 15px; color: #64748b; font-weight: 600; }
   .header h1 {
-    font-size: 26px; font-weight: 900;
+    font-size: 34px; font-weight: 900;
     letter-spacing: -0.01em; color: #0f172a;
   }
   .header .sub {
-    font-size: 14px; color: #475569; margin-top: 6px;
+    font-size: 16px; color: #475569; margin-top: 8px;
   }
 
   /* 안건 카드 */
@@ -54,21 +55,21 @@
   .agenda-num {
     background: #0f172a;
     color: #fff;
-    width: 40px; height: 40px;
+    width: 48px; height: 48px;
     display: flex; align-items: center; justify-content: center;
-    font-weight: 900; font-size: 17px;
+    font-weight: 900; font-size: 22px;
     flex-shrink: 0;
   }
   .agenda-title { flex: 1; }
   .agenda-title h2 {
-    font-size: 21px; font-weight: 900;
-    color: #0f172a; margin-bottom: 8px;
+    font-size: 27px; font-weight: 900;
+    color: #0f172a; margin-bottom: 10px;
     letter-spacing: -0.005em;
   }
-  .agenda-pills { display: flex; gap: 6px; flex-wrap: wrap; }
+  .agenda-pills { display: flex; gap: 7px; flex-wrap: wrap; }
   .pill {
-    font-size: 11px; font-weight: 800;
-    padding: 3px 9px;
+    font-size: 14px; font-weight: 800;
+    padding: 4px 12px;
     letter-spacing: 0.02em;
   }
   .pill-cat { background: #e0e7ff; color: #3730a3; }
@@ -83,81 +84,82 @@
 
   /* 진행률 */
   .progress-wrap {
-    padding: 14px 28px;
+    padding: 16px 32px;
     background: #f8fafc;
-    display: flex; align-items: center; gap: 16px;
+    display: flex; align-items: center; gap: 18px;
     border-bottom: 1px solid #e2e8f0;
-    font-size: 13px;
+    font-size: 16px;
     flex-wrap: wrap;
   }
-  .progress-wrap .label { color: #64748b; font-weight: 700; min-width: 60px; }
-  .progress-wrap .owner { color: #0f172a; font-weight: 800; min-width: 100px; }
+  .progress-wrap .label { color: #64748b; font-weight: 700; min-width: 70px; }
+  .progress-wrap .owner { color: #0f172a; font-weight: 800; min-width: 120px; }
   .progress-bar {
-    flex: 1; min-width: 180px; height: 9px; background: #e2e8f0;
+    flex: 1; min-width: 200px; height: 12px; background: #e2e8f0;
     position: relative; overflow: hidden;
   }
   .progress-fill { height: 100%; background: linear-gradient(90deg, #2563eb, #3b82f6); }
   .progress-pct {
-    font-weight: 800; font-size: 14px;
-    color: #2563eb; min-width: 48px; text-align: right;
+    font-weight: 800; font-size: 17px;
+    color: #2563eb; min-width: 56px; text-align: right;
   }
   .progress-when {
     color: #475569; font-weight: 700;
-    padding-left: 14px; border-left: 1px solid #cbd5e1;
+    padding-left: 16px; border-left: 1px solid #cbd5e1;
+    font-size: 15.5px;
   }
 
   /* 본문 — desc 원문 그대로 풀어서 표시 */
-  .agenda-body { padding: 24px 28px 28px; }
+  .agenda-body { padding: 28px 32px 32px; }
   .desc-section {
-    margin-bottom: 22px;
-    padding-left: 16px;
-    border-left: 3px solid #2563eb;
+    margin-bottom: 26px;
+    padding-left: 18px;
+    border-left: 4px solid #2563eb;
   }
   .desc-section:last-of-type { margin-bottom: 0; }
   .desc-section .sec-label {
     display: inline-block;
-    font-size: 12px; font-weight: 800;
+    font-size: 15px; font-weight: 800;
     color: #2563eb;
     background: #dbeafe;
-    padding: 3px 10px;
-    margin-bottom: 10px;
+    padding: 5px 14px;
+    margin-bottom: 12px;
     letter-spacing: 0.04em;
   }
   .desc-section .sec-body {
     color: #1e293b;
-    font-size: 14.5px;
+    font-size: 17.5px;
     line-height: 1.85;
     white-space: pre-wrap;
   }
   .desc-section .sec-body b { color: #0f172a; font-weight: 800; }
 
   .meta-strip {
-    margin-top: 22px;
-    padding: 14px 18px;
+    margin-top: 26px;
+    padding: 16px 22px;
     background: #f1f5f9;
-    border-left: 3px solid #94a3b8;
-    font-size: 13px;
+    border-left: 4px solid #94a3b8;
+    font-size: 16px;
     color: #475569;
-    display: flex; gap: 24px; flex-wrap: wrap;
+    display: flex; gap: 30px; flex-wrap: wrap;
   }
-  .meta-strip .item b { color: #0f172a; font-weight: 800; margin-right: 6px; }
+  .meta-strip .item b { color: #0f172a; font-weight: 800; margin-right: 8px; }
 
   .note-strip {
-    margin-top: 16px;
-    padding: 14px 18px;
+    margin-top: 18px;
+    padding: 16px 22px;
     background: #fff7ed;
     border: 1px solid #fed7aa;
-    border-left: 4px solid #ea580c;
+    border-left: 5px solid #ea580c;
     color: #7c2d12;
-    font-size: 14px;
+    font-size: 17px;
     font-weight: 700;
   }
   .note-strip .lbl {
     display: block;
-    font-size: 11px; font-weight: 900;
+    font-size: 13px; font-weight: 900;
     color: #ea580c;
     letter-spacing: 0.1em;
-    margin-bottom: 4px;
+    margin-bottom: 6px;
   }
 
   /* 인쇄 */
