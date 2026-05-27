@@ -1687,9 +1687,9 @@ body.inside-iframe .meeting-toggle { display: none !important; }
 }
 .sb-setup-modal .actions button:hover { background: rgba(34,211,238,0.18); }
 
-/* Supabase 상태 버튼 — 우상단 고정 (v2 헤더 구조와 다르므로 fixed 위치) */
+/* Supabase 상태 버튼 — 좌측 헤더 영역 ("프로젝트 진행 관리" 옆) — 우측 버튼 그룹과 겹침 회피 */
 .sb-status-v2 {
-  position: fixed; top: 16px; right: 14px; z-index: 115;
+  position: fixed; top: 16px; left: 510px; right: auto; z-index: 115;
   background: rgba(34,211,238,0.10);
   border: 1px solid rgba(34,211,238,0.40);
   color: #67e8f9;
