@@ -11,7 +11,7 @@
     font-family: "Pretendard", "Noto Sans KR", "Apple SD Gothic Neo", system-ui, sans-serif;
     background: #f5f7fa;
     color: #1a1f2e;
-    line-height: 1.6;
+    line-height: 1.7;
     padding: 32px 24px;
   }
   .wrap { max-width: 1080px; margin: 0 auto; }
@@ -42,27 +42,27 @@
   /* 안건 카드 */
   .agenda {
     background: #fff;
-    margin-bottom: 20px;
+    margin-bottom: 24px;
     box-shadow: 0 1px 3px rgba(0,0,0,0.05);
     overflow: hidden;
   }
   .agenda-head {
-    padding: 18px 24px 14px;
+    padding: 20px 28px 16px;
     border-bottom: 1px solid #e2e8f0;
     display: flex; gap: 14px; align-items: flex-start;
   }
   .agenda-num {
     background: #0f172a;
     color: #fff;
-    width: 36px; height: 36px;
+    width: 40px; height: 40px;
     display: flex; align-items: center; justify-content: center;
-    font-weight: 900; font-size: 16px;
+    font-weight: 900; font-size: 17px;
     flex-shrink: 0;
   }
   .agenda-title { flex: 1; }
   .agenda-title h2 {
-    font-size: 19px; font-weight: 800;
-    color: #0f172a; margin-bottom: 6px;
+    font-size: 21px; font-weight: 900;
+    color: #0f172a; margin-bottom: 8px;
     letter-spacing: -0.005em;
   }
   .agenda-pills { display: flex; gap: 6px; flex-wrap: wrap; }
@@ -83,53 +83,82 @@
 
   /* 진행률 */
   .progress-wrap {
-    padding: 12px 24px;
+    padding: 14px 28px;
     background: #f8fafc;
-    display: flex; align-items: center; gap: 14px;
+    display: flex; align-items: center; gap: 16px;
     border-bottom: 1px solid #e2e8f0;
     font-size: 13px;
+    flex-wrap: wrap;
   }
   .progress-wrap .label { color: #64748b; font-weight: 700; min-width: 60px; }
-  .progress-wrap .owner { color: #0f172a; font-weight: 700; min-width: 80px; }
+  .progress-wrap .owner { color: #0f172a; font-weight: 800; min-width: 100px; }
   .progress-bar {
-    flex: 1; height: 8px; background: #e2e8f0;
+    flex: 1; min-width: 180px; height: 9px; background: #e2e8f0;
     position: relative; overflow: hidden;
   }
   .progress-fill { height: 100%; background: linear-gradient(90deg, #2563eb, #3b82f6); }
   .progress-pct {
-    font-weight: 800; font-size: 13px;
-    color: #2563eb; min-width: 40px; text-align: right;
+    font-weight: 800; font-size: 14px;
+    color: #2563eb; min-width: 48px; text-align: right;
   }
   .progress-when {
-    color: #475569; font-weight: 600;
+    color: #475569; font-weight: 700;
     padding-left: 14px; border-left: 1px solid #cbd5e1;
   }
 
-  /* 본문 */
-  .agenda-body { padding: 20px 24px 24px; }
-  .agenda-body section { margin-bottom: 18px; }
-  .agenda-body section:last-child { margin-bottom: 0; }
-  .agenda-body h3 {
-    font-size: 12px; font-weight: 800;
-    color: #2563eb; text-transform: uppercase;
-    letter-spacing: 0.08em;
-    margin-bottom: 8px;
-    padding-left: 10px; border-left: 3px solid #2563eb;
+  /* 본문 — desc 원문 그대로 풀어서 표시 */
+  .agenda-body { padding: 24px 28px 28px; }
+  .desc-section {
+    margin-bottom: 22px;
+    padding-left: 16px;
+    border-left: 3px solid #2563eb;
   }
-  .agenda-body p { color: #334155; font-size: 14.5px; line-height: 1.75; }
-  .agenda-body ul { margin-left: 22px; color: #334155; font-size: 14.5px; line-height: 1.75; }
-  .agenda-body li { margin-bottom: 4px; }
-  .agenda-body b { color: #0f172a; font-weight: 800; }
+  .desc-section:last-of-type { margin-bottom: 0; }
+  .desc-section .sec-label {
+    display: inline-block;
+    font-size: 12px; font-weight: 800;
+    color: #2563eb;
+    background: #dbeafe;
+    padding: 3px 10px;
+    margin-bottom: 10px;
+    letter-spacing: 0.04em;
+  }
+  .desc-section .sec-body {
+    color: #1e293b;
+    font-size: 14.5px;
+    line-height: 1.85;
+    white-space: pre-wrap;
+  }
+  .desc-section .sec-body b { color: #0f172a; font-weight: 800; }
 
-  .check-box {
+  .meta-strip {
+    margin-top: 22px;
+    padding: 14px 18px;
+    background: #f1f5f9;
+    border-left: 3px solid #94a3b8;
+    font-size: 13px;
+    color: #475569;
+    display: flex; gap: 24px; flex-wrap: wrap;
+  }
+  .meta-strip .item b { color: #0f172a; font-weight: 800; margin-right: 6px; }
+
+  .note-strip {
+    margin-top: 16px;
+    padding: 14px 18px;
     background: #fff7ed;
     border: 1px solid #fed7aa;
     border-left: 4px solid #ea580c;
-    padding: 12px 16px;
-    color: #7c2d12; font-size: 14px; font-weight: 600;
-    margin-top: 14px;
+    color: #7c2d12;
+    font-size: 14px;
+    font-weight: 700;
   }
-  .check-box .lbl { color: #ea580c; font-weight: 800; font-size: 11px; letter-spacing: 0.1em; display: block; margin-bottom: 4px; }
+  .note-strip .lbl {
+    display: block;
+    font-size: 11px; font-weight: 900;
+    color: #ea580c;
+    letter-spacing: 0.1em;
+    margin-bottom: 4px;
+  }
 
   /* 인쇄 */
   @media print {
@@ -148,7 +177,7 @@
       <span class="date">2026. 05. 28 (수)</span>
     </div>
     <h1>11시 미팅 안건</h1>
-    <div class="sub">하나사인몰 · 박상준 차장 주관 · SNS·콘텐츠 마케팅 결정 회의</div>
+    <div class="sub">하나사인몰 · 박상준 차장 주관 · SNS · 콘텐츠 마케팅 결정 회의</div>
   </div>
 
   <!-- 안건 1 -->
@@ -158,8 +187,8 @@
       <div class="agenda-title">
         <h2>블로그 무료 AI 시안 배포</h2>
         <div class="agenda-pills">
-          <span class="pill pill-cat">AI · 자동화</span>
-          <span class="pill pill-tier-E">매출 E</span>
+          <span class="pill pill-cat">시스템 · AI</span>
+          <span class="pill pill-tier-E">매출 E · 장기</span>
           <span class="pill pill-prio-m">우선도 中</span>
         </div>
       </div>
@@ -172,27 +201,37 @@
       <span class="progress-when">📅 미정</span>
     </div>
     <div class="agenda-body">
-      <section>
-        <h3>배경 · 목적</h3>
-        <p>AI 시안(4K급)을 비용·시간 거의 <b>제로</b>로 생성 가능. 블로그에 무료로 첨부해 <b>트래픽 + 공유 유도</b> → 실물 출력은 자사몰로 자연 연결되는 전환 구조를 만든다.</p>
-      </section>
-      <section>
-        <h3>실행안</h3>
-        <ul>
-          <li>시안 하단에 <b>하나사인몰 출처 표기 + 링크 복사</b> 기능 → SNS·커뮤니티 자발적 공유 유도</li>
-          <li>자사몰 상품 페이지에도 무료 시안 <b>1종 첨부</b></li>
-        </ul>
-      </section>
-      <section>
-        <h3>준비 · 일정</h3>
-        <ul>
-          <li>웹팀 콘텐츠 포맷 기획 필요</li>
-          <li>박상준 차장 — AI 이미지 생성 기법 정리 필요</li>
-        </ul>
-      </section>
-      <div class="check-box">
-        <span class="lbl">결정 사항</span>
-        진행 여부 확정 / 첫 카테고리 무엇으로 시작할지 / 콘텐츠 포맷 담당자 지정
+
+      <div class="desc-section">
+        <span class="sec-label">[카테고리]</span>
+        <div class="sec-body">시스템</div>
+      </div>
+
+      <div class="desc-section">
+        <span class="sec-label">[배경 / 목적]</span>
+        <div class="sec-body">AI 시안(4K급)을 비용·시간 거의 제로로 생성 가능해, 블로그에 무료 첨부
+→ 트래픽 + 공유 유도
+→ 실물 출력은 자사몰로 자연 연결하는 전환 구조를 만듭니다.</div>
+      </div>
+
+      <div class="desc-section">
+        <span class="sec-label">[세부 내용]</span>
+        <div class="sec-body">시안 하단에 하나사인몰 출처 표기 + 링크 복사 기능 제공으로 SNS·커뮤니티 자발적 공유를 유도하며, 자사몰 상품 페이지 내에도 무료 시안 <b>1종</b>을 첨부합니다.</div>
+      </div>
+
+      <div class="desc-section">
+        <span class="sec-label">[담당 / 일정]</span>
+        <div class="sec-body">웹팀, 포맷 기획 필요, 박상준 차장 AI 이미지 생성 기법 관련 정리 필요</div>
+      </div>
+
+      <div class="meta-strip">
+        <div class="item"><b>주관</b>웹팀</div>
+        <div class="item"><b>유관</b>없음</div>
+      </div>
+
+      <div class="note-strip">
+        <span class="lbl">차장님 메모</span>
+        진행!!!! 내일 11시 미팅 안건
       </div>
     </div>
   </div>
@@ -204,7 +243,7 @@
       <div class="agenda-title">
         <h2>인스타 / 유튜브 광고 (META DB 연동)</h2>
         <div class="agenda-pills">
-          <span class="pill pill-cat">광고</span>
+          <span class="pill pill-cat">SNS · 광고</span>
           <span class="pill pill-tier-A">매출 A · 직접</span>
           <span class="pill pill-prio-m">우선도 中</span>
         </div>
@@ -218,32 +257,41 @@
       <span class="progress-when">📅 결정 후</span>
     </div>
     <div class="agenda-body">
-      <section>
-        <h3>배경 · 목적</h3>
-        <p>더 적극적인 SNS 마케팅 활용을 위한 <b>실질 광고 작업</b>.</p>
-      </section>
-      <section>
-        <h3>현황</h3>
-        <ul>
-          <li>✅ META에 <b>신규몰 상품 데이터베이스 연동 완료</b></li>
-        </ul>
-      </section>
-      <section>
-        <h3>결정 필요</h3>
-        <ul>
-          <li>인스타그램·유튜브의 <b>여러 광고상품 중 어떤 것으로 진행</b>할지</li>
-          <li>예산 / 첫 타겟 카테고리 / 운영 주기</li>
-        </ul>
-      </section>
-      <div class="check-box">
-        <span class="lbl">결정 사항</span>
-        광고상품 선택 / 시작 카테고리 / 월 예산 / 운영 담당 확정
+
+      <div class="desc-section">
+        <span class="sec-label">[카테고리]</span>
+        <div class="sec-body">SNS</div>
+      </div>
+
+      <div class="desc-section">
+        <span class="sec-label">[배경 / 목적]</span>
+        <div class="sec-body">더 적극적인 SNS 마케팅 활용을 위한 실질 광고 작업</div>
+      </div>
+
+      <div class="desc-section">
+        <span class="sec-label">[세부 내용]</span>
+        <div class="sec-body">현재 META에 신규몰 상품 데이터베이스 연동 완료 / 인스타그램, 유튜브의 여러 광고상품 중 결정하여 진행</div>
+      </div>
+
+      <div class="desc-section">
+        <span class="sec-label">[담당 / 일정]</span>
+        <div class="sec-body">임정민 주임</div>
+      </div>
+
+      <div class="meta-strip">
+        <div class="item"><b>주관</b>웹팀</div>
+        <div class="item"><b>유관</b>없음</div>
+      </div>
+
+      <div class="note-strip">
+        <span class="lbl">차장님 메모</span>
+        내일 미팅 11시에 진행
       </div>
     </div>
   </div>
 
   <div style="text-align: center; margin-top: 32px; color: #94a3b8; font-size: 12px; letter-spacing: 0.06em;">
-    HANASIGNMALL · 박상준 차장 · 회의 진행안 v1 · 2026-05-28
+    HANASIGNMALL · 박상준 차장 · 회의 진행안 · 2026-05-28
   </div>
 
 </div>
