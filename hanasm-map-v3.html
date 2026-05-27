@@ -959,9 +959,38 @@ function getEffective(cat, item) {
   const ovr = PROJECT_OVERRIDES[k] || {};
   return {
     ownerDept: (ovr.ownerDept !== undefined) ? ovr.ownerDept : (item.ownerDept || ''),
-    related: (ovr.related !== undefined) ? ovr.related : (item.related || [])
+    related: (ovr.related !== undefined) ? ovr.related : (item.related || []),
+    // 편집 가능 필드들 — 오버라이드 우선, 없으면 원본
+    prio: (ovr.prio !== undefined) ? ovr.prio : (item.prio || 'm'),
+    progress: (ovr.progress !== undefined) ? ovr.progress : (item.progress || 0),
+    revTier: (ovr.revTier !== undefined) ? ovr.revTier : (item.revTier || 'E'),
+    startWhen: (ovr.startWhen !== undefined) ? ovr.startWhen : (item.startWhen || ''),
+    owner: (ovr.owner !== undefined) ? ovr.owner : (item.owner || ''),
+    decision: (ovr.decision !== undefined) ? ovr.decision : (item.decision || 'go'),
+    desc: (ovr.desc !== undefined) ? ovr.desc : (item.desc || ''),
+    status: (ovr.status !== undefined) ? ovr.status : (item.status || 'active')
   };
 }
+
+// 페이지 로드 시 PROJECT_OVERRIDES 값을 PROJECTS 객체(메모리)에 직접 적용
+// → 모든 렌더링이 자동으로 수정된 값을 사용. v2 fetch 다음 페이지 로드에서도 일관.
+function applyOverridesToProjects(PROJECTS) {
+  if (!PROJECTS) return;
+  Object.keys(PROJECT_OVERRIDES).forEach(k => {
+    const idx = k.indexOf('::');
+    if (idx < 0) return;
+    const cat = k.slice(0, idx);
+    const name = k.slice(idx + 2);
+    const items = (PROJECTS[cat] && PROJECTS[cat].items) || [];
+    const item = items.find(i => i.name === name);
+    if (!item) return;
+    const ovr = PROJECT_OVERRIDES[k];
+    // 편집 가능 필드만 적용
+    ['ownerDept','related','prio','progress','revTier','startWhen','owner','decision','desc','status']
+      .forEach(f => { if (ovr[f] !== undefined) item[f] = ovr[f]; });
+  });
+}
+
 function setOwner(cat, name, deptId) {
   const k = cat + '::' + name;
   const it = ITEMS.find(x => x.key === k);
@@ -1308,6 +1337,10 @@ function renderDetail() {
     + '<div class="d-row"><span class="lbl">결정</span><span class="val">' + (it.decision || '-') + '</span></div>'
     + '<div class="d-actions">'
     +   ['first','run','hold','stop','merge'].map(a => '<button data-act="' + a + '" class="' + (action === a ? 'active' : '') + '">' + ACTION_LABEL[a] + '</button>').join('')
+    + '</div>'
+    + '<div class="d-actions" style="margin-top:8px;">'
+    +   '<button class="d-edit-btn" title="이 프로젝트 내용 수정">✎ 편집</button>'
+    +   (it._userAdded ? '<button class="d-delete-btn" title="삭제 (사용자 추가 항목만)">🗑 삭제</button>' : '')
     + '</div>';
 
   const _memoText = getProjectMemo(key);
@@ -1468,7 +1501,8 @@ function splitDesc(desc) {
 
 (async function init() {
   let PROJECTS;
-  try { PROJECTS = await loadData(); }
+  try { PROJECTS = await loadData();
+    applyOverridesToProjects(PROJECTS); }
   catch(e) { console.error(e); return; }
   document.getElementById('loading').remove();
   ITEMS = [];
@@ -1823,6 +1857,127 @@ function saveNewProject() {
     }
   }, true);
 })();
+
+// ─── 프로젝트 편집 (추가 모달 재사용) ──────────────────
+let _editingKey = null;  // 'cat::name' — null이면 신규 추가 모드
+function openEditProjModal(cat, item) {
+  _editingKey = cat + '::' + item.name;
+  const ov = document.getElementById('addProjOverlay');
+  if (!ov) return;
+  // 폼 채우기
+  ov.querySelector('h2').textContent = '✎ 프로젝트 편집';
+  document.getElementById('apf-name').value = item.name;
+  document.getElementById('apf-cat').value = cat;
+  document.getElementById('apf-cat').disabled = true;  // 카테고리 이동은 별도
+  document.getElementById('apf-tier').value = item.revTier || 'E';
+  document.getElementById('apf-prio').value = item.prio || 'm';
+  document.getElementById('apf-prog').value = item.progress || 0;
+  document.getElementById('apf-when').value = item.startWhen || '';
+  document.getElementById('apf-owner').value = item.owner || '';
+  document.getElementById('apf-desc').value = item.desc || '';
+  document.getElementById('apf-save').textContent = '수정 저장';
+  ov.classList.add('show');
+  setTimeout(() => document.getElementById('apf-name').focus(), 50);
+}
+// 기존 openAddProjModal 보강 — 편집 상태 리셋
+const _origOpenAdd = openAddProjModal;
+openAddProjModal = function() {
+  _editingKey = null;
+  _origOpenAdd();
+  const ov = document.getElementById('addProjOverlay');
+  ov.querySelector('h2').textContent = '＋ 신규 프로젝트';
+  document.getElementById('apf-cat').disabled = false;
+  document.getElementById('apf-save').textContent = '저장';
+};
+
+// saveNewProject 보강 — 편집 모드일 땐 update
+const _origSaveNew = saveNewProject;
+saveNewProject = function() {
+  if (!_editingKey) { _origSaveNew(); return; }
+  // 편집 모드
+  const name = document.getElementById('apf-name').value.trim();
+  if (!name) { alert('이름은 필수입니다'); return; }
+  const cat = document.getElementById('apf-cat').value;
+  const tier = document.getElementById('apf-tier').value;
+  const prio = document.getElementById('apf-prio').value;
+  const prog = parseInt(document.getElementById('apf-prog').value) || 0;
+  const when = document.getElementById('apf-when').value.trim();
+  const owner = document.getElementById('apf-owner').value.trim();
+  const desc = document.getElementById('apf-desc').value.trim();
+
+  const item = ITEMS.find(x => x.key === _editingKey);
+  if (!item) { closeAddProjModal(); return; }
+
+  // 변경 적용
+  item.item.name = name;  // 이름 변경은 key도 바꿔야 하지만 일단 visual만
+  item.item.prio = prio;
+  item.item.progress = prog;
+  item.item.revTier = tier;
+  item.item.startWhen = when;
+  item.item.owner = owner;
+  item.item.desc = desc;
+
+  if (item.item._userAdded) {
+    // 사용자 추가 항목 — userProjects에서 update
+    let user = {};
+    try { user = JSON.parse(localStorage.getItem('hanasm.userProjects.v3') || '{}'); } catch(e) {}
+    const arr = user[cat] || [];
+    const idx = arr.findIndex(x => x.name === item.item.name || x.name === _editingKey.split('::')[1]);
+    if (idx >= 0) arr[idx] = item.item;
+    user[cat] = arr;
+    try { localStorage.setItem('hanasm.userProjects.v3', JSON.stringify(user)); } catch(e) {}
+  } else {
+    // 기본 항목 — PROJECT_OVERRIDES에 저장
+    const k = cat + '::' + _editingKey.split('::')[1];  // 원본 키 (이름 바꿔도)
+    const ovr = Object.assign({}, PROJECT_OVERRIDES[k] || {});
+    ovr.prio = prio;
+    ovr.progress = prog;
+    ovr.revTier = tier;
+    ovr.startWhen = when;
+    ovr.owner = owner;
+    ovr.desc = desc;
+    PROJECT_OVERRIDES[k] = ovr;
+    persistOverrides();
+  }
+
+  _editingKey = null;
+  if (typeof renderColumns === 'function') renderColumns();
+  if (typeof renderDetail === 'function') renderDetail();
+  closeAddProjModal();
+};
+
+// 삭제 (사용자 추가 항목만)
+function deleteUserProject(cat, name) {
+  if (!confirm('이 프로젝트를 삭제할까요? (사용자 추가 항목)')) return;
+  let user = {};
+  try { user = JSON.parse(localStorage.getItem('hanasm.userProjects.v3') || '{}'); } catch(e) {}
+  if (user[cat]) {
+    user[cat] = user[cat].filter(x => x.name !== name);
+    try { localStorage.setItem('hanasm.userProjects.v3', JSON.stringify(user)); } catch(e) {}
+  }
+  // ITEMS에서도 제거
+  const idx = ITEMS.findIndex(x => x.key === cat + '::' + name);
+  if (idx >= 0) ITEMS.splice(idx, 1);
+  SELECTED.delete(cat + '::' + name);
+  if (typeof renderColumns === 'function') renderColumns();
+  if (typeof renderDetail === 'function') renderDetail();
+}
+
+// renderDetail 후 편집/삭제 버튼 바인딩 — 이벤트 위임으로 처리
+document.addEventListener('click', (e) => {
+  if (e.target.matches('.d-edit-btn')) {
+    if (SELECTED.size !== 1) return;
+    const key = Array.from(SELECTED)[0];
+    const entry = ITEMS.find(x => x.key === key);
+    if (entry) openEditProjModal(entry.cat, entry.item);
+  }
+  if (e.target.matches('.d-delete-btn')) {
+    if (SELECTED.size !== 1) return;
+    const key = Array.from(SELECTED)[0];
+    const idx = key.indexOf('::');
+    if (idx > 0) deleteUserProject(key.slice(0, idx), key.slice(idx + 2));
+  }
+});
 </script>
 
 <!-- 신규 프로젝트 추가 모달 -->
