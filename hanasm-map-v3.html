@@ -771,22 +771,37 @@ body.meeting-mode .detail-resize-handle { display: none; }
 .add-proj-modal .actions button:hover { background: rgba(167,139,250,0.20); }
 .add-proj-modal .actions button.primary:hover { background: rgba(167,139,250,0.45); }
 
-/* d-right 상단 이미지 썸네일 */
-.d-image-wrap {
-  display: block;
-  margin-bottom: 12px;
-  text-align: center;
+/* 디테일 우측 이미지 컬럼 (별도 영역) */
+.d-image-col {
+  flex: 0 0 340px; max-width: 340px;
+  max-height: calc(50vh - 28px);
+  overflow-y: auto;
+  padding: 0 4px;
+  display: none;
+}
+.detail.expanded .d-image-col { max-height: calc(82vh - 28px); }
+.d-image-col.show { display: block; }
+/* 컬럼 좌측 구분선 */
+.d-image-col.show {
+  border-left: 1px dashed var(--line);
+  padding-left: 16px;
+}
+.d-image-col-head {
+  font-size: 12.6px; font-weight: 800; letter-spacing: 0.16em;
+  color: var(--text-2); text-transform: uppercase;
+  margin-bottom: 8px;
 }
 .d-image-thumb {
   display: block;
   width: 100%;
-  max-height: 280px;
+  max-height: calc(50vh - 80px);
   object-fit: contain;
   background: rgba(0,0,0,0.40);
   border: 1px solid rgba(167,139,250,0.30);
   cursor: zoom-in;
   transition: border-color 0.15s ease;
 }
+.detail.expanded .d-image-thumb { max-height: calc(82vh - 80px); }
 .d-image-thumb:hover {
   border-color: rgba(167,139,250,0.70);
 }
@@ -795,6 +810,7 @@ body.meeting-mode .detail-resize-handle { display: none; }
   color: var(--text-3);
   margin-top: 4px;
   letter-spacing: 0.06em;
+  text-align: center;
 }
 
 /* 이미지 라이트박스 (풀스크린) */
@@ -903,6 +919,7 @@ body.meeting-mode .detail-resize-handle { display: none; }
     <div class="d-left" id="detailLeft" style="display:none"></div>
     <div class="d-pricecol" id="detailPriceCol"></div>
     <div class="d-right" id="detailRight" style="display:none"></div>
+    <div class="d-image-col" id="detailImageCol" style="display:none"></div>
   </section>
   <div class="detail-resize-handle" id="detailResizeHandle" title="드래그로 디테일 영역 크기 조절"></div>
 
@@ -1441,18 +1458,21 @@ function renderDetail() {
   const leftEl = document.getElementById('detailLeft');
   const rightEl = document.getElementById('detailRight');
   const priceEl = document.getElementById('detailPriceCol');
+  const imageColEl = document.getElementById('detailImageCol');
   if (SELECTED.size === 0) {
     detail.classList.add('empty');
     emptyEl.style.display = '';
     leftEl.style.display = 'none';
     rightEl.style.display = 'none';
     priceEl.classList.remove('show');
+    if (imageColEl) { imageColEl.classList.remove('show'); imageColEl.style.display = 'none'; imageColEl.innerHTML = ''; }
     return;
   }
   detail.classList.remove('empty');
   emptyEl.style.display = 'none';
   leftEl.style.display = '';
   rightEl.style.display = '';
+  if (imageColEl) { imageColEl.classList.remove('show'); imageColEl.style.display = 'none'; imageColEl.innerHTML = ''; }
 
   if (SELECTED.size > 1) {
     priceEl.classList.remove('show');
@@ -1504,8 +1524,7 @@ function renderDetail() {
   const _memoText = getProjectMemo(key);
   const _imgSrc = it.image || '';
   rightEl.innerHTML =
-    (_imgSrc ? ('<div class="d-image-wrap"><img class="d-image-thumb" src="' + escapeHtml(_imgSrc) + '" alt="" onerror="this.style.display=\'none\'"><div class="d-image-caption">클릭하면 원본 크기로 보기</div></div>') : '')
-    + '<div class="d-desc">'
+    '<div class="d-desc">'
     +   (split.text || it.desc || '<i style="color:#6b7280">상세 설명 없음</i>')
     + '</div>'
     + '<div class="d-memo-box">'
@@ -1516,11 +1535,19 @@ function renderDetail() {
     +     '<span class="d-memo-cnt">' + _memoText.length + '자</span>'
     +   '</div>'
     + '</div>';
-  // 썸네일 클릭 → 라이트박스
-  const _thumb = rightEl.querySelector('.d-image-thumb');
-  if (_thumb) _thumb.addEventListener('click', () => openImgLightbox(_imgSrc));
   // desc 안 링크 처리: 기존 <a>에 target="_blank" + plain text URL 자동 linkify
   linkifyDescArea(rightEl.querySelector('.d-desc'));
+  // 이미지가 있으면 별도 우측 컬럼(d-image-col)에 렌더 — desc 안 가림
+  if (_imgSrc && imageColEl) {
+    imageColEl.innerHTML =
+      '<div class="d-image-col-head">📷 이미지</div>'
+      + '<img class="d-image-thumb" src="' + escapeHtml(_imgSrc) + '" alt="" onerror="this.style.display=\'none\'">'
+      + '<div class="d-image-caption">클릭하면 원본 크기로 보기</div>';
+    imageColEl.classList.add('show');
+    imageColEl.style.display = 'block';
+    const _thumb = imageColEl.querySelector('.d-image-thumb');
+    if (_thumb) _thumb.addEventListener('click', () => openImgLightbox(_imgSrc));
+  }
   // 메모 textarea 바인딩
   const _memoTa = rightEl.querySelector('.d-project-memo');
   const _memoCnt = rightEl.querySelector('.d-memo-cnt');
