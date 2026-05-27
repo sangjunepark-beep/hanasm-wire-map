@@ -1550,9 +1550,8 @@ function openMapIframeModal() {
   const m = document.getElementById('mapIframeModal');
   const f = document.getElementById('mapIframeModalIframe');
   if (!m || !f) return;
-  if (f.src.indexOf('hanasm-map-v2.html') === -1) {
-    f.src = 'hanasm-map-v2.html';
-  }
+  // cache-buster — 항상 최신 v2 코드 로드 (브라우저 캐시 우회)
+  f.src = 'hanasm-map-v2.html?t=' + Date.now();
   m.classList.add('open');
 }
 function closeMapIframeModal() {
