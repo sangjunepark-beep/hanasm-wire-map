@@ -545,9 +545,8 @@ body.memo-expanded main.app { bottom: 95px !important; }
   .detail .d-right { max-height: none; }
 }
 
-/* ⑤ 회의 모드 토글 (v3) */
+/* ⑤ 회의 모드 토글 (v3) — header 안 v2-link 직전에 flex 자식으로 통합 */
 .meeting-toggle {
-  position: fixed; top: 14px; right: 240px; z-index: 110;
   background: rgba(8,9,28,0.85);
   border: 1px solid rgba(167,139,250,0.40);
   color: #c084fc;
@@ -558,16 +557,23 @@ body.memo-expanded main.app { bottom: 95px !important; }
 }
 .meeting-toggle:hover { background: rgba(167,139,250,0.18); color: #fff; }
 body.meeting-mode .meeting-toggle {
-  /* 회의모드 ON: 좌상단(meeting-aux-link 옆)으로 이동 — 칸반 컬럼 헤더와 안 겹치게 */
-  top: 14px !important; left: 165px !important; right: auto !important;
   background: rgba(251,191,36,0.20);
   border-color: #fbbf24;
   color: #fbbf24;
-  box-shadow: 0 0 14px rgba(251,191,36,0.45);
 }
-/* 회의모드 — header 통째 숨김. 와이어맵 복귀는 floating meeting-aux-link로 일원화 */
-body.meeting-mode header.topbar { display: none !important; }
-/* 상단 50px 띠는 meeting-aux-link 영역. 컨텐츠는 그 아래부터 시작 → 디테일과 안 겹침 */
+/* 회의모드 — header는 살리되 자식 중 meeting-toggle만 보임 (해제 진입점 유지) */
+body.meeting-mode header.topbar {
+  background: transparent !important;
+  border-bottom: none !important;
+  padding: 8px 14px !important;
+  justify-content: flex-start !important;
+}
+body.meeting-mode header.topbar > *:not(#meetingToggle) { display: none !important; }
+body.meeting-mode header.topbar > #meetingToggle {
+  display: inline-block !important;
+  margin-left: 150px !important;  /* meeting-aux-link 옆 위치 */
+}
+/* 상단 50px 띠는 meeting-aux-link/meeting-toggle 영역. 컨텐츠는 그 아래부터 */
 body.meeting-mode .app { top: 50px !important; padding-top: 4px !important; }
 body.meeting-mode { background: #000 !important; }
 /* 회의모드 보조 링크 (v2로 이동) */
@@ -669,7 +675,6 @@ body.inside-iframe { background: #050614 !important; }
           allow="fullscreen; clipboard-read; clipboard-write"
           src="about:blank"></iframe>
 </div>
-<button class="meeting-toggle" id="meetingToggle" title="회의 모드 — 단축키 P / 해제 ESC">⛶ 회의</button>
 <a class="meeting-aux-link" id="meetingAuxLink" href="hanasm-map-v2.html" title="와이어 맵으로">← 와이어 맵</a>
 
 <header class="topbar">
@@ -688,6 +693,7 @@ body.inside-iframe { background: #050614 !important; }
     <button data-bulk="stop" disabled>⊘ 중단</button>
     <button data-bulk="clear" disabled>✕ 해제</button>
   </div>
+  <button class="meeting-toggle" id="meetingToggle" title="회의 모드 — 단축키 P / 해제 ESC">⛶ 회의</button>
   <a class="v2-link" href="hanasm-map-v2.html" title="와이어 맵으로">← 와이어 맵</a>
 </header>
 
