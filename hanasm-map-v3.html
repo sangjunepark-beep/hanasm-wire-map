@@ -1597,6 +1597,13 @@ function initCardSortables() {
       ghostClass: 'sortable-ghost',
       chosenClass: 'sortable-chosen',
       handle: '.card',
+      // native HTML5 DnD 대신 mouse 이벤트 사용 — 일부 브라우저/카드 내부 인터랙션과 충돌 회피
+      forceFallback: true,
+      fallbackTolerance: 5,
+      fallbackOnBody: true,
+      // 카드 내부 인터랙티브 요소(링크/버튼/입력)만 드래그 시작 제외 — 진행률 바는 잡아도 OK
+      filter: 'a, button, input, textarea, select',
+      preventOnFilter: false,
       onAdd: (evt) => onCardAdd(evt),
       onUpdate: (evt) => onCardUpdate(evt),
       onRemove: (evt) => onCardRemove(evt)
