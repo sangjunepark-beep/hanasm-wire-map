@@ -1532,6 +1532,7 @@ function getAction(key, item) {
   return (st[key] && (st[key].action === 'after' ? 'hold' : st[key].action)) || fallback;
 }
 function setAction(key, action) {
+  if (!action) return;  // 가드: undefined/null/'' 차단 — data-act 없는 버튼이 setAction 호출하면 storage 깨짐
   const st = loadProjectState();
   const before = (st[key] && st[key].action) || 'run';
   if (before === action) return;
@@ -1933,7 +1934,8 @@ function renderDetail() {
     priceEl.innerHTML = '';
   }
 
-  leftEl.querySelectorAll('.d-actions button').forEach(btn => {
+  // 액션 버튼만 — [data-act] 셀렉터로 ✎편집·🗑삭제 버튼 제외 (그것들도 .d-actions 안에 있음)
+  leftEl.querySelectorAll('.d-actions button[data-act]').forEach(btn => {
     btn.addEventListener('click', () => {
       setAction(key, btn.dataset.act);
       renderDetail();
