@@ -902,6 +902,27 @@ body.meeting-mode .detail-resize-handle { display: none; }
   cursor: pointer; line-height: 1;
 }
 .apf-img-chip-x:hover { background: #ef4444; }
+/* 액션 버튼 그룹 (디테일 액션 버튼과 같은 스타일) */
+.apf-action-group {
+  display: flex; gap: 5px; flex-wrap: wrap;
+}
+.apf-action-group button {
+  flex: 1;
+  background: rgba(8,9,28,0.80);
+  border: 1px solid var(--line);
+  color: var(--text-2);
+  padding: 7px 10px; font-size: 12.5px; font-weight: 800;
+  letter-spacing: 0.04em;
+  cursor: pointer; font-family: inherit;
+  clip-path: polygon(3px 0, 100% 0, 100% calc(100% - 3px), calc(100% - 3px) 100%, 0 100%, 0 3px);
+}
+.apf-action-group button:hover {
+  color: #fff; border-color: var(--info); background: rgba(34,211,238,0.10);
+}
+.apf-action-group button.active {
+  background: rgba(34,211,238,0.22); color: #fff; border-color: var(--info);
+}
+
 .apf-img-hint {
   font-size: 10.5px; color: var(--text-3);
   margin-top: 3px; display: block;
@@ -1101,13 +1122,13 @@ body.meeting-mode .detail-resize-handle { display: none; }
     </div>
     <div class="field">
       <label>액션 (보드 위치)</label>
-      <select id="apf-action">
-        <option value="first">⚡ 우선</option>
-        <option value="run" selected>● 진행</option>
-        <option value="hold">⏸ 보류</option>
-        <option value="stop">⊘ 중단</option>
-        <option value="merge">⤴ 통합</option>
-      </select>
+      <div class="apf-action-group" id="apf-action-group">
+        <button type="button" data-act="first">⚡ 우선</button>
+        <button type="button" data-act="run" class="active">● 진행</button>
+        <button type="button" data-act="hold">⏸ 보류</button>
+        <button type="button" data-act="stop">⊘ 중단</button>
+        <button type="button" data-act="merge">⤴ 통합</button>
+      </div>
     </div>
     <div class="field">
       <label>시기 / 일정 <span style="font-size:10px;color:var(--text-3);font-weight:400;">(클릭하여 선택 또는 직접 입력)</span></label>
@@ -2160,7 +2181,7 @@ function openAddProjModal() {
   document.getElementById('apf-cat').disabled = false;
   document.getElementById('apf-tier').value = 'B';
   document.getElementById('apf-prio').value = 'm';
-  document.getElementById('apf-action').value = 'run';
+  setApfAction('run');
 
   ov.classList.add('show');
   setTimeout(() => document.getElementById('apf-name').focus(), 50);
@@ -2181,7 +2202,7 @@ function saveNewProject() {
   const desc = plainToHtml(document.getElementById('apf-desc').value.trim());
   const images = apfImages.slice();
   const image = images[0] || '';  // backward compat: 첫 번째 이미지를 image로도 저장
-  const action = document.getElementById('apf-action').value || 'run';
+  const action = getApfAction();
 
   // ─── 편집 모드 ────────────────────────────────────
   if (typeof _editingKey !== 'undefined' && _editingKey) {
@@ -2291,7 +2312,7 @@ function openEditProjModal(cat, item) {
   document.getElementById('apf-cat').disabled = true;  // 카테고리 이동은 별도
   document.getElementById('apf-tier').value = item.revTier || 'E';
   document.getElementById('apf-prio').value = item.prio || 'm';
-  document.getElementById('apf-action').value = getAction(cat + '::' + item.name, item) || 'run';
+  setApfAction(getAction(cat + '::' + item.name, item) || 'run');
   document.getElementById('apf-prog').value = item.progress || 0;
   document.getElementById('apf-when').value = item.startWhen || '';
   document.getElementById('apf-owner').value = item.owner || '';
@@ -2357,6 +2378,30 @@ function deleteUserProject(cat, name) {
   if (typeof renderColumns === 'function') renderColumns();
   if (typeof renderDetail === 'function') renderDetail();
 }
+
+// 액션 버튼 그룹 헬퍼
+function setApfAction(act) {
+  const g = document.getElementById('apf-action-group');
+  if (!g) return;
+  g.querySelectorAll('button').forEach(b => {
+    b.classList.toggle('active', b.dataset.act === act);
+  });
+}
+function getApfAction() {
+  const g = document.getElementById('apf-action-group');
+  if (!g) return 'run';
+  const btn = g.querySelector('button.active');
+  return btn ? btn.dataset.act : 'run';
+}
+// 클릭 시 active 토글 (이벤트 위임)
+document.addEventListener('click', (e) => {
+  const btn = e.target.closest('#apf-action-group button[data-act]');
+  if (!btn) return;
+  e.preventDefault();
+  const g = document.getElementById('apf-action-group');
+  if (g) g.querySelectorAll('button').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+});
 
 // renderDetail 후 편집/삭제 버튼 바인딩 — 이벤트 위임으로 처리
 document.addEventListener('click', (e) => {
