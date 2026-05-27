@@ -1598,7 +1598,7 @@ function renderDetail() {
     + '</div>'
     + '<div class="d-actions" style="margin-top:8px;">'
     +   '<button class="d-edit-btn" title="이 프로젝트 내용 수정">✎ 편집</button>'
-    +   (it._userAdded ? '<button class="d-delete-btn" title="삭제 (사용자 추가 항목만)">🗑 삭제</button>' : '')
+    +   '<button class="d-delete-btn" title="이 프로젝트 삭제">🗑 삭제</button>'
     + '</div>';
 
   const _memoText = getProjectMemo(key);
@@ -1855,9 +1855,13 @@ function splitDesc(desc) {
   catch(e) { console.error(e); return; }
   document.getElementById('loading').remove();
   ITEMS = [];
+  // 숨김 처리된 키 목록 (deleteUserProject로 기본 항목 숨긴 것)
+  const _hiddenSet = new Set((typeof loadHiddenList === 'function') ? loadHiddenList() : []);
   Object.keys(PROJECTS).forEach(cat => {
     (PROJECTS[cat].items || []).forEach(item => {
-      ITEMS.push({ cat, key: cat + '::' + item.name, item });
+      const k = cat + '::' + item.name;
+      if (_hiddenSet.has(k)) return;  // 숨김 항목 스킵
+      ITEMS.push({ cat, key: k, item });
     });
   });
   try {
@@ -2311,18 +2315,45 @@ function openEditProjModal(cat, item) {
 // 별도 wrapper 불필요 — _editingKey 변수만 공유
 
 // 삭제 (사용자 추가 항목만)
+// 숨김 처리된 기본 항목 목록 (localStorage)
+const HIDDEN_KEY = 'hanasm.hiddenProjects.v3';
+function loadHiddenList() {
+  try { return JSON.parse(localStorage.getItem(HIDDEN_KEY) || '[]'); } catch(e) { return []; }
+}
+function saveHiddenList(list) {
+  try { localStorage.setItem(HIDDEN_KEY, JSON.stringify(list)); } catch(e) {}
+}
+function hideBaseProject(key) {
+  const list = loadHiddenList();
+  if (!list.includes(key)) { list.push(key); saveHiddenList(list); }
+}
+
 function deleteUserProject(cat, name) {
-  if (!confirm('이 프로젝트를 삭제할까요? (사용자 추가 항목)')) return;
-  let user = {};
-  try { user = JSON.parse(localStorage.getItem('hanasm.userProjects.v3') || '{}'); } catch(e) {}
-  if (user[cat]) {
-    user[cat] = user[cat].filter(x => x.name !== name);
-    try { localStorage.setItem('hanasm.userProjects.v3', JSON.stringify(user)); } catch(e) {}
+  const key = cat + '::' + name;
+  const entry = ITEMS.find(x => x.key === key);
+  const isUserAdded = entry && entry.item._userAdded;
+  const msg = isUserAdded
+    ? '이 프로젝트를 삭제할까요? (사용자 추가 항목 — 영구 삭제)'
+    : '이 프로젝트를 보드에서 숨길까요? (기본 항목 — 다시 복원 가능)';
+  if (!confirm(msg)) return;
+
+  if (isUserAdded) {
+    // 사용자 추가 — userProjects에서 영구 제거
+    let user = {};
+    try { user = JSON.parse(localStorage.getItem('hanasm.userProjects.v3') || '{}'); } catch(e) {}
+    if (user[cat]) {
+      user[cat] = user[cat].filter(x => x.name !== name);
+      try { localStorage.setItem('hanasm.userProjects.v3', JSON.stringify(user)); } catch(e) {}
+    }
+  } else {
+    // 기본 항목 — hiddenList에 추가 (다음 로드에도 숨김 유지)
+    hideBaseProject(key);
   }
-  // ITEMS에서도 제거
-  const idx = ITEMS.findIndex(x => x.key === cat + '::' + name);
+
+  // ITEMS에서도 제거 (현재 세션)
+  const idx = ITEMS.findIndex(x => x.key === key);
   if (idx >= 0) ITEMS.splice(idx, 1);
-  SELECTED.delete(cat + '::' + name);
+  SELECTED.delete(key);
   if (typeof renderColumns === 'function') renderColumns();
   if (typeof renderDetail === 'function') renderDetail();
 }
