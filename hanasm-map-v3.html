@@ -1886,12 +1886,13 @@ function saveNewProject() {
   closeAddProjModal();
 }
 (function bindAddProj(){
+  // 함수 reference 직접 등록 시 stale 문제 → wrapping function으로 매번 fresh lookup
   const btn = document.getElementById('addProjBtn');
-  if (btn) btn.addEventListener('click', openAddProjModal);
+  if (btn) btn.addEventListener('click', () => openAddProjModal());
   const cancel = document.getElementById('apf-cancel');
-  if (cancel) cancel.addEventListener('click', closeAddProjModal);
+  if (cancel) cancel.addEventListener('click', () => closeAddProjModal());
   const save = document.getElementById('apf-save');
-  if (save) save.addEventListener('click', saveNewProject);
+  if (save) save.addEventListener('click', () => saveNewProject());
   const ov = document.getElementById('addProjOverlay');
   if (ov) ov.addEventListener('click', (e) => {
     if (e.target === ov) closeAddProjModal();
