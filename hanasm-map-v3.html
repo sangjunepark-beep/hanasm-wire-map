@@ -928,9 +928,37 @@ body.meeting-mode .detail-resize-handle { display: none; }
   margin-top: 3px; display: block;
   letter-spacing: 0.04em;
 }
+
+/* Toast 알림 */
+.v3-toast {
+  position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%);
+  background: rgba(8,9,28,0.95);
+  border: 1px solid rgba(34,211,238,0.55);
+  color: #67e8f9;
+  padding: 10px 22px; font-size: 13px; font-weight: 800;
+  letter-spacing: 0.06em; z-index: 99998;
+  clip-path: polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px);
+  display: none; pointer-events: none;
+}
+.v3-toast.show { display: block; animation: toastIn 0.2s ease-out; }
+.v3-toast.error { border-color: rgba(248,113,113,0.55); color: #f87171; }
+@keyframes toastIn { from { opacity: 0; transform: translate(-50%, 10px); } to { opacity: 1; transform: translate(-50%, 0); } }
+
+/* 백업/복원 버튼 */
+.backup-btn {
+  background: rgba(34,211,238,0.10);
+  border: 1px solid rgba(34,211,238,0.45);
+  color: #67e8f9;
+  padding: 7px 12px; font-size: 12.5px;
+  font-family: inherit; font-weight: 700; cursor: pointer;
+  letter-spacing: 0.06em; white-space: nowrap;
+  clip-path: polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px);
+}
+.backup-btn:hover { background: rgba(34,211,238,0.22); color: #fff; }
 </style>
 </head>
 <body>
+<div class="v3-toast" id="v3Toast"></div>
 <!-- 이미지 라이트박스 (썸네일 클릭 시 원본 크기) -->
 <div class="img-lightbox" id="imgLightbox">
   <button class="img-lightbox-close" id="imgLightboxClose" title="닫기 (ESC)">✕ 닫기</button>
@@ -964,6 +992,7 @@ body.meeting-mode .detail-resize-handle { display: none; }
   </div>
   <button class="meeting-toggle" id="meetingToggle" title="회의 모드 — 단축키 P / 해제 ESC">⛶ 회의</button>
   <button class="add-proj-btn" id="addProjBtn" title="신규 프로젝트 추가">＋ 신규</button>
+  <button class="backup-btn" id="backupBtn" title="모든 데이터 JSON으로 내보내기/가져오기 (백업·복원)">💾 백업</button>
   <a class="v2-link" href="hanasm-map-v2.html" title="와이어 맵으로">← 와이어 맵</a>
 </header>
 
@@ -2248,6 +2277,8 @@ function saveNewProject() {
     _editingKey = null;
     if (typeof renderColumns === 'function') renderColumns();
     if (typeof renderDetail === 'function') renderDetail();
+    if (typeof autoBackup === 'function') autoBackup();
+    if (typeof showToast === 'function') showToast('✅ 수정 저장됨');
     closeAddProjModal();
     return;
   }
@@ -2274,6 +2305,8 @@ function saveNewProject() {
   // 신규 카드 액션(보드 위치) 저장
   if (typeof setAction === 'function') setAction(cat + '::' + name, action);
   if (typeof renderColumns === 'function') renderColumns();
+  if (typeof autoBackup === 'function') autoBackup();
+  if (typeof showToast === 'function') showToast('✅ 신규 추가됨');
   closeAddProjModal();
 }
 (function bindAddProj(){
@@ -2582,6 +2615,135 @@ function renderApfImgList() {
     }
     if (handled) e.preventDefault();
   });
+})();
+
+// ─── 응급 백업 시스템 ────────────────────────────────
+const V3_KEYS = [
+  'hanasm.userProjects.v3',
+  'hanasm.projectOverrides.v3',
+  'hanasm.projectMemos.v3',
+  'hanasm.projectState.v3',
+  'hanasm.hiddenProjects.v3',
+  'hanasm.meetingMemo.v3',
+  'hanasm.v3.kanban.order',
+  'hanasm.projectSortMode.v3',
+  'hanasm.projectRevFilter.v3',
+  'hanasm.detailHeight.v3',
+  'hanasm.detailExpanded.v3'
+];
+const V3_AUTOBACKUP_KEY = 'hanasm.autoBackup.v3';   // 최근 5개 회전
+const V3_AUTOBACKUP_MAX = 5;
+
+function showToast(msg, isError) {
+  const t = document.getElementById('v3Toast');
+  if (!t) return;
+  t.textContent = msg;
+  t.classList.toggle('error', !!isError);
+  t.classList.add('show');
+  clearTimeout(window._v3ToastTimer);
+  window._v3ToastTimer = setTimeout(() => t.classList.remove('show'), 2000);
+}
+
+function snapshotAllData() {
+  const snap = {};
+  V3_KEYS.forEach(k => {
+    const v = localStorage.getItem(k);
+    if (v) snap[k] = v;
+  });
+  return snap;
+}
+
+function autoBackup() {
+  try {
+    const list = JSON.parse(localStorage.getItem(V3_AUTOBACKUP_KEY) || '[]');
+    list.push({ ts: Date.now(), iso: new Date().toISOString(), snap: snapshotAllData() });
+    while (list.length > V3_AUTOBACKUP_MAX) list.shift();
+    localStorage.setItem(V3_AUTOBACKUP_KEY, JSON.stringify(list));
+  } catch(e) { console.warn('autoBackup 실패:', e); }
+}
+
+// JSON 내보내기 (다운로드)
+function exportBackup() {
+  const data = {
+    exportedAt: new Date().toISOString(),
+    version: 'v3',
+    data: snapshotAllData()
+  };
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'hanasm-v3-backup-' + new Date().toISOString().slice(0,19).replace(/[:T]/g,'-') + '.json';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  showToast('✅ 백업 파일 다운로드 완료');
+}
+
+// JSON 가져오기 (파일 선택)
+function importBackup() {
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = 'application/json,.json';
+  input.addEventListener('change', () => {
+    const f = input.files && input.files[0];
+    if (!f) return;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const obj = JSON.parse(e.target.result);
+        if (!obj.data) throw new Error('형식 오류 — data 필드 없음');
+        if (!confirm('현재 데이터를 덮어쓰고 백업을 복원합니다. 계속할까요?\n\n(현재 상태는 자동 백업에 저장됩니다)')) return;
+        autoBackup();  // 복원 전 현재 상태 백업
+        Object.entries(obj.data).forEach(([k, v]) => {
+          if (typeof v === 'string') localStorage.setItem(k, v);
+        });
+        showToast('✅ 복원 완료 — 페이지 새로고침');
+        setTimeout(() => location.reload(), 1000);
+      } catch(err) {
+        showToast('❌ 복원 실패: ' + err.message, true);
+      }
+    };
+    reader.readAsText(f);
+  });
+  input.click();
+}
+
+// 백업 버튼 클릭 시 메뉴
+function openBackupMenu() {
+  const list = JSON.parse(localStorage.getItem(V3_AUTOBACKUP_KEY) || '[]');
+  const lastIso = list.length ? new Date(list[list.length-1].ts).toLocaleString('ko-KR') : '없음';
+  const choice = prompt(
+    '📦 백업 / 복원\n\n' +
+    '자동 백업: ' + list.length + '개 (최근: ' + lastIso + ')\n\n' +
+    '1: JSON 파일로 내보내기 (수동 백업)\n' +
+    '2: JSON 파일에서 복원 (가져오기)\n' +
+    '3: 마지막 자동 백업에서 복원\n' +
+    '\n번호 입력 (취소: 빈 칸):',
+    '1'
+  );
+  if (!choice) return;
+  if (choice === '1') exportBackup();
+  else if (choice === '2') importBackup();
+  else if (choice === '3') {
+    if (!list.length) { showToast('❌ 자동 백업 없음', true); return; }
+    if (!confirm('마지막 자동 백업(' + lastIso + ')으로 복원합니다.\n현재 데이터는 덮어써집니다.')) return;
+    const last = list[list.length - 1];
+    autoBackup();  // 현재 상태도 백업
+    Object.entries(last.snap).forEach(([k, v]) => {
+      if (typeof v === 'string') localStorage.setItem(k, v);
+    });
+    showToast('✅ 자동 백업으로 복원');
+    setTimeout(() => location.reload(), 1000);
+  }
+}
+
+(function bindBackupBtn(){
+  const btn = document.getElementById('backupBtn');
+  if (btn) btn.addEventListener('click', openBackupMenu);
+  // 페이지 로드 시 자동 백업 (1번/로드)
+  setTimeout(autoBackup, 2000);
 })();
 </script>
 
