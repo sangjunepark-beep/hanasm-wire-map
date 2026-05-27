@@ -1100,8 +1100,35 @@ body.meeting-mode .detail-resize-handle { display: none; }
       </div>
     </div>
     <div class="field">
-      <label>시기 / 일정</label>
-      <input type="text" id="apf-when" placeholder="예: 진행 중 / 6월 초 / 미정">
+      <label>시기 / 일정 <span style="font-size:10px;color:var(--text-3);font-weight:400;">(클릭하여 선택 또는 직접 입력)</span></label>
+      <input type="text" id="apf-when" list="apf-when-list" placeholder="클릭해서 선택 / 직접 입력">
+      <datalist id="apf-when-list">
+        <option value="진행 중"></option>
+        <option value="즉시 시작"></option>
+        <option value="이번 주"></option>
+        <option value="다음 주"></option>
+        <option value="이번 달"></option>
+        <option value="6월 초"></option>
+        <option value="6월 중순"></option>
+        <option value="6월 말"></option>
+        <option value="7월 초"></option>
+        <option value="7월 중순"></option>
+        <option value="7월 말"></option>
+        <option value="3분기"></option>
+        <option value="4분기"></option>
+        <option value="중기 (3개월)"></option>
+        <option value="장기 (6개월+)"></option>
+        <option value="기획 후"></option>
+        <option value="협의 후"></option>
+        <option value="검토 후"></option>
+        <option value="결정 후"></option>
+        <option value="보고 후"></option>
+        <option value="외주 확인 후"></option>
+        <option value="원가 검토 후"></option>
+        <option value="보류"></option>
+        <option value="미정"></option>
+        <option value="완료"></option>
+      </datalist>
     </div>
     <div class="field">
       <label>담당자</label>
