@@ -1115,7 +1115,7 @@ body.meeting-mode .detail-resize-handle { display: none; }
         <input type="file" id="apf-img-file" accept="image/*" multiple style="display:none">
       </div>
       <div class="apf-img-list" id="apf-img-list"></div>
-      <span class="apf-img-hint">URL은 Enter로 추가 · 파일은 여러 개 선택 가능 · 3MB 초과 파일은 거부</span>
+      <span class="apf-img-hint">URL Enter로 추가 · 파일 다중 선택 · 캡쳐 후 Ctrl+V 붙여넣기 · 3MB 초과 거부</span>
     </div>
     <div class="field">
       <label>상세 설명</label>
@@ -2434,6 +2434,34 @@ function renderApfImgList() {
       file.value = '';  // 같은 파일 다시 선택 가능하게
     });
   }
+  // 클립보드 이미지 붙여넣기 (Ctrl+V) — 모달 열렸을 때만 동작
+  document.addEventListener('paste', (e) => {
+    const ov = document.getElementById('addProjOverlay');
+    if (!ov || !ov.classList.contains('show')) return;
+    const cd = e.clipboardData || window.clipboardData;
+    if (!cd || !cd.items) return;
+    let handled = false;
+    for (const item of cd.items) {
+      if (item.type && item.type.indexOf('image/') === 0) {
+        const blob = item.getAsFile();
+        if (!blob) continue;
+        if (blob.size > APF_MAX_SIZE) {
+          alert('붙여넣은 이미지가 3MB를 초과합니다 (' + (blob.size / 1024 / 1024).toFixed(2) + 'MB). 거부됨.');
+          handled = true;
+          break;
+        }
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+          apfImages.push(ev.target.result);
+          renderApfImgList();
+        };
+        reader.readAsDataURL(blob);
+        handled = true;
+        break;  // 한 번에 하나만 처리
+      }
+    }
+    if (handled) e.preventDefault();
+  });
 })();
 </script>
 
