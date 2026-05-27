@@ -1631,9 +1631,96 @@ body.meeting-mode .meeting-toggle {
   top: 16px !important;
 }
 body.inside-iframe .meeting-toggle { display: none !important; }
+
+/* Supabase 설정 모달 (v3와 동일) */
+.sb-setup-overlay {
+  position: fixed; inset: 0; z-index: 99997;
+  background: rgba(0,0,0,0.85);
+  display: none; align-items: center; justify-content: center;
+}
+.sb-setup-overlay.show { display: flex; }
+.sb-setup-modal {
+  background: #0a0a1c;
+  border: 1px solid rgba(34,211,238,0.45);
+  padding: 26px 30px;
+  width: 540px; max-width: 92vw;
+  clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px);
+}
+.sb-setup-modal h2 {
+  font-size: 18px; font-weight: 800;
+  color: #67e8f9; margin-bottom: 8px;
+  letter-spacing: 0.04em;
+}
+.sb-setup-modal p {
+  font-size: 13px; color: rgba(255,255,255,0.65);
+  margin-bottom: 16px; line-height: 1.7;
+}
+.sb-setup-modal label {
+  display: block; font-size: 11px; font-weight: 800;
+  color: rgba(255,255,255,0.55);
+  letter-spacing: 0.16em; text-transform: uppercase;
+  margin: 12px 0 4px;
+}
+.sb-setup-modal input {
+  width: 100%;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.18);
+  color: #fff;
+  font-family: monospace; font-size: 12.5px;
+  padding: 8px 10px; outline: none;
+}
+.sb-setup-modal input:focus { border-color: rgba(34,211,238,0.65); }
+.sb-setup-modal .actions {
+  display: flex; gap: 10px; justify-content: flex-end;
+  margin-top: 20px;
+}
+.sb-setup-modal .actions button {
+  padding: 8px 16px; font-size: 13px; font-weight: 800;
+  letter-spacing: 0.04em; cursor: pointer; font-family: inherit;
+  background: transparent; color: #fff;
+  border: 1px solid rgba(255,255,255,0.30);
+}
+.sb-setup-modal .actions button.primary {
+  background: rgba(34,211,238,0.25);
+  border-color: rgba(34,211,238,0.55);
+  color: #67e8f9;
+}
+.sb-setup-modal .actions button:hover { background: rgba(34,211,238,0.18); }
+
+/* Supabase 상태 버튼 — 우상단 고정 (v2 헤더 구조와 다르므로 fixed 위치) */
+.sb-status-v2 {
+  position: fixed; top: 16px; right: 14px; z-index: 115;
+  background: rgba(34,211,238,0.10);
+  border: 1px solid rgba(34,211,238,0.40);
+  color: #67e8f9;
+  padding: 6px 11px; font-size: 11.5px;
+  font-family: inherit; font-weight: 700; cursor: pointer;
+  letter-spacing: 0.04em; white-space: nowrap;
+  clip-path: polygon(5px 0, 100% 0, 100% calc(100% - 5px), calc(100% - 5px) 100%, 0 100%, 0 5px);
+}
+.sb-status-v2.disconnected { background: rgba(248,113,113,0.10); border-color: rgba(248,113,113,0.40); color: #f87171; }
+.sb-status-v2.syncing { background: rgba(251,191,36,0.10); border-color: rgba(251,191,36,0.40); color: #fbbf24; }
+.sb-status-v2:hover { filter: brightness(1.2); }
+body.meeting-mode .sb-status-v2 { display: none; }
 </style>
 </head>
 <body>
+<!-- Supabase 초기 설정 모달 -->
+<div class="sb-setup-overlay" id="sbSetupOverlay">
+  <div class="sb-setup-modal">
+    <h2>☁ Supabase 연결 설정 (v2)</h2>
+    <p>v3에서 사용 중인 같은 URL/Key를 입력하면 v2도 동일 데이터를 봅니다. 한 번만 입력하면 됩니다.</p>
+    <label>Project URL</label>
+    <input type="text" id="sbUrlInput" placeholder="https://xxxxxxxxxxxxxxxx.supabase.co">
+    <label>Anon (Public) Key</label>
+    <input type="text" id="sbKeyInput" placeholder="eyJhbGc... (jwt 형식)">
+    <div class="actions">
+      <button id="sbSetupSkip">나중에</button>
+      <button class="primary" id="sbSetupSave">연결</button>
+    </div>
+  </div>
+</div>
+<button class="sb-status-v2 disconnected" id="sbStatusBtn" title="Supabase 연결 상태">☁ 미연결</button>
 
 <div class="topbar">
   <div class="title">
@@ -3166,6 +3253,7 @@ window.addEventListener('resize', () => { drawAllWires(); });
   </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
 <script>
 const PROJECTS = {
@@ -4725,6 +4813,232 @@ window.addEventListener('message', (e) => {
     }
   });
 })();
+
+// ═══════════════════════════════════════════════════════════
+// v2 Supabase 통합 + OVERRIDES → PROJECTS 머지
+// ═══════════════════════════════════════════════════════════
+const SB_CFG_KEY = 'hanasm.supabase.cfg';
+const SB_SYNCED_KEYS = [
+  'hanasm.userProjects.v3',
+  'hanasm.projectOverrides.v3',
+  'hanasm.projectMemos.v3',
+  'hanasm.projectState.v3',
+  'hanasm.hiddenProjects.v3',
+  'hanasm.meetingMemo.v3',
+  'hanasm.v3.kanban.order',
+  'hanasm.projectSortMode.v3',
+  'hanasm.projectRevFilter.v3'
+];
+let sbClient = null;
+let sbConfig = null;
+let sbChannel = null;
+let sbApplying = false;
+
+function sbLoadConfig() {
+  try { return JSON.parse(localStorage.getItem(SB_CFG_KEY) || 'null'); }
+  catch(e) { return null; }
+}
+function sbSaveConfig(cfg) {
+  try { localStorage.setItem(SB_CFG_KEY, JSON.stringify(cfg)); } catch(e) {}
+}
+function sbUpdateStatus(text, cls) {
+  const btn = document.getElementById('sbStatusBtn');
+  if (!btn) return;
+  btn.textContent = text;
+  btn.className = 'sb-status-v2' + (cls ? ' ' + cls : '');
+}
+function sbOpenSetup() {
+  const cfg = sbLoadConfig();
+  if (cfg) {
+    document.getElementById('sbUrlInput').value = cfg.url || '';
+    document.getElementById('sbKeyInput').value = cfg.key || '';
+  }
+  document.getElementById('sbSetupOverlay').classList.add('show');
+}
+function sbCloseSetup() {
+  document.getElementById('sbSetupOverlay').classList.remove('show');
+}
+
+// ─── OVERRIDES + userProjects → PROJECTS 머지 ───
+// v3에서 편집한 모든 필드를 v2의 PROJECTS 객체에 적용
+function applyOverridesToProjects() {
+  if (typeof PROJECTS === 'undefined') return;
+  // 1) USER_PROJECTS 갱신
+  try {
+    if (typeof USER_PROJECTS !== 'undefined') {
+      USER_PROJECTS = JSON.parse(localStorage.getItem('hanasm.userProjects.v3') || '{}');
+    }
+  } catch(e) {}
+  // 2) PROJECT_OVERRIDES 갱신
+  let ovrAll = {};
+  try { ovrAll = JSON.parse(localStorage.getItem('hanasm.projectOverrides.v3') || '{}'); } catch(e) {}
+  if (typeof PROJECT_OVERRIDES !== 'undefined') {
+    PROJECT_OVERRIDES = ovrAll;
+  }
+  // 3) PROJECTS 객체에 직접 머지 — 신규 프로젝트 패널이 자동으로 갱신값 사용
+  Object.keys(ovrAll).forEach(k => {
+    const idx = k.indexOf('::');
+    if (idx < 0) return;
+    const cat = k.slice(0, idx);
+    const name = k.slice(idx + 2);
+    const items = (PROJECTS[cat] && PROJECTS[cat].items) || [];
+    const item = items.find(i => i.name === name);
+    if (!item) return;
+    const ovr = ovrAll[k];
+    ['ownerDept','related','prio','progress','revTier','startWhen','owner','decision','desc','status','image','images']
+      .forEach(f => { if (ovr[f] !== undefined) item[f] = ovr[f]; });
+  });
+  // 4) hidden 항목 처리 — 신규 프로젝트 패널에서 숨김
+  try {
+    const hidden = JSON.parse(localStorage.getItem('hanasm.hiddenProjects.v3') || '[]');
+    if (hidden.length && typeof PROJECTS !== 'undefined') {
+      hidden.forEach(k => {
+        const idx = k.indexOf('::');
+        if (idx < 0) return;
+        const cat = k.slice(0, idx);
+        const name = k.slice(idx + 2);
+        const items = (PROJECTS[cat] && PROJECTS[cat].items) || [];
+        const i = items.findIndex(it => it.name === name);
+        if (i >= 0) items.splice(i, 1);
+      });
+    }
+  } catch(e) {}
+  // 5) projectState 갱신
+  try {
+    if (typeof PROJECT_STATE !== 'undefined') {
+      PROJECT_STATE = JSON.parse(localStorage.getItem('hanasm.projectState.v3') || '{}');
+    }
+  } catch(e) {}
+}
+
+async function sbInit() {
+  const cfg = sbLoadConfig();
+  if (!cfg || !cfg.url || !cfg.key) {
+    sbUpdateStatus('☁ 미연결', 'disconnected');
+    return false;
+  }
+  if (!window.supabase) {
+    sbUpdateStatus('☁ SDK 로딩...', 'syncing');
+    setTimeout(sbInit, 500);
+    return false;
+  }
+  try {
+    sbClient = window.supabase.createClient(cfg.url, cfg.key);
+    sbConfig = cfg;
+    sbUpdateStatus('☁ 동기화 중...', 'syncing');
+    await sbPullAll();
+    await sbPushMissing();
+    // PROJECTS에 적용 + 재렌더
+    applyOverridesToProjects();
+    if (typeof renderProjects === 'function') renderProjects();
+    sbSubscribe();
+    sbUpdateStatus('☁ 연결됨', '');
+    return true;
+  } catch(e) {
+    console.error('[Supabase v2] init 실패:', e);
+    sbUpdateStatus('☁ 연결 실패', 'disconnected');
+    return false;
+  }
+}
+
+async function sbPullAll() {
+  const { data, error } = await sbClient.from('v3_state').select('key, value, updated_at');
+  if (error) throw error;
+  sbApplying = true;
+  try {
+    data.forEach(row => {
+      if (SB_SYNCED_KEYS.includes(row.key)) {
+        localStorage.setItem(row.key, row.value);
+      }
+    });
+  } finally {
+    sbApplying = false;
+  }
+}
+
+async function sbPushMissing() {
+  for (const key of SB_SYNCED_KEYS) {
+    const v = localStorage.getItem(key);
+    if (v == null) continue;
+    try {
+      await sbClient.from('v3_state').upsert({ key, value: v }, { onConflict: 'key' });
+    } catch(e) { console.warn('[Supabase v2] push 실패:', key, e); }
+  }
+}
+
+async function sbPushKey(key, value) {
+  if (!sbClient || sbApplying) return;
+  if (!SB_SYNCED_KEYS.includes(key)) return;
+  try {
+    sbUpdateStatus('☁ 저장 중...', 'syncing');
+    await sbClient.from('v3_state').upsert({ key, value }, { onConflict: 'key' });
+    sbUpdateStatus('☁ 연결됨', '');
+  } catch(e) {
+    sbUpdateStatus('☁ 저장 실패', 'disconnected');
+  }
+}
+
+function sbSubscribe() {
+  if (sbChannel) sbChannel.unsubscribe();
+  sbChannel = sbClient
+    .channel('v3_state_changes_v2')
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'v3_state' }, (payload) => {
+      const row = payload.new || payload.old;
+      if (!row || !SB_SYNCED_KEYS.includes(row.key)) return;
+      sbApplying = true;
+      try {
+        if (payload.eventType === 'DELETE') {
+          localStorage.removeItem(row.key);
+        } else {
+          localStorage.setItem(row.key, row.value);
+        }
+        // v3 OVERRIDES → v2 PROJECTS 즉시 적용 + 재렌더
+        applyOverridesToProjects();
+        if (typeof renderProjects === 'function') renderProjects();
+      } finally {
+        sbApplying = false;
+      }
+    })
+    .subscribe();
+}
+
+// localStorage.setItem 패치 — 자동 push
+(function patchLocalStorage(){
+  const origSet = localStorage.setItem.bind(localStorage);
+  localStorage.setItem = function(key, value) {
+    origSet(key, value);
+    if (sbClient && SB_SYNCED_KEYS.includes(key)) {
+      sbPushKey(key, value);
+    }
+  };
+})();
+
+(function bindSbUI(){
+  const btn = document.getElementById('sbStatusBtn');
+  if (btn) btn.addEventListener('click', sbOpenSetup);
+  const skip = document.getElementById('sbSetupSkip');
+  if (skip) skip.addEventListener('click', sbCloseSetup);
+  const save = document.getElementById('sbSetupSave');
+  if (save) save.addEventListener('click', async () => {
+    const url = document.getElementById('sbUrlInput').value.trim().replace(/\/$/, '');
+    const key = document.getElementById('sbKeyInput').value.trim();
+    if (!url || !key) { alert('URL과 Key 둘 다 필요합니다'); return; }
+    sbSaveConfig({ url, key });
+    sbCloseSetup();
+    await sbInit();
+  });
+})();
+
+window.addEventListener('load', () => {
+  setTimeout(() => {
+    if (sbLoadConfig()) sbInit();
+    else {
+      // 연결 없어도 localStorage에 있는 OVERRIDES 즉시 적용
+      applyOverridesToProjects();
+      if (typeof renderProjects === 'function') renderProjects();
+    }
+  }, 1500);
+});
 </script>
 
 </body>
