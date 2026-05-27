@@ -558,6 +558,8 @@ body.memo-expanded main.app { bottom: 95px !important; }
 }
 .meeting-toggle:hover { background: rgba(167,139,250,0.18); color: #fff; }
 body.meeting-mode .meeting-toggle {
+  /* 회의모드 ON: 좌상단(meeting-aux-link 옆)으로 이동 — 칸반 컬럼 헤더와 안 겹치게 */
+  top: 14px !important; left: 165px !important; right: auto !important;
   background: rgba(251,191,36,0.20);
   border-color: #fbbf24;
   color: #fbbf24;
@@ -619,9 +621,9 @@ body.inside-iframe { background: #050614 !important; }
 }
 .map-iframe-modal-close:hover { background: rgba(251,191,36,0.22); color: #fff; }
 
-/* 프로젝트별 메모 박스 (d-right 안 상단) */
+/* 프로젝트별 메모 박스 (d-right 안 desc 아래) */
 .d-memo-box {
-  margin-bottom: 12px;
+  margin-top: 12px;
   border: 1px dashed rgba(167,139,250,0.30);
   padding: 9px 11px;
   background: rgba(167,139,250,0.05);
@@ -1196,16 +1198,16 @@ function renderDetail() {
 
   const _memoText = getProjectMemo(key);
   rightEl.innerHTML =
-    '<div class="d-memo-box">'
+    '<div class="d-desc">'
+    +   (split.text || it.desc || '<i style="color:#6b7280">상세 설명 없음</i>')
+    + '</div>'
+    + '<div class="d-memo-box">'
     +   '<span class="d-memo-label">📝 이 프로젝트 메모</span>'
     +   '<textarea class="d-project-memo" placeholder="이 카드에 대한 메모 — 결정 근거, 후속 액션, 담당자 코멘트 등. 카드별 독립 자동 저장."></textarea>'
     +   '<div class="d-memo-meta">'
     +     '<span>자동 저장 · 카드별 독립 · 회의 메모와 별개</span>'
     +     '<span class="d-memo-cnt">' + _memoText.length + '자</span>'
     +   '</div>'
-    + '</div>'
-    + '<div class="d-desc">'
-    +   (split.text || it.desc || '<i style="color:#6b7280">상세 설명 없음</i>')
     + '</div>';
   // 메모 textarea 바인딩
   const _memoTa = rightEl.querySelector('.d-project-memo');
