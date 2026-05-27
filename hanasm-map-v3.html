@@ -955,9 +955,93 @@ body.meeting-mode .detail-resize-handle { display: none; }
   clip-path: polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px);
 }
 .backup-btn:hover { background: rgba(34,211,238,0.22); color: #fff; }
+
+/* Supabase 설정 모달 */
+.sb-setup-overlay {
+  position: fixed; inset: 0; z-index: 99997;
+  background: rgba(0,0,0,0.85);
+  display: none; align-items: center; justify-content: center;
+}
+.sb-setup-overlay.show { display: flex; }
+.sb-setup-modal {
+  background: #0a0a1c;
+  border: 1px solid rgba(34,211,238,0.45);
+  padding: 26px 30px;
+  width: 540px; max-width: 92vw;
+  clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px);
+}
+.sb-setup-modal h2 {
+  font-size: 18px; font-weight: 800;
+  color: #67e8f9; margin-bottom: 8px;
+  letter-spacing: 0.04em;
+}
+.sb-setup-modal p {
+  font-size: 13px; color: rgba(255,255,255,0.65);
+  margin-bottom: 16px; line-height: 1.7;
+}
+.sb-setup-modal label {
+  display: block; font-size: 11px; font-weight: 800;
+  color: rgba(255,255,255,0.55);
+  letter-spacing: 0.16em; text-transform: uppercase;
+  margin: 12px 0 4px;
+}
+.sb-setup-modal input {
+  width: 100%;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.18);
+  color: #fff;
+  font-family: monospace; font-size: 12.5px;
+  padding: 8px 10px; outline: none;
+}
+.sb-setup-modal input:focus { border-color: rgba(34,211,238,0.65); }
+.sb-setup-modal .actions {
+  display: flex; gap: 10px; justify-content: flex-end;
+  margin-top: 20px;
+}
+.sb-setup-modal .actions button {
+  padding: 8px 16px; font-size: 13px; font-weight: 800;
+  letter-spacing: 0.04em; cursor: pointer; font-family: inherit;
+  background: transparent; color: #fff;
+  border: 1px solid rgba(255,255,255,0.30);
+}
+.sb-setup-modal .actions button.primary {
+  background: rgba(34,211,238,0.25);
+  border-color: rgba(34,211,238,0.55);
+  color: #67e8f9;
+}
+.sb-setup-modal .actions button:hover { background: rgba(34,211,238,0.18); }
+
+/* Supabase 상태 표시 (헤더 안) */
+.sb-status {
+  background: rgba(34,211,238,0.10);
+  border: 1px solid rgba(34,211,238,0.40);
+  color: #67e8f9;
+  padding: 6px 11px; font-size: 11.5px;
+  font-family: inherit; font-weight: 700; cursor: pointer;
+  letter-spacing: 0.04em; white-space: nowrap;
+  clip-path: polygon(5px 0, 100% 0, 100% calc(100% - 5px), calc(100% - 5px) 100%, 0 100%, 0 5px);
+}
+.sb-status.disconnected { background: rgba(248,113,113,0.10); border-color: rgba(248,113,113,0.40); color: #f87171; }
+.sb-status.syncing { background: rgba(251,191,36,0.10); border-color: rgba(251,191,36,0.40); color: #fbbf24; }
+.sb-status:hover { filter: brightness(1.2); }
 </style>
 </head>
 <body>
+<!-- Supabase 초기 설정 모달 -->
+<div class="sb-setup-overlay" id="sbSetupOverlay">
+  <div class="sb-setup-modal">
+    <h2>☁ Supabase 연결 설정</h2>
+    <p>Supabase 프로젝트의 URL과 anon key를 입력하면, 데이터가 클라우드 DB에 자동 저장되고 모든 PC에서 동일하게 보입니다. 한 번만 입력하면 됩니다.</p>
+    <label>Project URL</label>
+    <input type="text" id="sbUrlInput" placeholder="https://xxxxxxxxxxxxxxxx.supabase.co">
+    <label>Anon (Public) Key</label>
+    <input type="text" id="sbKeyInput" placeholder="eyJhbGc... (jwt 형식)">
+    <div class="actions">
+      <button id="sbSetupSkip">나중에</button>
+      <button class="primary" id="sbSetupSave">연결</button>
+    </div>
+  </div>
+</div>
 <div class="v3-toast" id="v3Toast"></div>
 <!-- 이미지 라이트박스 (썸네일 클릭 시 원본 크기) -->
 <div class="img-lightbox" id="imgLightbox">
@@ -992,6 +1076,7 @@ body.meeting-mode .detail-resize-handle { display: none; }
   </div>
   <button class="meeting-toggle" id="meetingToggle" title="회의 모드 — 단축키 P / 해제 ESC">⛶ 회의</button>
   <button class="add-proj-btn" id="addProjBtn" title="신규 프로젝트 추가">＋ 신규</button>
+  <button class="sb-status disconnected" id="sbStatusBtn" title="Supabase 연결 상태">☁ 미연결</button>
   <button class="backup-btn" id="backupBtn" title="모든 데이터 JSON으로 내보내기/가져오기 (백업·복원)">💾 백업</button>
   <a class="v2-link" href="hanasm-map-v2.html" title="와이어 맵으로">← 와이어 맵</a>
 </header>
@@ -1215,6 +1300,7 @@ body.meeting-mode .detail-resize-handle { display: none; }
   </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
 <script>
 async function loadData() {
@@ -2764,6 +2850,198 @@ window.addEventListener('load', () => {
     rebind('addProjBtn', window.openAddProjModal);
     console.log('[v3] 응급 핸들러 강제 재등록 완료');
   }, 800);
+});
+
+// ═══════════════════════════════════════════════════════════
+// Supabase 통합 (v3_state 테이블 키-값 sync)
+// ═══════════════════════════════════════════════════════════
+const SB_CFG_KEY = 'hanasm.supabase.cfg';
+const SB_SYNCED_KEYS = [
+  'hanasm.userProjects.v3',
+  'hanasm.projectOverrides.v3',
+  'hanasm.projectMemos.v3',
+  'hanasm.projectState.v3',
+  'hanasm.hiddenProjects.v3',
+  'hanasm.meetingMemo.v3',
+  'hanasm.v3.kanban.order',
+  'hanasm.projectSortMode.v3',
+  'hanasm.projectRevFilter.v3'
+];
+let sbClient = null;
+let sbConfig = null;
+let sbChannel = null;
+let sbApplying = false; // remote 변경 적용 중일 때 push 차단
+
+function sbLoadConfig() {
+  try { return JSON.parse(localStorage.getItem(SB_CFG_KEY) || 'null'); }
+  catch(e) { return null; }
+}
+function sbSaveConfig(cfg) {
+  try { localStorage.setItem(SB_CFG_KEY, JSON.stringify(cfg)); } catch(e) {}
+}
+function sbUpdateStatus(text, cls) {
+  const btn = document.getElementById('sbStatusBtn');
+  if (!btn) return;
+  btn.textContent = text;
+  btn.className = 'sb-status' + (cls ? ' ' + cls : '');
+}
+
+// 설정 모달
+function sbOpenSetup() {
+  const cfg = sbLoadConfig();
+  if (cfg) {
+    document.getElementById('sbUrlInput').value = cfg.url || '';
+    document.getElementById('sbKeyInput').value = cfg.key || '';
+  }
+  document.getElementById('sbSetupOverlay').classList.add('show');
+}
+function sbCloseSetup() {
+  document.getElementById('sbSetupOverlay').classList.remove('show');
+}
+
+// Supabase 초기화
+async function sbInit() {
+  const cfg = sbLoadConfig();
+  if (!cfg || !cfg.url || !cfg.key) {
+    sbUpdateStatus('☁ 미연결', 'disconnected');
+    return false;
+  }
+  if (!window.supabase) {
+    sbUpdateStatus('☁ SDK 로딩...', 'syncing');
+    setTimeout(sbInit, 500);
+    return false;
+  }
+  try {
+    sbClient = window.supabase.createClient(cfg.url, cfg.key);
+    sbConfig = cfg;
+    sbUpdateStatus('☁ 동기화 중...', 'syncing');
+    // 1) 원격 → 로컬 (서버가 최신이면 적용)
+    await sbPullAll();
+    // 2) 로컬에 있는데 원격에 없는 키는 push
+    await sbPushMissing();
+    // 3) 실시간 구독
+    sbSubscribe();
+    sbUpdateStatus('☁ 연결됨', '');
+    return true;
+  } catch(e) {
+    console.error('[Supabase] init 실패:', e);
+    sbUpdateStatus('☁ 연결 실패', 'disconnected');
+    if (typeof showToast === 'function') showToast('❌ Supabase 연결 실패: ' + e.message, true);
+    return false;
+  }
+}
+
+// 원격 → 로컬 적용
+async function sbPullAll() {
+  const { data, error } = await sbClient.from('v3_state').select('key, value, updated_at');
+  if (error) throw error;
+  sbApplying = true;
+  try {
+    data.forEach(row => {
+      if (SB_SYNCED_KEYS.includes(row.key)) {
+        localStorage.setItem(row.key, row.value);
+      }
+    });
+  } finally {
+    sbApplying = false;
+  }
+}
+
+// 로컬에만 있는 키 push
+async function sbPushMissing() {
+  for (const key of SB_SYNCED_KEYS) {
+    const v = localStorage.getItem(key);
+    if (v == null) continue;
+    try {
+      await sbClient.from('v3_state').upsert({ key, value: v }, { onConflict: 'key' });
+    } catch(e) { console.warn('[Supabase] push 실패:', key, e); }
+  }
+}
+
+// 단일 키 push (저장 시 호출)
+async function sbPushKey(key, value) {
+  if (!sbClient || sbApplying) return;
+  if (!SB_SYNCED_KEYS.includes(key)) return;
+  try {
+    sbUpdateStatus('☁ 저장 중...', 'syncing');
+    await sbClient.from('v3_state').upsert({ key, value }, { onConflict: 'key' });
+    sbUpdateStatus('☁ 연결됨', '');
+  } catch(e) {
+    console.error('[Supabase] push 실패:', e);
+    sbUpdateStatus('☁ 저장 실패', 'disconnected');
+  }
+}
+
+// 실시간 구독 (다른 PC에서 변경 시 즉시 반영)
+function sbSubscribe() {
+  if (sbChannel) sbChannel.unsubscribe();
+  sbChannel = sbClient
+    .channel('v3_state_changes')
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'v3_state' }, (payload) => {
+      const row = payload.new || payload.old;
+      if (!row || !SB_SYNCED_KEYS.includes(row.key)) return;
+      sbApplying = true;
+      try {
+        if (payload.eventType === 'DELETE') {
+          localStorage.removeItem(row.key);
+        } else {
+          localStorage.setItem(row.key, row.value);
+        }
+        // 화면 갱신
+        if (typeof renderColumns === 'function') renderColumns();
+        if (typeof renderDetail === 'function') renderDetail();
+        if (typeof showToast === 'function') showToast('☁ 다른 PC에서 변경됨');
+      } finally {
+        sbApplying = false;
+      }
+    })
+    .subscribe();
+}
+
+// localStorage.setItem을 감싸서 자동 push
+(function patchLocalStorage(){
+  const origSet = localStorage.setItem.bind(localStorage);
+  localStorage.setItem = function(key, value) {
+    origSet(key, value);
+    if (sbClient && SB_SYNCED_KEYS.includes(key)) {
+      sbPushKey(key, value);
+    }
+  };
+  const origRemove = localStorage.removeItem.bind(localStorage);
+  localStorage.removeItem = function(key) {
+    origRemove(key);
+    if (sbClient && SB_SYNCED_KEYS.includes(key)) {
+      sbClient.from('v3_state').delete().eq('key', key).then(() => {}).catch(e => console.warn(e));
+    }
+  };
+})();
+
+// 헤더 상태 버튼 클릭 → 설정 모달 또는 동기화 상태
+(function bindSbUI(){
+  const btn = document.getElementById('sbStatusBtn');
+  if (btn) btn.addEventListener('click', sbOpenSetup);
+  const skip = document.getElementById('sbSetupSkip');
+  if (skip) skip.addEventListener('click', sbCloseSetup);
+  const save = document.getElementById('sbSetupSave');
+  if (save) save.addEventListener('click', async () => {
+    const url = document.getElementById('sbUrlInput').value.trim().replace(/\/$/, '');
+    const key = document.getElementById('sbKeyInput').value.trim();
+    if (!url || !key) { alert('URL과 Key 둘 다 필요합니다'); return; }
+    if (!url.startsWith('https://') || !url.includes('.supabase.co')) {
+      if (!confirm('URL 형식이 일반 supabase.co 형태가 아닙니다. 그래도 진행할까요?')) return;
+    }
+    sbSaveConfig({ url, key });
+    sbCloseSetup();
+    if (typeof showToast === 'function') showToast('☁ Supabase 연결 시도 중...');
+    await sbInit();
+  });
+})();
+
+// 페이지 로드 시 자동 연결 시도
+window.addEventListener('load', () => {
+  setTimeout(() => {
+    if (sbLoadConfig()) sbInit();
+  }, 1500);
 });
 </script>
 
