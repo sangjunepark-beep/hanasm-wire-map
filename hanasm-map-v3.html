@@ -631,12 +631,15 @@ body.inside-iframe { background: #050614 !important; }
 .map-iframe-modal-close:hover,
 .map-iframe-modal-meeting:hover { background: rgba(251,191,36,0.22); color: #fff; }
 
-/* 프로젝트별 메모 박스 (d-right 안 desc 아래) */
+/* 프로젝트별 메모 박스 — 우측 독립 컬럼(.d-memo-col)에 배치 */
 .d-memo-box {
-  margin-top: 12px;
   border: 1px dashed rgba(167,139,250,0.30);
   padding: 9px 11px;
   background: rgba(167,139,250,0.05);
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  box-sizing: border-box;
 }
 .d-memo-box .d-memo-label {
   font-size: 11.5px; font-weight: 800;
@@ -647,8 +650,8 @@ body.inside-iframe { background: #050614 !important; }
 }
 .d-memo-box textarea.d-project-memo {
   width: 100%;
-  min-height: 56px;
-  max-height: 200px;
+  flex: 1 1 auto;     /* 세로로 길게 — 컬럼 높이 끝까지 채움 */
+  min-height: 200px;
   background: transparent;
   border: 0;
   color: var(--text-1);
@@ -658,6 +661,7 @@ body.inside-iframe { background: #050614 !important; }
   resize: vertical;
   outline: none;
   padding: 0;
+  box-sizing: border-box;
 }
 .d-memo-box textarea.d-project-memo::placeholder { color: var(--text-3); font-style: italic; }
 .d-memo-box .d-memo-meta {
@@ -668,6 +672,24 @@ body.inside-iframe { background: #050614 !important; }
   justify-content: space-between;
   gap: 10px;
   letter-spacing: 0.04em;
+}
+
+/* 디테일 우측 메모 컬럼 — 이미지 없을 때 넓게, 이미지 있을 때 좁아져 옆에 나란히 */
+.d-memo-col {
+  flex: 1 1 360px;       /* 이미지 없을 때: 우측 영역 차지 (세로로 길게) */
+  min-width: 280px;
+  max-height: calc(50vh - 28px);
+  overflow-y: auto;
+  padding: 0 4px 0 16px;
+  border-left: 1px dashed var(--line);
+  display: none;
+}
+.detail.expanded .d-memo-col { max-height: calc(82vh - 28px); }
+.d-memo-col.show { display: block; }
+/* 이미지 컬럼이 동반되면 메모는 폭 고정해서 이미지에게 자리 양보 */
+.d-memo-col.has-image {
+  flex: 0 0 300px;
+  max-width: 300px;
 }
 
 /* 디테일/칸반 사이 가로 리사이즈 핸들 */
@@ -1096,6 +1118,7 @@ body.meeting-mode .detail-resize-handle { display: none; }
     <div class="d-left" id="detailLeft" style="display:none"></div>
     <div class="d-pricecol" id="detailPriceCol"></div>
     <div class="d-right" id="detailRight" style="display:none"></div>
+    <div class="d-memo-col" id="detailMemoCol" style="display:none"></div>
     <div class="d-image-col" id="detailImageCol" style="display:none"></div>
   </section>
   <div class="detail-resize-handle" id="detailResizeHandle" title="드래그로 디테일 영역 크기 조절"></div>
@@ -1703,6 +1726,7 @@ function renderDetail() {
   const rightEl = document.getElementById('detailRight');
   const priceEl = document.getElementById('detailPriceCol');
   const imageColEl = document.getElementById('detailImageCol');
+  const memoColEl = document.getElementById('detailMemoCol');
   if (SELECTED.size === 0) {
     detail.classList.add('empty');
     emptyEl.style.display = '';
@@ -1710,6 +1734,7 @@ function renderDetail() {
     rightEl.style.display = 'none';
     priceEl.classList.remove('show');
     if (imageColEl) { imageColEl.classList.remove('show'); imageColEl.style.display = 'none'; imageColEl.innerHTML = ''; }
+    if (memoColEl) { memoColEl.classList.remove('show', 'has-image'); memoColEl.style.display = 'none'; memoColEl.innerHTML = ''; }
     return;
   }
   detail.classList.remove('empty');
@@ -1717,6 +1742,7 @@ function renderDetail() {
   leftEl.style.display = '';
   rightEl.style.display = '';
   if (imageColEl) { imageColEl.classList.remove('show'); imageColEl.style.display = 'none'; imageColEl.innerHTML = ''; }
+  if (memoColEl) { memoColEl.classList.remove('show', 'has-image'); memoColEl.style.display = 'none'; memoColEl.innerHTML = ''; }
 
   if (SELECTED.size > 1) {
     priceEl.classList.remove('show');
@@ -1766,18 +1792,9 @@ function renderDetail() {
     + '</div>';
 
   const _memoText = getProjectMemo(key);
-  const _imgSrc = it.image || '';
   rightEl.innerHTML =
     '<div class="d-desc">'
     +   (split.text || it.desc || '<i style="color:#6b7280">상세 설명 없음</i>')
-    + '</div>'
-    + '<div class="d-memo-box">'
-    +   '<span class="d-memo-label">📝 이 프로젝트 메모</span>'
-    +   '<textarea class="d-project-memo" placeholder="이 카드에 대한 메모 — 결정 근거, 후속 액션, 담당자 코멘트 등. 카드별 독립 자동 저장."></textarea>'
-    +   '<div class="d-memo-meta">'
-    +     '<span>자동 저장 · 카드별 독립 · 회의 메모와 별개</span>'
-    +     '<span class="d-memo-cnt">' + _memoText.length + '자</span>'
-    +   '</div>'
     + '</div>';
   // desc 안 링크 처리: 기존 <a>에 target="_blank" + plain text URL 자동 linkify
   linkifyDescArea(rightEl.querySelector('.d-desc'));
@@ -1796,9 +1813,24 @@ function renderDetail() {
       thumb.addEventListener('click', () => openImgLightbox(_imgList[i]));
     });
   }
-  // 메모 textarea 바인딩
-  const _memoTa = rightEl.querySelector('.d-project-memo');
-  const _memoCnt = rightEl.querySelector('.d-memo-cnt');
+  // 메모 — 우측 독립 컬럼. 이미지 동반 시 has-image 클래스로 폭 좁아짐
+  if (memoColEl) {
+    memoColEl.innerHTML =
+      '<div class="d-memo-box">'
+      +   '<span class="d-memo-label">📝 이 프로젝트 메모</span>'
+      +   '<textarea class="d-project-memo" placeholder="이 카드에 대한 메모 — 결정 근거, 후속 액션, 담당자 코멘트 등. 카드별 독립 자동 저장."></textarea>'
+      +   '<div class="d-memo-meta">'
+      +     '<span>자동 저장 · 카드별 독립 · 회의 메모와 별개</span>'
+      +     '<span class="d-memo-cnt">' + _memoText.length + '자</span>'
+      +   '</div>'
+      + '</div>';
+    memoColEl.classList.add('show');
+    if (_imgList.length) memoColEl.classList.add('has-image');
+    memoColEl.style.display = 'block';
+  }
+  // 메모 textarea 바인딩 (이제 memoCol 안)
+  const _memoTa = memoColEl ? memoColEl.querySelector('.d-project-memo') : null;
+  const _memoCnt = memoColEl ? memoColEl.querySelector('.d-memo-cnt') : null;
   if (_memoTa) {
     _memoTa.value = _memoText;
     let _memoTimer = null;
