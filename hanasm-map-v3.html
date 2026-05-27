@@ -1598,7 +1598,8 @@ function initCardSortables() {
       chosenClass: 'sortable-chosen',
       handle: '.card',
       onAdd: (evt) => onCardAdd(evt),
-      onUpdate: (evt) => onCardUpdate(evt)
+      onUpdate: (evt) => onCardUpdate(evt),
+      onRemove: (evt) => onCardRemove(evt)
     });
     _cardSortables.push(sortable);
   });
@@ -1609,13 +1610,33 @@ function onCardAdd(evt) {
   const newAct = newCol.dataset.act;
   const key = card.dataset.key;
   if (!newAct || !key) return;
-  setAction(key, newAct);
+  // 액션(보드 위치) 강제 갱신 — 같은 액션이면 setAction이 early return 하므로
+  // localStorage에 직접 강제 기록해서 확실히 반영
+  try {
+    const st = JSON.parse(localStorage.getItem('hanasm.projectState.v3') || '{}');
+    st[key] = Object.assign({}, st[key] || {}, { action: newAct });
+    localStorage.setItem('hanasm.projectState.v3', JSON.stringify(st));
+    if (typeof PROJECT_STATE !== 'undefined') PROJECT_STATE = st;
+  } catch(e) { console.warn('[v3] onCardAdd state 기록 실패', e); }
+  if (typeof setAction === 'function') setAction(key, newAct);
+  // 원본 컬럼 + 대상 컬럼 순서 둘 다 갱신
+  if (evt.from && evt.from.dataset.act) saveColumnOrder(evt.from.dataset.act);
   saveColumnOrder(newAct);
-  setTimeout(() => renderColumns(), 50);
+  // 즉시 재렌더
+  renderColumns();
+  if (typeof showToast === 'function') {
+    const labelMap = { first:'⚡ 우선', run:'● 진행', hold:'⏸ 보류', stop:'⊘ 중단', merge:'⤴ 통합' };
+    showToast('✅ ' + (labelMap[newAct] || newAct) + '(으)로 이동');
+  }
 }
 function onCardUpdate(evt) {
   const act = evt.from.dataset.act;
   saveColumnOrder(act);
+}
+function onCardRemove(evt) {
+  // 원본 컬럼 order 갱신 (onAdd에서도 처리하지만 안전망)
+  const act = evt.from && evt.from.dataset.act;
+  if (act) saveColumnOrder(act);
 }
 function saveColumnOrder(act) {
   const body = document.getElementById('body-' + act);
