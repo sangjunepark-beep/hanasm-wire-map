@@ -1586,18 +1586,26 @@ body:has(.proj-panel.show) .node .dept-projects-section { display: none !importa
 }
 .proj-iframe-modal-close:hover { background: rgba(251,191,36,0.22); color: #fff; }
 
-/* v2가 iframe 안에 있을 때(v3 회의모드 → v2 모달): 우상단 컨트롤 전부 숨김 */
+/* v2가 iframe 안에 있을 때(v3 회의모드 → v2 모달): 우상단 컨트롤 일부만 숨김
+   ※ #projToggle (≡ 신규 프로젝트) + .proj-panel 은 살림 (와이어맵 안에서 보드 보기 가능) */
 body.inside-iframe .meeting-toggle,
 body.inside-iframe #meetingAuxLink,
 body.inside-iframe .v3-link,
 body.inside-iframe #editToggle,
 body.inside-iframe #undoBtn,
-body.inside-iframe #projToggle,
-body.inside-iframe .proj-toggle,
-body.inside-iframe .proj-panel,
 body.inside-iframe .controls,
 body.inside-iframe .topbar,
 body.inside-iframe .legend { display: none !important; }
+/* #projToggle은 표시. 위치를 부모 모달 닫기/회의 해제 버튼 피해 약간 안쪽으로 */
+body.inside-iframe #projToggle {
+  top: 60px !important;
+  right: 18px !important;
+  z-index: 10001 !important;
+}
+body.inside-iframe .proj-panel {
+  top: 100px !important;
+  z-index: 10001 !important;
+}
 
 /* 회의모드 floating 보조 링크 (v3 가기) — v2 회의모드 시에만 표시 */
 .v2-meeting-aux {
