@@ -1688,8 +1688,9 @@ body.inside-iframe .meeting-toggle { display: none !important; }
 .sb-setup-modal .actions button:hover { background: rgba(34,211,238,0.18); }
 
 /* Supabase 상태 버튼 — 좌측 헤더 영역 ("프로젝트 진행 관리" 옆) — 우측 버튼 그룹과 겹침 회피 */
+/* 좁은 화면/줌 환경에서 좌측 .title이 510px을 넘으면 우측으로 자동 비켜남 */
 .sb-status-v2 {
-  position: fixed; top: 16px; left: 510px; right: auto; z-index: 115;
+  position: fixed; top: 16px; left: max(510px, calc(50% - 100px)); right: auto; z-index: 115;
   background: rgba(34,211,238,0.10);
   border: 1px solid rgba(34,211,238,0.40);
   color: #67e8f9;
@@ -1697,6 +1698,10 @@ body.inside-iframe .meeting-toggle { display: none !important; }
   font-family: inherit; font-weight: 700; cursor: pointer;
   letter-spacing: 0.04em; white-space: nowrap;
   clip-path: polygon(5px 0, 100% 0, 100% calc(100% - 5px), calc(100% - 5px) 100%, 0 100%, 0 5px);
+}
+/* 1366px 미만에서는 우측 버튼 그룹(편집 right:290) 왼쪽으로 더 안쪽 배치 */
+@media (max-width: 1365px) {
+  .sb-status-v2 { left: auto; right: 370px; }
 }
 .sb-status-v2.disconnected { background: rgba(248,113,113,0.10); border-color: rgba(248,113,113,0.40); color: #f87171; }
 .sb-status-v2.syncing { background: rgba(251,191,36,0.10); border-color: rgba(251,191,36,0.40); color: #fbbf24; }
@@ -4826,6 +4831,9 @@ const SB_SYNCED_KEYS = [
   'hanasm.hiddenProjects.v3',
   'hanasm.meetingMemo.v3',
   'hanasm.v3.kanban.order',
+  'hanasm.v3.kanban.colOrder',
+  'hanasm.v3.kanban.sortMode',
+  'hanasm.decisionsLog.v3',
   'hanasm.projectSortMode.v3',
   'hanasm.projectRevFilter.v3'
 ];
