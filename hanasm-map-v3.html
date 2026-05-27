@@ -1077,7 +1077,7 @@ body.meeting-mode .detail-resize-handle { display: none; }
     </div>
     <div class="field">
       <label>상세 설명</label>
-      <textarea id="apf-desc" placeholder="배경, 세부 내용, 담당/일정 등 자유 입력"></textarea>
+      <textarea id="apf-desc" placeholder="자유 입력 — 줄바꿈은 그대로 표시됩니다.&#10;&#10;팁: **굵게**, *기울임*, https://링크 자동 처리"></textarea>
     </div>
     <div class="actions">
       <button id="apf-cancel">취소</button>
@@ -1685,6 +1685,41 @@ function bindMemo() {
 }
 // desc 안 가격표(<table>) 분리 — 우측 가격표 영역에 표시
 // desc 안 링크 처리: 기존 <a>에 target/rel 추가 + plain text URL 자동 linkify
+// desc HTML → 평문 변환 (편집 시 textarea에 평문으로 표시)
+function htmlToPlain(html) {
+  if (!html) return '';
+  return html
+    .replace(/<br\s*\/?>/gi, '\n')                  // <br> → 개행
+    .replace(/<\/(p|div|li|tr|h[1-6])>/gi, '\n')    // 블록 닫는 태그 → 개행
+    .replace(/<table[\s\S]*?<\/table>/gi, '\n[표 생략 — HTML 유지됨]\n')
+    .replace(/<[^>]+>/g, '')                         // 모든 HTML 태그 제거
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/\n{3,}/g, '\n\n')                     // 3개 이상 개행 → 2개로
+    .trim();
+}
+// 평문 → desc HTML 변환 (저장 시 줄바꿈을 <br>로, **굵게** 마크다운 지원)
+function plainToHtml(text) {
+  if (!text) return '';
+  // 1) HTML 안전 escape
+  let s = text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+  // 2) 마크다운 라이트 (**굵게**, *기울임*)
+  s = s.replace(/\*\*([^*\n]+)\*\*/g, '<b>$1</b>');
+  s = s.replace(/(?<!\*)\*([^*\n]+)\*(?!\*)/g, '<i>$1</i>');
+  // 3) URL 자동 링크
+  s = s.replace(/(https?:\/\/[^\s<>"']+)/g, '<a href="$1" target="_blank" rel="noopener noreferrer">$1</a>');
+  // 4) 개행 → <br>
+  s = s.replace(/\n/g, '<br>');
+  return s;
+}
 function linkifyDescArea(root) {
   if (!root) return;
   // 1) 기존 <a> 모두 새 창으로
@@ -2052,7 +2087,7 @@ function saveNewProject() {
   const prog = parseInt(document.getElementById('apf-prog').value) || 0;
   const when = document.getElementById('apf-when').value.trim();
   const owner = document.getElementById('apf-owner').value.trim();
-  const desc = document.getElementById('apf-desc').value.trim();
+  const desc = plainToHtml(document.getElementById('apf-desc').value.trim());
   const image = document.getElementById('apf-image').value.trim();
 
   // ─── 편집 모드 ────────────────────────────────────
@@ -2159,7 +2194,7 @@ function openEditProjModal(cat, item) {
   document.getElementById('apf-prog').value = item.progress || 0;
   document.getElementById('apf-when').value = item.startWhen || '';
   document.getElementById('apf-owner').value = item.owner || '';
-  document.getElementById('apf-desc').value = item.desc || '';
+  document.getElementById('apf-desc').value = htmlToPlain(item.desc || '');
   document.getElementById('apf-image').value = item.image || '';
   _apfImgRefreshPreview();
   document.getElementById('apf-save').textContent = '수정 저장';
