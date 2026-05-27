@@ -618,6 +618,45 @@ body.inside-iframe { background: #050614 !important; }
   clip-path: polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px);
 }
 .map-iframe-modal-close:hover { background: rgba(251,191,36,0.22); color: #fff; }
+
+/* 프로젝트별 메모 박스 (d-right 안 상단) */
+.d-memo-box {
+  margin-bottom: 12px;
+  border: 1px dashed rgba(167,139,250,0.30);
+  padding: 9px 11px;
+  background: rgba(167,139,250,0.05);
+}
+.d-memo-box .d-memo-label {
+  font-size: 11.5px; font-weight: 800;
+  color: var(--text-3);
+  letter-spacing: 0.10em;
+  text-transform: uppercase;
+  margin-bottom: 5px; display: block;
+}
+.d-memo-box textarea.d-project-memo {
+  width: 100%;
+  min-height: 56px;
+  max-height: 200px;
+  background: transparent;
+  border: 0;
+  color: var(--text-1);
+  font-family: inherit;
+  font-size: 14px;
+  line-height: 1.55;
+  resize: vertical;
+  outline: none;
+  padding: 0;
+}
+.d-memo-box textarea.d-project-memo::placeholder { color: var(--text-3); font-style: italic; }
+.d-memo-box .d-memo-meta {
+  font-size: 10.8px;
+  color: var(--text-3);
+  margin-top: 4px;
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  letter-spacing: 0.04em;
+}
 </style>
 </head>
 <body>
@@ -1068,6 +1107,31 @@ function initColumnSortable() {
   });
 }
 
+
+// ─── 프로젝트별 메모 (회의 메모와 별개) ────────────────────
+const PROJECT_MEMO_KEY = 'hanasm.projectMemos.v3';
+function loadProjectMemos() {
+  try { return JSON.parse(localStorage.getItem(PROJECT_MEMO_KEY) || '{}'); }
+  catch(e) { return {}; }
+}
+function saveProjectMemo(key, text) {
+  const m = loadProjectMemos();
+  if (text && text.trim()) m[key] = text;
+  else delete m[key];
+  try { localStorage.setItem(PROJECT_MEMO_KEY, JSON.stringify(m)); } catch(e) {}
+}
+function getProjectMemo(key) {
+  return loadProjectMemos()[key] || '';
+}
+// 다른 탭/창에서 메모 변경 시 현재 디테일 자동 갱신
+window.addEventListener('storage', (e) => {
+  if (e.key === PROJECT_MEMO_KEY) {
+    if (typeof SELECTED !== 'undefined' && SELECTED.size === 1 && typeof renderDetail === 'function') {
+      renderDetail();
+    }
+  }
+});
+
 function renderDetail() {
   const detail = document.getElementById('detail');
   const emptyEl = document.getElementById('detailEmpty');
@@ -1130,10 +1194,31 @@ function renderDetail() {
     +   ['first','run','hold','stop','merge'].map(a => '<button data-act="' + a + '" class="' + (action === a ? 'active' : '') + '">' + ACTION_LABEL[a] + '</button>').join('')
     + '</div>';
 
+  const _memoText = getProjectMemo(key);
   rightEl.innerHTML =
-    '<div class="d-desc">'
+    '<div class="d-memo-box">'
+    +   '<span class="d-memo-label">📝 이 프로젝트 메모</span>'
+    +   '<textarea class="d-project-memo" placeholder="이 카드에 대한 메모 — 결정 근거, 후속 액션, 담당자 코멘트 등. 카드별 독립 자동 저장."></textarea>'
+    +   '<div class="d-memo-meta">'
+    +     '<span>자동 저장 · 카드별 독립 · 회의 메모와 별개</span>'
+    +     '<span class="d-memo-cnt">' + _memoText.length + '자</span>'
+    +   '</div>'
+    + '</div>'
+    + '<div class="d-desc">'
     +   (split.text || it.desc || '<i style="color:#6b7280">상세 설명 없음</i>')
     + '</div>';
+  // 메모 textarea 바인딩
+  const _memoTa = rightEl.querySelector('.d-project-memo');
+  const _memoCnt = rightEl.querySelector('.d-memo-cnt');
+  if (_memoTa) {
+    _memoTa.value = _memoText;
+    let _memoTimer = null;
+    _memoTa.addEventListener('input', () => {
+      if (_memoCnt) _memoCnt.textContent = _memoTa.value.length + '자';
+      clearTimeout(_memoTimer);
+      _memoTimer = setTimeout(() => saveProjectMemo(key, _memoTa.value), 300);
+    });
+  }
 
   // 가격표(또는 다른 <table>) 분리 표시
   if (split.tables) {
