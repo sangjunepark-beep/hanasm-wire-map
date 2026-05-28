@@ -2693,6 +2693,54 @@ document.addEventListener('click', (e) => {
 });
 
 // ─── 이미지 라이트박스 ──────────────────────────────
+// ─── 첨부 클릭 핸들러 — data URL은 Blob 변환해 새 탭 (Chrome 보안 정책 회피) ──
+function openAttachment(href) {
+  if (!href) return;
+  // 일반 http(s) URL → 그대로 새 탭
+  if (!href.startsWith('data:')) {
+    window.open(href, '_blank', 'noopener');
+    return;
+  }
+  // data URL → Blob → object URL → 새 탭
+  try {
+    const commaIdx = href.indexOf(',');
+    const meta = href.slice(5, commaIdx); // "application/pdf;base64"
+    const payload = href.slice(commaIdx + 1);
+    const isBase64 = /;base64/i.test(meta);
+    const mime = (meta.split(';')[0] || 'application/octet-stream');
+    let blob;
+    if (isBase64) {
+      const bin = atob(payload);
+      const buf = new Uint8Array(bin.length);
+      for (let i = 0; i < bin.length; i++) buf[i] = bin.charCodeAt(i);
+      blob = new Blob([buf], { type: mime });
+    } else {
+      blob = new Blob([decodeURIComponent(payload)], { type: mime });
+    }
+    const url = URL.createObjectURL(blob);
+    const win = window.open(url, '_blank', 'noopener');
+    if (!win) {
+      // 팝업 차단 시 같은 탭으로 폴백
+      if (typeof showToast === 'function') showToast('⚠ 팝업 차단됨 — 같은 탭에서 엽니다');
+      location.href = url;
+    }
+    // 메모리 누수 방지 — 60초 후 해제 (브라우저 다운로드 시간 고려)
+    setTimeout(() => URL.revokeObjectURL(url), 60000);
+  } catch (e) {
+    console.error('[v3] 첨부 열기 실패:', e);
+    if (typeof showToast === 'function') showToast('❌ 첨부 열기 실패: ' + e.message, true);
+  }
+}
+// 이벤트 위임 — d-attach-btn 클릭 가로채기
+document.addEventListener('click', (e) => {
+  const a = e.target.closest('.d-attach-btn');
+  if (!a) return;
+  const href = a.getAttribute('href');
+  if (!href || !href.startsWith('data:')) return; // 일반 URL은 브라우저 기본 동작
+  e.preventDefault();
+  openAttachment(href);
+});
+
 function openImgLightbox(src) {
   const lb = document.getElementById('imgLightbox');
   const img = document.getElementById('imgLightboxImg');
