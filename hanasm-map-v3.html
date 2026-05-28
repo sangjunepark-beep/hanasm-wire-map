@@ -1722,6 +1722,8 @@ function onCardAdd(evt) {
   // 원본 컬럼 + 대상 컬럼 순서 둘 다 갱신
   if (evt.from && evt.from.dataset.act) saveColumnOrder(evt.from.dataset.act);
   saveColumnOrder(newAct);
+  // 새 컬럼은 사용자가 의도한 위치 — manual로 전환해서 그 자리 유지
+  switchColumnToManual(newAct);
   // 즉시 재렌더
   renderColumns();
   if (typeof showToast === 'function') {
@@ -1732,6 +1734,8 @@ function onCardAdd(evt) {
 function onCardUpdate(evt) {
   const act = evt.from.dataset.act;
   saveColumnOrder(act);
+  // 자동 정렬 모드면 드래그 결과가 즉시 덮어씌워지므로 manual로 전환
+  switchColumnToManual(act);
 }
 function onCardRemove(evt) {
   // 원본 컬럼 order 갱신 (onAdd에서도 처리하지만 안전망)
@@ -1745,6 +1749,17 @@ function saveColumnOrder(act) {
   const map = loadOrder();
   map[act] = keys;
   saveOrder(map);
+}
+// 드래그로 카드 순서 변경 시 호출 — 해당 컬럼 정렬 모드를 자동 정렬에서 manual로 전환
+function switchColumnToManual(act) {
+  if (!act) return;
+  const map = loadSortMode();
+  if (map[act] === 'manual') return;
+  map[act] = 'manual';
+  saveSortMode(map);
+  // select UI도 동기화 (즉시 표시 반영)
+  const sel = document.querySelector('.ch-sort[data-col="' + act + '"]');
+  if (sel) sel.value = 'manual';
 }
 
 // 컬럼 자체 순서 변경 (Sortable on .kanban)
