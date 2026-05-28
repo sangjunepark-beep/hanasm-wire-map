@@ -1450,7 +1450,8 @@ function getEffective(cat, item) {
     desc: (ovr.desc !== undefined) ? ovr.desc : (item.desc || ''),
     status: (ovr.status !== undefined) ? ovr.status : (item.status || 'active'),
     image: (ovr.image !== undefined) ? ovr.image : (item.image || ''),
-    images: (ovr.images !== undefined) ? ovr.images : (item.images || [])
+    images: (ovr.images !== undefined) ? ovr.images : (item.images || []),
+    attachments: (ovr.attachments !== undefined) ? ovr.attachments : (item.attachments || [])
   };
 }
 
@@ -1468,7 +1469,7 @@ function applyOverridesToProjects(PROJECTS) {
     if (!item) return;
     const ovr = PROJECT_OVERRIDES[k];
     // 편집 가능 필드만 적용
-    ['ownerDept','related','prio','progress','revTier','startWhen','owner','decision','desc','status','image','images']
+    ['ownerDept','related','prio','progress','revTier','startWhen','owner','decision','desc','status','image','images','attachments']
       .forEach(f => { if (ovr[f] !== undefined) item[f] = ovr[f]; });
   });
 }
