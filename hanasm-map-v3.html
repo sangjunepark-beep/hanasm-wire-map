@@ -2453,6 +2453,22 @@ function closeAddProjModal() {
 function saveNewProject() {
   const name = document.getElementById('apf-name').value.trim();
   if (!name) { alert('이름은 필수입니다'); return; }
+  // 저장 직전 — 입력 칸에 Enter 누르지 않고 남아있는 URL이 있으면 자동으로 칩에 추가
+  // (사용자가 Enter 잊고 그대로 "수정 저장" 누르는 케이스 보호)
+  const pendingImgUrl = document.getElementById('apf-image-url')?.value?.trim();
+  if (pendingImgUrl) {
+    apfImages.push(pendingImgUrl);
+    document.getElementById('apf-image-url').value = '';
+    if (typeof renderApfImgList === 'function') renderApfImgList();
+  }
+  const pendingAttachUrl = document.getElementById('apf-attach-url')?.value?.trim();
+  if (pendingAttachUrl && !pendingAttachUrl.startsWith('data:')) {
+    const kind = detectAttachKind(pendingAttachUrl, '');
+    const autoName = autoAttachName(pendingAttachUrl, kind, '');
+    apfAttachments.push({ url: pendingAttachUrl, name: autoName, kind });
+    document.getElementById('apf-attach-url').value = '';
+    if (typeof renderApfAttachList === 'function') renderApfAttachList();
+  }
   const cat = document.getElementById('apf-cat').value;
   const tier = document.getElementById('apf-tier').value;
   const prio = document.getElementById('apf-prio').value;
