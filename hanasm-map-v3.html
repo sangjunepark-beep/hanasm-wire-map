@@ -1373,14 +1373,12 @@ body.meeting-mode .detail-resize-handle { display: none; }
       <span class="apf-img-hint">URL Enter로 추가 · 파일 다중 선택 · 캡쳐 후 Ctrl+V 붙여넣기 · 3MB 초과 거부</span>
     </div>
     <div class="field">
-      <label>첨부 (PDF · HTML · 링크) — 여러 개 가능</label>
+      <label>첨부 링크 (PDF · HTML · 외부 자료) — 여러 개 가능</label>
       <div class="apf-img-row">
-        <input type="text" id="apf-attach-url" placeholder="URL 입력 후 Enter (Figma · Notion · Drive · YouTube 등 모두)">
-        <button type="button" class="apf-img-pick" id="apf-attach-pick-btn">📎 파일</button>
-        <input type="file" id="apf-attach-file" accept=".pdf,.html,.htm,application/pdf,text/html" multiple style="display:none">
+        <input type="text" id="apf-attach-url" placeholder="URL 입력 후 Enter (구글 드라이브 · Figma · Notion · YouTube 등)" style="flex:1;">
       </div>
       <div class="apf-attach-list" id="apf-attach-list"></div>
-      <span class="apf-attach-hint">URL Enter로 추가 · 파일은 PDF/HTML 3MB 이하 · 디테일에 버튼으로 표시되어 새 탭에서 열림</span>
+      <span class="apf-attach-hint">⚠ 외부 URL만 입력 (구글 드라이브·회사 NAS·GitHub Pages 등에 올린 링크). 파일 직접 업로드는 저장 용량 한도 위험으로 제거됨.</span>
     </div>
     <div class="field">
       <label>상세 설명</label>
@@ -2972,34 +2970,17 @@ function renderApfAttachList() {
         e.preventDefault();
         const v = urlInput.value.trim();
         if (!v) return;
+        // data: URL 차단 — 외부 호스팅 링크만 허용 (저장 용량 한도 위험 회피)
+        if (v.startsWith('data:')) {
+          alert('data: URL은 저장 용량 한도 위험으로 차단됩니다. 구글 드라이브 등에 올린 후 외부 URL을 입력해주세요.');
+          return;
+        }
         const kind = detectAttachKind(v, '');
         const name = autoAttachName(v, kind, '');
         apfAttachments.push({ url: v, name: name, kind: kind });
         renderApfAttachList();
         urlInput.value = '';
       }
-    });
-  }
-  const pick = document.getElementById('apf-attach-pick-btn');
-  const file = document.getElementById('apf-attach-file');
-  if (pick && file) {
-    pick.addEventListener('click', () => file.click());
-    file.addEventListener('change', () => {
-      const files = Array.from(file.files || []);
-      files.forEach(f => {
-        if (f.size > APF_MAX_SIZE) {
-          alert('파일 "' + f.name + '"이 3MB를 초과합니다 (' + (f.size / 1024 / 1024).toFixed(2) + 'MB). 거부됨.');
-          return;
-        }
-        const reader = new FileReader();
-        reader.onload = (ev) => {
-          const kind = detectAttachKind(ev.target.result, f.type);
-          apfAttachments.push({ url: ev.target.result, name: f.name, kind: kind });
-          renderApfAttachList();
-        };
-        reader.readAsDataURL(f);
-      });
-      file.value = '';
     });
   }
 })();
