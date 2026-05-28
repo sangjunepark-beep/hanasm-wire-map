@@ -1378,7 +1378,7 @@ body.meeting-mode .detail-resize-handle { display: none; }
         <input type="text" id="apf-attach-url" placeholder="URL 입력 후 Enter (구글 드라이브 · Figma · Notion · YouTube 등)" style="flex:1;">
       </div>
       <div class="apf-attach-list" id="apf-attach-list"></div>
-      <span class="apf-attach-hint">⚠ 외부 URL만 입력 (구글 드라이브·회사 NAS·GitHub Pages 등에 올린 링크). 파일 직접 업로드는 저장 용량 한도 위험으로 제거됨.</span>
+      <span class="apf-attach-hint">⚠ 외부 URL만 입력. <b>HTML 파일</b>은 구글 드라이브 X (소스 텍스트만 보임) → GitHub Pages 또는 GitHub blob URL 권장 (raw.githack.com으로 자동 변환).</span>
     </div>
     <div class="field">
       <label>상세 설명</label>
@@ -2463,9 +2463,11 @@ function saveNewProject() {
   }
   const pendingAttachUrl = document.getElementById('apf-attach-url')?.value?.trim();
   if (pendingAttachUrl && !pendingAttachUrl.startsWith('data:')) {
-    const kind = detectAttachKind(pendingAttachUrl, '');
-    const autoName = autoAttachName(pendingAttachUrl, kind, '');
-    apfAttachments.push({ url: pendingAttachUrl, name: autoName, kind });
+    const norm = normalizeAttachUrl(pendingAttachUrl);
+    const finalUrl = norm.url;
+    const kind = detectAttachKind(finalUrl, '');
+    const autoName = autoAttachName(finalUrl, kind, '');
+    apfAttachments.push({ url: finalUrl, name: autoName, kind });
     document.getElementById('apf-attach-url').value = '';
     if (typeof renderApfAttachList === 'function') renderApfAttachList();
   }
@@ -2846,6 +2848,25 @@ function detectAttachKind(url, mimeType) {
   if (u.includes('github.com')) return 'github';
   return 'link';
 }
+// URL 정규화 — GitHub blob/raw URL을 raw.githack.com으로 자동 변환 (HTML/CSS/JS 즉시 렌더링)
+function normalizeAttachUrl(url) {
+  if (!url || typeof url !== 'string') return { url, converted: false, note: '' };
+  // github.com/{user}/{repo}/blob/{branch}/{path} → raw.githack.com/{user}/{repo}/{branch}/{path}
+  let m = url.match(/^https?:\/\/github\.com\/([^/]+)\/([^/]+)\/blob\/([^/]+)\/(.+)$/);
+  if (m) return {
+    url: 'https://raw.githack.com/' + m[1] + '/' + m[2] + '/' + m[3] + '/' + m[4],
+    converted: true,
+    note: 'GitHub blob URL → raw.githack.com 변환 (브라우저 렌더링)'
+  };
+  // raw.githubusercontent.com/{user}/{repo}/{branch}/{path} → raw.githack.com 동일 경로
+  m = url.match(/^https?:\/\/raw\.githubusercontent\.com\/([^/]+)\/([^/]+)\/([^/]+)\/(.+)$/);
+  if (m) return {
+    url: 'https://raw.githack.com/' + m[1] + '/' + m[2] + '/' + m[3] + '/' + m[4],
+    converted: true,
+    note: 'GitHub raw URL → raw.githack.com 변환'
+  };
+  return { url, converted: false, note: '' };
+}
 function autoAttachName(url, kind, fallback) {
   if (fallback) return fallback;
   if (!url) return '첨부';
@@ -2984,18 +3005,21 @@ function renderApfAttachList() {
     urlInput.addEventListener('keydown', (e) => {
       if (e.key === 'Enter') {
         e.preventDefault();
-        const v = urlInput.value.trim();
-        if (!v) return;
-        // data: URL 차단 — 외부 호스팅 링크만 허용 (저장 용량 한도 위험 회피)
-        if (v.startsWith('data:')) {
+        const raw = urlInput.value.trim();
+        if (!raw) return;
+        if (raw.startsWith('data:')) {
           alert('data: URL은 저장 용량 한도 위험으로 차단됩니다. 구글 드라이브 등에 올린 후 외부 URL을 입력해주세요.');
           return;
         }
+        // URL 정규화 — GitHub blob → raw.githack.com 자동 변환
+        const norm = normalizeAttachUrl(raw);
+        const v = norm.url;
         const kind = detectAttachKind(v, '');
         const name = autoAttachName(v, kind, '');
         apfAttachments.push({ url: v, name: name, kind: kind });
         renderApfAttachList();
         urlInput.value = '';
+        if (norm.converted && typeof showToast === 'function') showToast('🔄 ' + norm.note);
       }
     });
   }
