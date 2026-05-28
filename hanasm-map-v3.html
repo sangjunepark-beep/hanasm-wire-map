@@ -3130,6 +3130,7 @@ let sbClient = null;
 let sbConfig = null;
 let sbChannel = null;
 let sbApplying = false; // remote 변경 적용 중일 때 push 차단
+const _sbLocalEcho = new Map(); // 자기가 방금 쓴 값 — realtime echo 무시용
 
 function sbLoadConfig() {
   try { return JSON.parse(localStorage.getItem(SB_CFG_KEY) || 'null'); }
@@ -3239,6 +3240,11 @@ function sbSubscribe() {
     .on('postgres_changes', { event: '*', schema: 'public', table: 'v3_state' }, (payload) => {
       const row = payload.new || payload.old;
       if (!row || !SB_SYNCED_KEYS.includes(row.key)) return;
+      // 자기가 방금 쓴 값이 realtime echo로 돌아옴 → 무시 (storage 덮어쓰기·"다른 PC에서 변경됨" 토스트 차단)
+      if (payload.eventType !== 'DELETE' && _sbLocalEcho.get(row.key) === row.value) {
+        _sbLocalEcho.delete(row.key);
+        return;
+      }
       sbApplying = true;
       try {
         if (payload.eventType === 'DELETE') {
@@ -3263,6 +3269,8 @@ function sbSubscribe() {
   localStorage.setItem = function(key, value) {
     origSet(key, value);
     if (sbClient && SB_SYNCED_KEYS.includes(key)) {
+      // realtime echo 방어용 — sbApplying 중(remote 적용 중)이 아닐 때만 echo map 기록
+      if (!sbApplying) _sbLocalEcho.set(key, value);
       sbPushKey(key, value);
     }
   };
