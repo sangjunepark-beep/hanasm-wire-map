@@ -1798,6 +1798,9 @@ function getProjectMemo(key) {
 // 다른 탭/창에서 메모 변경 시 현재 디테일 자동 갱신
 window.addEventListener('storage', (e) => {
   if (e.key === PROJECT_MEMO_KEY) {
+    // 입력 중이면 갱신 보류 (커서 튕김 방지)
+    const ae = document.activeElement;
+    if (ae && (ae.classList.contains('d-project-memo') || ae.tagName === 'TEXTAREA' || ae.tagName === 'INPUT')) return;
     if (typeof SELECTED !== 'undefined' && SELECTED.size === 1 && typeof renderDetail === 'function') {
       renderDetail();
     }
@@ -1935,7 +1938,7 @@ function renderDetail() {
     _memoTa.addEventListener('input', () => {
       if (_memoCnt) _memoCnt.textContent = _memoTa.value.length + '자';
       clearTimeout(_memoTimer);
-      _memoTimer = setTimeout(() => saveProjectMemo(key, _memoTa.value), 300);
+      _memoTimer = setTimeout(() => saveProjectMemo(key, _memoTa.value), 1200);
     });
   }
 
@@ -2049,7 +2052,7 @@ function bindMemo() {
   ta.addEventListener('input', () => {
     if (cnt) cnt.textContent = (ta.value.length) + '자';
     clearTimeout(_t);
-    _t = setTimeout(() => saveMeetingMemo(ta.value), 300);
+    _t = setTimeout(() => saveMeetingMemo(ta.value), 1200);
   });
   // focus 시 body 클래스 → app 영역 위로 밀어줌
   ta.addEventListener('focus', () => document.body.classList.add('memo-expanded'));
@@ -3337,10 +3340,19 @@ function sbSubscribe() {
         } else {
           localStorage.setItem(row.key, row.value);
         }
-        // 화면 갱신
-        if (typeof renderColumns === 'function') renderColumns();
-        if (typeof renderDetail === 'function') renderDetail();
-        if (typeof showToast === 'function') showToast('☁ 다른 PC에서 변경됨');
+        // 사용자가 메모 입력 중이면 textarea 다시 그려지는 거 차단 (커서 사라지는 튕김 방지)
+        const activeEl = document.activeElement;
+        const isInputting = activeEl && (
+          activeEl.classList.contains('d-project-memo') ||
+          activeEl.id === 'meetingMemoTa' ||
+          activeEl.tagName === 'TEXTAREA' ||
+          activeEl.tagName === 'INPUT'
+        );
+        if (!isInputting) {
+          if (typeof renderColumns === 'function') renderColumns();
+          if (typeof renderDetail === 'function') renderDetail();
+          if (typeof showToast === 'function') showToast('☁ 다른 PC에서 변경됨');
+        }
       } finally {
         sbApplying = false;
       }
