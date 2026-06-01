@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>하나사인몰 깃헙 프로젝트 대시보드</title>
+<style>
+  :root{
+    --bg:#0f1115; --panel:#171a21; --panel2:#1e222b; --line:#2a2f3a;
+    --txt:#e6e9ef; --sub:#9aa3b2; --accent:#4f8cff; --green:#36c780;
+    --amber:#f5a623; --red:#ff5d5d; --purple:#a06bff;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:'Malgun Gothic','맑은 고딕',system-ui,sans-serif;
+    background:var(--bg);color:var(--txt);font-size:14px;line-height:1.5}
+  a{color:var(--accent);text-decoration:none}
+  a:hover{text-decoration:underline}
+  header{position:sticky;top:0;z-index:10;background:rgba(15,17,21,.92);
+    backdrop-filter:blur(6px);border-bottom:1px solid var(--line);padding:14px 22px}
+  .htop{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+  h1{font-size:18px;margin:0;font-weight:700}
+  .muted{color:var(--sub);font-size:12.5px}
+  .btn{background:var(--panel2);border:1px solid var(--line);color:var(--txt);
+    padding:7px 13px;border-radius:8px;cursor:pointer;font-size:13px}
+  .btn:hover{border-color:var(--accent)}
+  .btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+  .wrap{max-width:1180px;margin:0 auto;padding:20px 22px 60px}
+
+  /* 요약 카드 */
+  .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:18px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px 16px}
+  .card .n{font-size:26px;font-weight:800}
+  .card .l{color:var(--sub);font-size:12.5px;margin-top:2px}
+  .card.hot .n{color:var(--amber)}
+  .card.sincevisit{border-color:#5a4a1e}
+  .card.sincevisit .n{color:var(--amber)}
+  .card.sincevisit.zero .n{color:var(--sub)}
+
+  /* 컨트롤 */
+  .controls{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:14px}
+  input[type=text],input[type=password],select{background:var(--panel2);border:1px solid var(--line);
+    color:var(--txt);padding:8px 11px;border-radius:8px;font-size:13px}
+  input[type=text]{min-width:240px;flex:1}
+
+  /* 리포 행 */
+  .repo{background:var(--panel);border:1px solid var(--line);border-radius:12px;
+    padding:14px 16px;margin-bottom:10px;display:grid;
+    grid-template-columns:1fr auto;gap:6px 16px;align-items:start}
+  .repo.recent{border-color:#3a4a36;box-shadow:0 0 0 1px rgba(54,199,128,.18) inset}
+  .rname{font-size:15.5px;font-weight:700;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .badge{font-size:11px;padding:2px 8px;border-radius:999px;border:1px solid var(--line);color:var(--sub)}
+  .badge.priv{color:var(--amber);border-color:#4a3f22}
+  .badge.pub{color:var(--green);border-color:#2c4a38}
+  .badge.lang{color:var(--purple);border-color:#3a2c4a}
+  .badge.new{color:#fff;background:var(--green);border-color:var(--green)}
+  .badge.fresh{color:#1a1a1a;background:var(--amber);border-color:var(--amber);font-weight:700}
+  .repo.fresh{border-color:var(--amber);box-shadow:0 0 0 1px rgba(245,166,35,.28) inset}
+  .markone{font-size:11.5px;padding:3px 9px;color:var(--amber);border-color:#5a4a1e}
+  .pushtime.f{color:var(--amber)}
+  .desc{color:var(--sub);font-size:13px;margin:4px 0}
+  .meta{color:var(--sub);font-size:12.5px;display:flex;gap:14px;flex-wrap:wrap;margin-top:4px}
+  .commit{font-size:12.5px;color:#c4cbd8;margin-top:5px}
+  .commit code{background:var(--panel2);padding:1px 6px;border-radius:5px;color:var(--green)}
+  .right{display:flex;flex-direction:column;gap:6px;align-items:flex-end;text-align:right}
+  .pushtime{font-size:13px;font-weight:600}
+  .pushtime.r{color:var(--green)}
+  .links{display:flex;gap:10px;font-size:12.5px}
+  .memo{grid-column:1/-1;margin-top:6px}
+  .memo textarea{width:100%;background:var(--panel2);border:1px dashed var(--line);
+    color:var(--txt);border-radius:8px;padding:8px 10px;font-size:12.5px;
+    font-family:inherit;resize:vertical;min-height:34px}
+  .memo textarea:focus{border-style:solid;border-color:var(--accent);outline:none}
+
+  /* 상세 패널 */
+  .detail-toggle{font-size:12px;padding:4px 11px;margin-top:2px}
+  .detail{grid-column:1/-1;margin-top:10px;border-top:1px solid var(--line);padding-top:12px}
+  .detail.hide{display:none}
+  .dgrid{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+  @media(max-width:760px){.dgrid{grid-template-columns:1fr}}
+  .dsec{margin-bottom:14px}
+  .dsec h4{margin:0 0 7px;font-size:12.5px;color:var(--txt);font-weight:700;display:flex;align-items:center;gap:7px}
+  .dsec h4 .cnt{background:var(--panel2);border:1px solid var(--line);border-radius:999px;padding:0 8px;font-size:11px;color:var(--sub);font-weight:600}
+  .clist{list-style:none;margin:0;padding:0}
+  .clist li{padding:5px 0;border-bottom:1px dashed var(--line);font-size:12.5px;display:flex;gap:11px;align-items:baseline}
+  .clist li:last-child{border-bottom:none}
+  .clist .cdate{color:var(--sub);white-space:nowrap;min-width:80px;font-variant-numeric:tabular-nums}
+  .clist .cmsg{color:#dbe1ea;flex:1}
+  .clist .cauthor{color:var(--sub);white-space:nowrap;font-size:11.5px}
+  .ilist a.cmsg{color:#dbe1ea}
+  .chips{display:flex;flex-wrap:wrap;gap:6px}
+  .chip{background:var(--panel2);border:1px solid var(--line);border-radius:6px;padding:3px 9px;font-size:12px;color:var(--sub)}
+  .chip.dir{color:var(--accent)}
+  .readme{background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:11px 13px;max-height:240px;overflow:auto;font-size:12px;white-space:pre-wrap;word-break:break-word;color:#c4cbd8;margin:0}
+  .dload{color:var(--sub);font-size:12.5px}
+
+  /* 토큰 패널 */
+  #setup{background:var(--panel);border:1px solid var(--line);border-radius:12px;
+    padding:18px 20px;margin-bottom:18px}
+  #setup h3{margin:0 0 8px}
+  .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:10px}
+  .hide{display:none}
+  .err{color:var(--red);font-size:13px;margin-top:8px}
+  .ok{color:var(--green)}
+  .grp{color:var(--sub);font-size:12px;margin-top:8px;line-height:1.7}
+  kbd{background:var(--panel2);border:1px solid var(--line);border-radius:5px;padding:1px 6px;font-size:11.5px}
+</style>
+</head>
+<body>
+<header>
+  <div class="htop">
+    <h1>📊 하나사인몰 깃헙 프로젝트 대시보드</h1>
+    <span class="muted" id="owner"></span>
+    <span style="flex:1"></span>
+    <span class="muted" id="lastvisit"></span>
+    <span class="muted" id="lastsync"></span>
+    <button class="btn" id="markread">변동 모두 읽음</button>
+    <button class="btn primary" id="refresh">새로고침</button>
+    <button class="btn" id="settings">토큰 설정</button>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <!-- 토큰 입력 -->
+  <div id="setup" class="hide">
+    <h3>깃헙 토큰 입력</h3>
+    <div class="muted">개인용 접근 토큰(PAT)을 입력하면 비공개 리포까지 실시간으로 불러옵니다.
+      토큰은 <b>이 브라우저에만 저장</b>되고 파일·서버에 올라가지 않습니다.</div>
+    <div class="row">
+      <input type="password" id="token" placeholder="ghp_... 또는 github_pat_..." style="min-width:340px;flex:1">
+      <input type="text" id="ownerInput" placeholder="계정명 (기본: sangjunepark-beep)" style="min-width:200px">
+      <button class="btn primary" id="saveTok">저장하고 불러오기</button>
+      <button class="btn" id="clearTok">토큰 삭제</button>
+    </div>
+    <div class="err hide" id="setupErr"></div>
+    <div class="grp">
+      · 토큰 발급: <a href="https://github.com/settings/tokens" target="_blank">github.com/settings/tokens</a>
+      → <kbd>repo</kbd> 권한(비공개 포함) 또는 fine-grained 토큰의 Contents/Metadata 읽기 권한.<br>
+      · 토큰 만료 시 여기서 새 토큰만 다시 붙여넣으면 됩니다.
+    </div>
+  </div>
+
+  <!-- 요약 -->
+  <div class="cards" id="cards"></div>
+
+  <!-- 컨트롤 -->
+  <div class="controls">
+    <input type="text" id="search" placeholder="리포명·설명 검색">
+    <select id="filterVis">
+      <option value="all">전체</option>
+      <option value="private">비공개만</option>
+      <option value="public">공개만</option>
+    </select>
+    <select id="sort">
+      <option value="pushed">최근 변동순</option>
+      <option value="name">이름순</option>
+      <option value="issues">미해결 이슈순</option>
+    </select>
+    <label class="muted"><input type="checkbox" id="loadCommits" checked> 최신 커밋 메시지 표시</label>
+  </div>
+
+  <div id="status" class="muted" style="margin-bottom:12px"></div>
+  <div id="list"></div>
+</div>
+
+<script>
+const LS_TOKEN='hanasm_gh_token', LS_OWNER='hanasm_gh_owner', LS_MEMO='hanasm_gh_memo';
+const LS_SEEN='hanasm_gh_seen', LS_VISIT='hanasm_gh_visit';
+const DEFAULT_OWNER='sangjunepark-beep';
+let REPOS=[], SEEN={};
+const memos=JSON.parse(localStorage.getItem(LS_MEMO)||'{}');
+
+const $=s=>document.querySelector(s);
+const getTok=()=>localStorage.getItem(LS_TOKEN)||'';
+const getOwner=()=>localStorage.getItem(LS_OWNER)||DEFAULT_OWNER;
+
+function rel(d){
+  const t=new Date(d), now=new Date(), s=(now-t)/1000;
+  if(s<60)return '방금 전';
+  if(s<3600)return Math.floor(s/60)+'분 전';
+  if(s<86400)return Math.floor(s/3600)+'시간 전';
+  const days=Math.floor(s/86400);
+  if(days<30)return days+'일 전';
+  if(days<365)return Math.floor(days/30)+'개월 전';
+  return Math.floor(days/365)+'년 전';
+}
+function fmt(d){const t=new Date(d);return t.getFullYear()+'-'+String(t.getMonth()+1).padStart(2,'0')+'-'+String(t.getDate()).padStart(2,'0');}
+function daysSince(d){return (new Date()-new Date(d))/86400000;}
+function esc(s){return (s||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+
+async function gh(path){
+  const r=await fetch('https://api.github.com'+path,{
+    headers:{'Authorization':'Bearer '+getTok(),'Accept':'application/vnd.github+json'}});
+  if(!r.ok){const e=new Error('GitHub '+r.status);e.status=r.status;throw e;}
+  return r.json();
+}
+
+async function loadAll(){
+  const tok=getTok();
+  if(!tok){showSetup('토큰을 먼저 입력하세요.');return;}
+  $('#owner').textContent='@'+getOwner();
+  $('#status').textContent='불러오는 중…';
+  $('#setup').classList.add('hide');
+  try{
+    // 토큰이 접근 가능한 모든 리포 (owned+collaborator+비공개), 변동순
+    let all=[],page=1;
+    while(page<=5){
+      const batch=await gh('/user/repos?per_page=100&sort=pushed&direction=desc&affiliation=owner,collaborator&page='+page);
+      all=all.concat(batch);
+      if(batch.length<100)break;
+      page++;
+    }
+    // 계정 필터 (해당 owner 소유만)
+    const owner=getOwner().toLowerCase();
+    REPOS=all.filter(r=>r.owner.login.toLowerCase()===owner);
+    REPOS.sort((a,b)=>new Date(b.pushed_at)-new Date(a.pushed_at));
+    computeFresh();
+    localStorage.setItem(LS_SYNC,new Date().toISOString());
+    $('#lastsync').textContent='마지막 동기화: '+new Date().toLocaleString('ko-KR');
+    render();
+    if($('#loadCommits').checked) loadCommits();
+  }catch(e){
+    if(e.status===401){showSetup('토큰이 만료되었거나 잘못되었습니다. 새 토큰을 입력하세요.');}
+    else{$('#status').textContent='오류: '+e.message;}
+  }
+}
+const LS_SYNC='hanasm_gh_sync';
+
+async function loadCommits(){
+  for(const r of REPOS){
+    try{
+      const c=await gh('/repos/'+r.owner.login+'/'+r.name+'/commits?per_page=1');
+      if(c&&c[0]){r._commit={msg:c[0].commit.message.split('\n')[0],date:c[0].commit.author.date,author:c[0].commit.author.name};}
+    }catch(e){/* 비어있는 리포 등 무시 */}
+    render();
+  }
+}
+
+function render(){
+  const q=$('#search').value.toLowerCase().trim();
+  const vis=$('#filterVis').value, sort=$('#sort').value;
+  let rs=REPOS.filter(r=>{
+    if(vis==='private'&&!r.private)return false;
+    if(vis==='public'&&r.private)return false;
+    if(q&&!(r.name.toLowerCase().includes(q)||(r.description||'').toLowerCase().includes(q)))return false;
+    return true;
+  });
+  if(sort==='name')rs.sort((a,b)=>a.name.localeCompare(b.name));
+  else if(sort==='issues')rs.sort((a,b)=>b.open_issues_count-a.open_issues_count);
+  else rs.sort((a,b)=>new Date(b.pushed_at)-new Date(a.pushed_at));
+
+  // 요약 카드
+  const total=REPOS.length, priv=REPOS.filter(r=>r.private).length;
+  const recent=REPOS.filter(r=>daysSince(r.pushed_at)<=7).length;
+  const issues=REPOS.reduce((s,r)=>s+r.open_issues_count,0);
+  const fresh=REPOS.filter(r=>r._isNew).length;
+  $('#cards').innerHTML=`
+    <div class="card"><div class="n">${total}</div><div class="l">전체 프로젝트</div></div>
+    <div class="card sincevisit ${fresh?'':'zero'}"><div class="n">★ ${fresh}</div><div class="l">지난 확인 이후 변동</div></div>
+    <div class="card hot"><div class="n">${recent}</div><div class="l">최근 7일 변동</div></div>
+    <div class="card"><div class="n">${priv}</div><div class="l">비공개</div></div>
+    <div class="card"><div class="n">${issues}</div><div class="l">미해결 이슈 합계</div></div>`;
+
+  $('#status').textContent=rs.length+'개 표시 중';
+  $('#list').innerHTML=rs.map(r=>{
+    const isNew=daysSince(r.pushed_at)<=7;
+    const isFresh=!!r._isNew;
+    const lang=r.language?`<span class="badge lang">${esc(r.language)}</span>`:'';
+    const site = r.has_pages?`https://${r.owner.login}.github.io/${r.name}/`:(r.homepage||'');
+    const siteLink=site?`<a href="${esc(site)}" target="_blank">사이트 ↗</a>`:'';
+    const commit=r._commit?`<div class="commit">최신: <code>${esc(r._commit.msg)}</code>
+        <span class="muted"> · ${esc(r._commit.author)} · ${rel(r._commit.date)}</span></div>`:'';
+    const memo=esc(memos[r.name]||'');
+    return `<div class="repo ${isFresh?'fresh':(isNew?'recent':'')}">
+      <div>
+        <div class="rname">
+          <a href="${r.html_url}" target="_blank">${esc(r.name)}</a>
+          ${isFresh?'<span class="badge fresh">★ 변동</span>':(isNew?'<span class="badge new">변동</span>':'')}
+          <span class="badge ${r.private?'priv':'pub'}">${r.private?'비공개':'공개'}</span>
+          ${lang}
+        </div>
+        ${r.description?`<div class="desc">${esc(r.description)}</div>`:''}
+        <div class="meta">
+          <span>이슈 ${r.open_issues_count}</span>
+          <span>브랜치 ${esc(r.default_branch)}</span>
+          ${r.fork?'<span>포크</span>':''}
+        </div>
+        ${commit}
+      </div>
+      <div class="right">
+        <div class="pushtime ${isFresh?'f':(isNew?'r':'')}">${rel(r.pushed_at)}</div>
+        <div class="muted">${fmt(r.pushed_at)}</div>
+        <div class="links">${siteLink}<a href="${r.html_url}" target="_blank">깃헙 ↗</a></div>
+        <button class="btn detail-toggle" data-repo="${esc(r.name)}">자세히 ▾</button>
+        ${isFresh?`<button class="btn markone" data-repo="${esc(r.name)}">✓ 읽음</button>`:''}
+      </div>
+      <div class="detail hide" data-detail="${esc(r.name)}"></div>
+      <div class="memo">
+        <textarea data-repo="${esc(r.name)}" placeholder="메모 (진행상황·담당·다음 할 일 — 자동 저장)">${memo}</textarea>
+      </div>
+    </div>`;
+  }).join('') || '<div class="muted">표시할 리포가 없습니다.</div>';
+
+  document.querySelectorAll('.memo textarea').forEach(t=>{
+    t.addEventListener('input',()=>{memos[t.dataset.repo]=t.value;localStorage.setItem(LS_MEMO,JSON.stringify(memos));});
+  });
+  document.querySelectorAll('.detail-toggle').forEach(b=>{
+    b.addEventListener('click',()=>toggleDetail(b.dataset.repo));
+  });
+  document.querySelectorAll('.markone').forEach(b=>{
+    b.addEventListener('click',()=>markOne(b.dataset.repo));
+  });
+}
+
+async function ghReadme(o,n){
+  const d=await gh('/repos/'+o+'/'+n+'/readme');
+  if(!d||!d.content)return null;
+  const bytes=Uint8Array.from(atob(d.content.replace(/\n/g,'')),c=>c.charCodeAt(0));
+  return new TextDecoder('utf-8').decode(bytes);
+}
+
+async function toggleDetail(name){
+  const el=document.querySelector('.detail[data-detail="'+name+'"]');
+  const btn=document.querySelector('.detail-toggle[data-repo="'+name+'"]');
+  if(!el)return;
+  if(!el.classList.contains('hide')){el.classList.add('hide');if(btn)btn.textContent='자세히 ▾';return;}
+  el.classList.remove('hide');if(btn)btn.textContent='접기 ▴';
+  if(el.dataset.loaded)return;
+  el.innerHTML='<div class="dload">불러오는 중…</div>';
+  const r=REPOS.find(x=>x.name===name); const o=r.owner.login;
+  try{
+    const [commits,issuesRaw,contents,branches,readme,treeRes]=await Promise.all([
+      gh('/repos/'+o+'/'+name+'/commits?per_page=15').catch(()=>[]),
+      gh('/repos/'+o+'/'+name+'/issues?state=open&per_page=20').catch(()=>[]),
+      gh('/repos/'+o+'/'+name+'/contents/').catch(()=>[]),
+      gh('/repos/'+o+'/'+name+'/branches?per_page=30').catch(()=>[]),
+      ghReadme(o,name).catch(()=>null),
+      gh('/repos/'+o+'/'+name+'/git/trees/'+r.default_branch+'?recursive=1').catch(()=>({tree:[]}))
+    ]);
+    const issues=(Array.isArray(issuesRaw)?issuesRaw:[]).filter(i=>!i.pull_request);
+    const commitsHtml=commits.length?'<ul class="clist">'+commits.map(c=>
+      '<li><span class="cdate">'+fmt(c.commit.author.date)+'</span><span class="cmsg">'+esc(c.commit.message.split('\n')[0])+'</span><span class="cauthor">'+esc(c.commit.author.name)+'</span></li>'
+    ).join('')+'</ul>':'<div class="dload">커밋 없음</div>';
+    const issuesHtml=issues.length?'<ul class="clist ilist">'+issues.map(i=>
+      '<li><span class="cdate">#'+i.number+'</span><a href="'+i.html_url+'" target="_blank" class="cmsg">'+esc(i.title)+'</a><span class="cauthor">'+rel(i.created_at)+'</span></li>'
+    ).join('')+'</ul>':'<div class="dload">열린 이슈 없음</div>';
+    const filesHtml=(Array.isArray(contents)&&contents.length)?'<div class="chips">'+contents.slice().sort((a,b)=>(a.type===b.type?a.name.localeCompare(b.name):(a.type==='dir'?-1:1))).map(f=>
+      '<span class="chip '+(f.type==='dir'?'dir':'')+'">'+(f.type==='dir'?'📁':'📄')+' '+esc(f.name)+'</span>'
+    ).join('')+'</div>':'<div class="dload">파일 목록 없음</div>';
+    const branchesHtml=branches.length?'<div class="chips">'+branches.map(b=>'<span class="chip">'+esc(b.name)+'</span>').join('')+'</div>':'<div class="dload">브랜치 정보 없음</div>';
+    const readmeHtml=readme?'<pre class="readme">'+esc(readme.slice(0,2000))+(readme.length>2000?'\n…(생략)':'')+'</pre>':'<div class="dload">README 없음</div>';
+    const tree=(treeRes&&treeRes.tree)?treeRes.tree:[];
+    const htmls=tree.filter(t=>t.type==='blob'&&/\.html?$/i.test(t.path));
+    const base=r.has_pages?('https://'+o.toLowerCase()+'.github.io/'+name+'/'):null;
+    // 페이지별 마지막 수정일 (파일당 1회, 최대 60개) → 최신순 정렬
+    const capped=htmls.slice(0,60);
+    const dated=await Promise.all(capped.map(t=>
+      gh('/repos/'+o+'/'+name+'/commits?per_page=1&path='+encodeURIComponent(t.path))
+        .then(c=>({path:t.path,date:(c&&c[0])?c[0].commit.author.date:null}))
+        .catch(()=>({path:t.path,date:null}))
+    ));
+    dated.sort((a,b)=>(b.date?new Date(b.date).getTime():0)-(a.date?new Date(a.date).getTime():0));
+    const pagesHtml=dated.length?'<ul class="clist plist">'+dated.map((t,i)=>{
+      const url=base?(base+t.path):(r.html_url+'/blob/'+r.default_branch+'/'+t.path);
+      const dstr=t.date?fmt(t.date):'-';
+      const tag=(i===0&&t.date)?'<span class="badge new" style="margin-left:6px">최신</span>':'';
+      const tail=t.date?rel(t.date):'날짜불명';
+      return '<li><span class="cdate">'+dstr+'</span><a href="'+url+'" target="_blank" class="cmsg">'+esc(t.path)+'</a>'+tag+'<span class="cauthor">'+tail+(base?'':' · 깃헙')+'</span></li>';
+    }).join('')+'</ul>'+(htmls.length>60?'<div class="dload">…페이지 60개까지만 날짜 표시</div>':''):'<div class="dload">HTML 페이지 없음</div>';
+    el.innerHTML=
+      '<div class="dsec"><h4>🔗 사이트 페이지 <span class="cnt">'+htmls.length+'</span>'+(base?'':' <span class="cauthor" style="font-weight:400">— Pages 미설정</span>')+'</h4>'+pagesHtml+'</div>'+
+      '<div class="dgrid">'+
+        '<div class="dsec"><h4>최근 변동 <span class="cnt">'+commits.length+'</span></h4>'+commitsHtml+'</div>'+
+        '<div class="dsec"><h4>미해결 이슈 <span class="cnt">'+issues.length+'</span></h4>'+issuesHtml+'</div>'+
+      '</div>'+
+      '<div class="dgrid">'+
+        '<div class="dsec"><h4>구성 파일</h4>'+filesHtml+'</div>'+
+        '<div class="dsec"><h4>브랜치 <span class="cnt">'+branches.length+'</span></h4>'+branchesHtml+'</div>'+
+      '</div>'+
+      '<div class="dsec"><h4>README</h4>'+readmeHtml+'</div>';
+    el.dataset.loaded='1';
+  }catch(e){el.innerHTML='<div class="dload">상세 불러오기 실패: '+esc(e.message)+'</div>';}
+}
+
+function computeFresh(){
+  let seen=null;
+  try{seen=JSON.parse(localStorage.getItem(LS_SEEN));}catch(e){}
+  if(!seen||typeof seen!=='object'){ // 첫 실행 = 현재 상태를 기준선으로(변동 0)
+    SEEN={}; REPOS.forEach(r=>SEEN[r.name]=r.pushed_at);
+    localStorage.setItem(LS_SEEN,JSON.stringify(SEEN));
+    REPOS.forEach(r=>r._isNew=false);
+  } else {
+    SEEN=seen;
+    REPOS.forEach(r=>{ r._isNew = !(r.name in SEEN) || new Date(r.pushed_at).getTime()>new Date(SEEN[r.name]).getTime(); });
+  }
+}
+function markAllRead(){
+  REPOS.forEach(r=>{SEEN[r.name]=r.pushed_at; r._isNew=false;});
+  localStorage.setItem(LS_SEEN,JSON.stringify(SEEN));
+  localStorage.setItem(LS_VISIT,new Date().toISOString());
+  updateVisitLabel(); render();
+}
+function markOne(name){
+  const r=REPOS.find(x=>x.name===name); if(!r)return;
+  SEEN[name]=r.pushed_at; r._isNew=false;
+  localStorage.setItem(LS_SEEN,JSON.stringify(SEEN)); render();
+}
+function updateVisitLabel(){
+  const v=localStorage.getItem(LS_VISIT);
+  $('#lastvisit').textContent=v?('마지막 확인: '+new Date(v).toLocaleString('ko-KR')):'';
+}
+
+function showSetup(msg){
+  $('#setup').classList.remove('hide');
+  $('#token').value=getTok();
+  $('#ownerInput').value=getOwner();
+  if(msg){$('#setupErr').textContent=msg;$('#setupErr').classList.remove('hide');}
+  else $('#setupErr').classList.add('hide');
+}
+
+$('#settings').onclick=()=>showSetup('');
+$('#refresh').onclick=loadAll;
+$('#markread').onclick=markAllRead;
+$('#saveTok').onclick=()=>{
+  const t=$('#token').value.trim();
+  if(!t){$('#setupErr').textContent='토큰을 입력하세요.';$('#setupErr').classList.remove('hide');return;}
+  localStorage.setItem(LS_TOKEN,t);
+  localStorage.setItem(LS_OWNER,($('#ownerInput').value.trim()||DEFAULT_OWNER));
+  loadAll();
+};
+$('#clearTok').onclick=()=>{localStorage.removeItem(LS_TOKEN);showSetup('토큰을 삭제했습니다.');};
+$('#search').oninput=render;
+$('#filterVis').onchange=render;
+$('#sort').onchange=render;
+$('#loadCommits').onchange=()=>{if($('#loadCommits').checked&&REPOS.length)loadCommits();};
+
+// 시작
+updateVisitLabel();
+const sync=localStorage.getItem(LS_SYNC);
+if(sync)$('#lastsync').textContent='마지막 동기화: '+new Date(sync).toLocaleString('ko-KR');
+if(getTok())loadAll(); else showSetup('');
+</script>
+</body>
+</html>
