@@ -2073,12 +2073,19 @@ function bindMemo() {
 // desc 안 가격표(<table>) 분리 — 우측 가격표 영역에 표시
 // desc 안 링크 처리: 기존 <a>에 target/rel 추가 + plain text URL 자동 linkify
 // desc HTML → 평문 변환 (편집 시 textarea에 평문으로 표시)
+// 편집 모달에서 표(<table>)를 평문 마커로 치환할 때 원본을 보관 — 저장 시 plainToHtml에서 복원
+let _editTables = [];
 function htmlToPlain(html) {
   if (!html) return '';
+  _editTables = [];
   return html
     .replace(/<br\s*\/?>/gi, '\n')                  // <br> → 개행
     .replace(/<\/(p|div|li|tr|h[1-6])>/gi, '\n')    // 블록 닫는 태그 → 개행
-    .replace(/<table[\s\S]*?<\/table>/gi, '\n[표 생략 — HTML 유지됨]\n')
+    .replace(/<table[\s\S]*?<\/table>/gi, (m) => {
+      const idx = _editTables.length;
+      _editTables.push(m);
+      return '\n[[표' + idx + ']]\n';                // 마커: 이 줄을 지우면 그 표가 삭제됨
+    })
     .replace(/<[^>]+>/g, '')                         // 모든 HTML 태그 제거
     .replace(/&nbsp;/g, ' ')
     .replace(/&amp;/g, '&')
@@ -2105,6 +2112,10 @@ function plainToHtml(text) {
   s = s.replace(/(https?:\/\/[^\s<>"']+)/g, '<a href="$1" target="_blank" rel="noopener noreferrer">$1</a>');
   // 4) 개행 → <br>
   s = s.replace(/\n/g, '<br>');
+  // 5) 표 마커 복원 — 마지막 단계에서 원본 <table> HTML 그대로 삽입 (escape/markdown/linkify/br 우회)
+  s = s.replace(/\[\[표(\d+)\]\]/g, (_, n) => (_editTables[+n] !== undefined ? _editTables[+n] : ''));
+  // 마커 주변 <br> 정리 (htmlToPlain이 \n으로 감싸서 br이 끼는 것 제거)
+  s = s.replace(/<br>(<table)/g, '$1').replace(/(<\/table>)<br>/g, '$1');
   return s;
 }
 function linkifyDescArea(root) {
