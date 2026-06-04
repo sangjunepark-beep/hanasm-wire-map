@@ -1435,7 +1435,7 @@ function persistOverrides() {
   try { localStorage.setItem('hanasm.projectOverrides.v3', JSON.stringify(PROJECT_OVERRIDES)); } catch(e) {}
 }
 function getEffective(cat, item) {
-  const k = cat + '::' + item.name;
+  const k = cat + '::' + (item._origName || item.name);
   const ovr = PROJECT_OVERRIDES[k] || {};
   return {
     ownerDept: (ovr.ownerDept !== undefined) ? ovr.ownerDept : (item.ownerDept || ''),
@@ -1471,6 +1471,11 @@ function applyOverridesToProjects(PROJECTS) {
     // 편집 가능 필드만 적용
     ['ownerDept','related','prio','progress','revTier','startWhen','owner','decision','desc','status','image','images','attachments']
       .forEach(f => { if (ovr[f] !== undefined) item[f] = ovr[f]; });
+    // 이름 override — 원본 이름은 _origName으로 보존 (모든 키는 _origName 기준 유지)
+    if (ovr.name !== undefined && ovr.name !== item.name) {
+      item._origName = item.name;
+      item.name = ovr.name;
+    }
   });
 }
 
@@ -1962,14 +1967,14 @@ function renderDetail() {
   // 주관 select 변경
   const ownerSel = leftEl.querySelector('.d-owner-sel');
   if (ownerSel) ownerSel.addEventListener('change', () => {
-    setOwner(e.cat, it.name, ownerSel.value || '');
+    setOwner(e.cat, it._origName || it.name, ownerSel.value || '');
     renderDetail();
     renderColumns();
   });
   // 유관 ✕ 제거
   leftEl.querySelectorAll('.rel-chip-x').forEach(x => {
     x.addEventListener('click', () => {
-      removeRel(e.cat, it.name, x.dataset.dept);
+      removeRel(e.cat, it._origName || it.name, x.dataset.dept);
       renderDetail();
       renderColumns();
     });
@@ -1978,7 +1983,7 @@ function renderDetail() {
   const relAdd = leftEl.querySelector('.d-rel-add');
   if (relAdd) relAdd.addEventListener('change', () => {
     if (!relAdd.value) return;
-    addRel(e.cat, it.name, relAdd.value);
+    addRel(e.cat, it._origName || it.name, relAdd.value);
     renderDetail();
     renderColumns();
   });
@@ -2157,7 +2162,7 @@ function splitDesc(desc) {
   const _hiddenSet = new Set((typeof loadHiddenList === 'function') ? loadHiddenList() : []);
   Object.keys(PROJECTS).forEach(cat => {
     (PROJECTS[cat].items || []).forEach(item => {
-      const k = cat + '::' + item.name;
+      const k = cat + '::' + (item._origName || item.name);
       if (_hiddenSet.has(k)) return;  // 숨김 항목 스킵
       ITEMS.push({ cat, key: k, item });
     });
@@ -2506,8 +2511,9 @@ function saveNewProject() {
   if (typeof _editingKey !== 'undefined' && _editingKey) {
     const entry = ITEMS.find(x => x.key === _editingKey);
     if (!entry) { _editingKey = null; closeAddProjModal(); return; }
-    const origName = entry.item.name;
+    const origName = entry.item._origName || entry.item.name;
     entry.item.name = name;
+    if (name !== origName) entry.item._origName = origName;  // 표시명 변경 시 원본 보존
     entry.item.prio = prio;
     entry.item.progress = prog;
     entry.item.revTier = tier;
@@ -2531,6 +2537,7 @@ function saveNewProject() {
       // 기본 항목 — PROJECT_OVERRIDES에 저장
       const k = cat + '::' + origName;
       const ovr = Object.assign({}, PROJECT_OVERRIDES[k] || {});
+      ovr.name = name;
       ovr.prio = prio;
       ovr.progress = prog;
       ovr.revTier = tier;
@@ -2607,7 +2614,7 @@ function saveNewProject() {
 // ─── 프로젝트 편집 (추가 모달 재사용) ──────────────────
 let _editingKey = null;  // 'cat::name' — null이면 신규 추가 모드
 function openEditProjModal(cat, item) {
-  _editingKey = cat + '::' + item.name;
+  _editingKey = cat + '::' + (item._origName || item.name);
   const ov = document.getElementById('addProjOverlay');
   if (!ov) return;
   // 폼 채우기
@@ -2617,7 +2624,7 @@ function openEditProjModal(cat, item) {
   document.getElementById('apf-cat').disabled = true;  // 카테고리 이동은 별도
   document.getElementById('apf-tier').value = item.revTier || 'E';
   document.getElementById('apf-prio').value = item.prio || 'm';
-  setApfAction(getAction(cat + '::' + item.name, item) || 'run');
+  setApfAction(getAction(cat + '::' + (item._origName || item.name), item) || 'run');
   document.getElementById('apf-prog').value = item.progress || 0;
   document.getElementById('apf-when').value = item.startWhen || '';
   document.getElementById('apf-owner').value = item.owner || '';
