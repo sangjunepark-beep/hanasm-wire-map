@@ -114,6 +114,23 @@
   ::-webkit-scrollbar-thumb{background:#28344a;border-radius:6px}
   ::-webkit-scrollbar-thumb:hover{background:var(--accent)}
   ::-webkit-scrollbar-track{background:#141c2b}
+
+  /* Firebase 배포 섹션 */
+  .fb-sec{margin:4px 0 20px}
+  .fb-h{font-size:15px;margin:0 0 10px;font-weight:700;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .fb-h .muted{font-weight:400}
+  .fb-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}
+  .fbcard{display:block;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px 16px;color:var(--txt)}
+  a.fbcard:hover{border-color:#f0883e;text-decoration:none}
+  .fbcard.live{border-color:#3a4a36;box-shadow:0 0 0 1px rgba(54,199,128,.15) inset}
+  .fbcard.off{opacity:.72;cursor:default}
+  .fbtop{display:flex;justify-content:space-between;align-items:center;gap:10px}
+  .fbname{font-weight:700;font-size:14.5px;word-break:break-all}
+  .fbstat{font-size:11.5px;padding:2px 9px;border-radius:999px;border:1px solid var(--line);color:var(--sub);white-space:nowrap}
+  .fbstat.on{color:var(--green);border-color:#2c4a38}
+  .fbdesc{color:var(--sub);font-size:12.5px;margin:8px 0 7px;line-height:1.5}
+  .fburl{color:var(--accent);font-size:12px;word-break:break-all}
+  .fbcard.off .fburl{color:var(--sub)}
 </style>
 </head>
 <body>
@@ -153,6 +170,38 @@
 
   <!-- 요약 -->
   <div class="cards" id="cards"></div>
+
+  <!-- Firebase 배포 (정적 — GitHub API로는 안 잡혀 직접 정리) -->
+  <div class="fb-sec">
+    <h3 class="fb-h">🔥 Firebase 배포 <span class="muted">호스팅·Firestore · 5개 · 2026-06-11 확인</span></h3>
+    <div class="fb-grid">
+      <a class="fbcard live" href="https://event-new-8ee81.web.app" target="_blank" rel="noopener">
+        <div class="fbtop"><span class="fbname">event-new-8ee81</span><span class="fbstat on">● 라이브</span></div>
+        <div class="fbdesc">이벤트보드 — 대표보고 + 관리화면, Firestore 실시간 동기화</div>
+        <div class="fburl">event-new-8ee81.web.app ↗</div>
+      </a>
+      <a class="fbcard live" href="https://hanasm-cs-meeting-6467a.web.app" target="_blank" rel="noopener">
+        <div class="fbtop"><span class="fbname">hanasm-cs-meeting-6467a</span><span class="fbstat on">● 라이브</span></div>
+        <div class="fbdesc">천차장 CS회의록 — 온라인 회의록, Firestore 동기화</div>
+        <div class="fburl">hanasm-cs-meeting-6467a.web.app ↗</div>
+      </a>
+      <div class="fbcard off">
+        <div class="fbtop"><span class="fbname">hanasm-chatbot-terms</span><span class="fbstat">호스팅 미배포</span></div>
+        <div class="fbdesc">ERP↔가이드 용어통일 — Firestore 백엔드 (프론트는 hanasm-guide Pages의 erp-compare.html)</div>
+        <div class="fburl">Firestore 전용</div>
+      </div>
+      <div class="fbcard off">
+        <div class="fbtop"><span class="fbname">hanasm-event-board-2026</span><span class="fbstat">호스팅 미배포</span></div>
+        <div class="fbdesc">이벤트보드 관련 (백엔드/미배포 추정)</div>
+        <div class="fburl">호스팅 404</div>
+      </div>
+      <div class="fbcard off">
+        <div class="fbtop"><span class="fbname">hanasm-cs-meeting</span><span class="fbstat">구·중복</span></div>
+        <div class="fbdesc">CS회의록 구/중복 프로젝트 (메인은 -6467a)</div>
+        <div class="fburl">호스팅 404</div>
+      </div>
+    </div>
+  </div>
 
   <!-- 컨트롤 -->
   <div class="controls">
