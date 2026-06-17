@@ -154,6 +154,7 @@
   .wd-sub .muted{font-weight:400}
   .wd-sub .tag{font-size:11px;padding:2px 8px;border-radius:6px;border:1px solid var(--line);color:var(--sub)}
   .wdnote{display:none;font-size:11.5px;margin-top:5px;color:var(--sub)}
+  .wdcard.wdoff{opacity:.66;cursor:default}
 </style>
 </head>
 <body>
@@ -206,38 +207,8 @@
     <div class="wd-grid" id="wdGridGh"></div>
     <div class="wd-sub"><span class="tag">Firebase 호스팅</span> 웹앱 <span class="muted">· 5곳 · 접속(살아있나)까지 점검</span></div>
     <div class="wd-grid" id="wdGridFb"></div>
-  </div>
-
-  <!-- Firebase 배포 (정적 — GitHub API로는 안 잡혀 직접 정리) -->
-  <div class="fb-sec">
-    <h3 class="fb-h">🔥 Firebase 배포 <span class="muted">호스팅·Firestore · 5개 · 2026-06-11 확인</span></h3>
-    <div class="fb-grid">
-      <a class="fbcard live" href="https://event-new-8ee81.web.app" target="_blank" rel="noopener">
-        <div class="fbtop"><span class="fbname">event-new-8ee81</span><span class="fbstat on">● 라이브</span></div>
-        <div class="fbdesc">이벤트보드 — 대표보고 + 관리화면, Firestore 실시간 동기화</div>
-        <div class="fburl">event-new-8ee81.web.app ↗</div>
-      </a>
-      <a class="fbcard live" href="https://hanasm-cs-meeting-6467a.web.app" target="_blank" rel="noopener">
-        <div class="fbtop"><span class="fbname">hanasm-cs-meeting-6467a</span><span class="fbstat on">● 라이브</span></div>
-        <div class="fbdesc">천차장 CS회의록 — 온라인 회의록, Firestore 동기화</div>
-        <div class="fburl">hanasm-cs-meeting-6467a.web.app ↗</div>
-      </a>
-      <div class="fbcard off">
-        <div class="fbtop"><span class="fbname">hanasm-chatbot-terms</span><span class="fbstat">호스팅 미배포</span></div>
-        <div class="fbdesc">ERP↔가이드 용어통일 — Firestore 백엔드 (프론트는 hanasm-guide Pages의 erp-compare.html)</div>
-        <div class="fburl">Firestore 전용</div>
-      </div>
-      <div class="fbcard off">
-        <div class="fbtop"><span class="fbname">hanasm-event-board-2026</span><span class="fbstat">호스팅 미배포</span></div>
-        <div class="fbdesc">이벤트보드 관련 (백엔드/미배포 추정)</div>
-        <div class="fburl">호스팅 404</div>
-      </div>
-      <div class="fbcard off">
-        <div class="fbtop"><span class="fbname">hanasm-cs-meeting</span><span class="fbstat">구·중복</span></div>
-        <div class="fbdesc">CS회의록 구/중복 프로젝트 (메인은 -6467a)</div>
-        <div class="fburl">호스팅 404</div>
-      </div>
-    </div>
+    <div class="wd-sub"><span class="tag">Firebase 비운용</span> 호스팅 페이지 없음 <span class="muted">· 3곳 · 백엔드 전용·미배포 (참고용, 감시 대상 아님)</span></div>
+    <div class="wd-grid" id="wdGridOff"></div>
   </div>
 
   <!-- 컨트롤 -->
@@ -551,15 +522,21 @@ if(getTok())loadAll(); else showSetup('');
     {g:"fb", name:"이벤트보드", url:"https://event-new-8ee81.web.app", type:"app", desc:"기획전 파이프라인 · 대표보고 + 관리화면"},
     {g:"fb", name:"CS회의록", url:"https://hanasm-cs-meeting-6467a.web.app", type:"app", desc:"천현정 차장 CS 회의록 (온라인)"},
     {g:"fb", name:"webteam 보드", url:"https://hanasm-webteam-board.web.app", type:"app", desc:"웹팀 업무 칸반 보드 (로그인 게이트)"},
-    {g:"fb", name:"ERP 용어", url:"https://hanasm-erp-term.web.app", type:"app", desc:"ERP 품목 용어개편 검토 데모"}
+    {g:"fb", name:"ERP 용어", url:"https://hanasm-erp-term.web.app", type:"app", desc:"ERP 품목 용어개편 검토 데모"},
+    {g:"off", name:"hanasm-chatbot-terms", url:"", type:"none", desc:"ERP↔가이드 용어통일 — Firestore 백엔드 (화면은 가이드의 erp-compare.html)"},
+    {g:"off", name:"hanasm-event-board-2026", url:"", type:"none", desc:"이벤트보드 관련 — 백엔드/미배포 추정"},
+    {g:"off", name:"hanasm-cs-meeting (구)", url:"", type:"none", desc:"CS회의록 구·중복 — 운용본은 -6467a"}
   ];
-  var gridGh=document.getElementById('wdGridGh'), gridFb=document.getElementById('wdGridFb');
+  var gridGh=document.getElementById('wdGridGh'), gridFb=document.getElementById('wdGridFb'), gridOff=document.getElementById('wdGridOff');
   if(!gridGh||!gridFb) return;
+  var pingN=APPS.filter(function(a){return a.g!=='off';}).length;
   var results=[];
   function card(a){
-    var el=document.createElement('a'); el.className='wdcard'; el.href=a.url; el.target='_blank'; el.rel='noopener';
+    var off=(a.g==='off');
+    var el=document.createElement(off?'div':'a'); el.className='wdcard'+(off?' wdoff':'');
+    if(!off){ el.href=a.url; el.target='_blank'; el.rel='noopener'; }
     el.innerHTML='<div class="wdtop"><span class="wdname">'+a.name+'</span><span class="wdbadge" data-b>점검중…</span></div><div class="wddesc">'+a.desc+'</div><div class="wdnote" data-n></div>';
-    (a.g==='gh'?gridGh:gridFb).appendChild(el); return el;
+    (off?(gridOff||gridFb):(a.g==='gh'?gridGh:gridFb)).appendChild(el); return el;
   }
   function withTimeout(ms){ var c=new AbortController(); setTimeout(function(){try{c.abort();}catch(e){}},ms); return c; }
   function setBadge(el,cls,txt,note){
@@ -570,7 +547,7 @@ if(getTok())loadAll(); else showSetup('');
     var bad=results.filter(function(r){return r==='bad';}).length;
     var g=document.getElementById('wdGear'), s=document.getElementById('wdSummary');
     if(bad>0){ g.className='wd-gear bad'; s.textContent='· '+bad+'곳 문제 — 톱니 멈춤'; s.style.color='var(--red)'; }
-    else if(results.length===APPS.length){ g.className='wd-gear'; s.textContent='· 전체 정상 ('+APPS.length+'곳)'; s.style.color='var(--green)'; }
+    else if(results.length===pingN){ g.className='wd-gear'; s.textContent='· 전체 정상 ('+pingN+'곳)'; s.style.color='var(--green)'; }
   }
   function checkApp(a,el){
     fetch(a.url,{mode:'no-cors',signal:withTimeout(8000).signal}).then(function(){
@@ -591,7 +568,7 @@ if(getTok())loadAll(); else showSetup('');
       setBadge(el,'bad','● 확인불가','status.json 못읽음'); results.push('bad'); done();
     });
   }
-  APPS.forEach(function(a){ var el=card(a); (a.type==='batch'?checkBatch:checkApp)(a,el); });
+  APPS.forEach(function(a){ var el=card(a); if(a.g==='off'){ setBadge(el,'','● 비운용'); return; } (a.type==='batch'?checkBatch:checkApp)(a,el); });
 })();
 </script>
 </body>
