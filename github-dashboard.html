@@ -150,6 +150,10 @@
   .wdbadge.on{color:var(--green);border-color:#2c4a38}
   .wdbadge.bad{color:var(--red);border-color:#5a2c2c}
   .wddesc{color:var(--sub);font-size:12px;margin-top:7px;line-height:1.45}
+  .wd-sub{font-size:12.5px;font-weight:700;color:var(--txt);margin:16px 0 9px;display:flex;align-items:center;gap:8px}
+  .wd-sub .muted{font-weight:400}
+  .wd-sub .tag{font-size:11px;padding:2px 8px;border-radius:6px;border:1px solid var(--line);color:var(--sub)}
+  .wdnote{display:none;font-size:11.5px;margin-top:5px;color:var(--sub)}
 </style>
 </head>
 <body>
@@ -198,7 +202,10 @@
       </span>
       운용 상황판 <span class="muted" id="wdSummary">점검 중…</span>
     </h3>
-    <div class="wd-grid" id="wdGrid"></div>
+    <div class="wd-sub"><span class="tag">GitHub Pages</span> 정적 페이지 <span class="muted">· 7곳 · 광고보고서는 단계까지 정밀 감시</span></div>
+    <div class="wd-grid" id="wdGridGh"></div>
+    <div class="wd-sub"><span class="tag">Firebase 호스팅</span> 웹앱 <span class="muted">· 5곳 · 접속(살아있나)까지 점검</span></div>
+    <div class="wd-grid" id="wdGridFb"></div>
   </div>
 
   <!-- Firebase 배포 (정적 — GitHub API로는 안 잡혀 직접 정리) -->
@@ -533,26 +540,31 @@ if(getTok())loadAll(); else showSetup('');
 <script>
 (function(){
   var APPS=[
-    {name:"광고보고서 빌드", url:"https://sangjunepark-beep.github.io/hanasignmall-ad-reports/monitor.html", type:"batch", status:"https://sangjunepark-beep.github.io/hanasignmall-ad-reports/status.json"},
-    {name:"제품DB 대시보드", url:"https://hanasm-product-db.web.app", type:"app"},
-    {name:"이벤트보드", url:"https://event-new-8ee81.web.app", type:"app"},
-    {name:"CS회의록", url:"https://hanasm-cs-meeting-6467a.web.app", type:"app"},
-    {name:"webteam 보드", url:"https://hanasm-webteam-board.web.app", type:"app"},
-    {name:"ERP 용어", url:"https://hanasm-erp-term.web.app", type:"app"},
-    {name:"가이드·용어비교", url:"https://sangjunepark-beep.github.io/hanasm-guide/", type:"app"},
-    {name:"와이어맵", url:"https://sangjunepark-beep.github.io/hanasm-wire-map/", type:"app"}
+    {g:"gh", name:"광고보고서 빌드", url:"https://sangjunepark-beep.github.io/hanasignmall-ad-reports/monitor.html", type:"batch", status:"https://sangjunepark-beep.github.io/hanasignmall-ad-reports/status.json", desc:"매일 새벽 자동 빌드 · CEO 광고 보고서 (5단계 감시)"},
+    {g:"gh", name:"가이드·용어비교", url:"https://sangjunepark-beep.github.io/hanasm-guide/", type:"app", desc:"제품 제작가이드 + ERP↔가이드 용어비교 (송기용팀장)"},
+    {g:"gh", name:"와이어맵", url:"https://sangjunepark-beep.github.io/hanasm-wire-map/", type:"app", desc:"프로젝트 와이어맵·칸반 + 이 대시보드"},
+    {g:"gh", name:"로켓출력공장 접수", url:"https://sangjunepark-beep.github.io/rocket-upload/", type:"app", desc:"DTF 디자인파일 고객 접수 페이지"},
+    {g:"gh", name:"게시판 간편구매", url:"https://sangjunepark-beep.github.io/hanasign-wizard/", type:"app", desc:"게시판 구매 위자드 (고객용)"},
+    {g:"gh", name:"A형입간판 시안입력", url:"https://sangjunepark-beep.github.io/sign_yellow/", type:"app", desc:"차량 2부제 노랑 A형 입간판 상호명 입력"},
+    {g:"gh", name:"신규몰 어드민매뉴얼", url:"https://sangjunepark-beep.github.io/newmall-admin-manual/", type:"app", desc:"신규몰 운영 내부 참고 매뉴얼"},
+    {g:"fb", name:"제품DB 대시보드", url:"https://hanasm-product-db.web.app", type:"app", desc:"챗봇 앵커 제품DB · 채널전파추적 · 내장 RAG챗봇"},
+    {g:"fb", name:"이벤트보드", url:"https://event-new-8ee81.web.app", type:"app", desc:"기획전 파이프라인 · 대표보고 + 관리화면"},
+    {g:"fb", name:"CS회의록", url:"https://hanasm-cs-meeting-6467a.web.app", type:"app", desc:"천현정 차장 CS 회의록 (온라인)"},
+    {g:"fb", name:"webteam 보드", url:"https://hanasm-webteam-board.web.app", type:"app", desc:"웹팀 업무 칸반 보드 (로그인 게이트)"},
+    {g:"fb", name:"ERP 용어", url:"https://hanasm-erp-term.web.app", type:"app", desc:"ERP 품목 용어개편 검토 데모"}
   ];
-  var grid=document.getElementById('wdGrid'); if(!grid) return;
+  var gridGh=document.getElementById('wdGridGh'), gridFb=document.getElementById('wdGridFb');
+  if(!gridGh||!gridFb) return;
   var results=[];
   function card(a){
     var el=document.createElement('a'); el.className='wdcard'; el.href=a.url; el.target='_blank'; el.rel='noopener';
-    el.innerHTML='<div class="wdtop"><span class="wdname">'+a.name+'</span><span class="wdbadge" data-b>점검중…</span></div><div class="wddesc" data-d>'+(a.type==='batch'?'배치 · 단계 감시':'웹앱 · 접속 점검')+'</div>';
-    grid.appendChild(el); return el;
+    el.innerHTML='<div class="wdtop"><span class="wdname">'+a.name+'</span><span class="wdbadge" data-b>점검중…</span></div><div class="wddesc">'+a.desc+'</div><div class="wdnote" data-n></div>';
+    (a.g==='gh'?gridGh:gridFb).appendChild(el); return el;
   }
   function withTimeout(ms){ var c=new AbortController(); setTimeout(function(){try{c.abort();}catch(e){}},ms); return c; }
-  function setBadge(el,cls,txt,desc){
+  function setBadge(el,cls,txt,note){
     var b=el.querySelector('[data-b]'); b.className='wdbadge '+cls; b.textContent=txt;
-    if(desc){ el.querySelector('[data-d]').textContent=desc; }
+    if(note){ var n=el.querySelector('[data-n]'); n.textContent=note; n.style.display='block'; if(cls==='bad'){ n.style.color='var(--red)'; } }
   }
   function done(){
     var bad=results.filter(function(r){return r==='bad';}).length;
@@ -564,19 +576,19 @@ if(getTok())loadAll(); else showSetup('');
     fetch(a.url,{mode:'no-cors',signal:withTimeout(8000).signal}).then(function(){
       setBadge(el,'on','● 라이브'); results.push('ok'); done();
     }).catch(function(){
-      setBadge(el,'bad','● 응답없음','웹앱 · 접속 실패 — 호스팅 확인'); results.push('bad'); done();
+      setBadge(el,'bad','● 응답없음','접속 실패 — 호스팅 확인 필요'); results.push('bad'); done();
     });
   }
   function checkBatch(a,el){
     fetch(a.status+'?t='+Date.now(),{signal:withTimeout(8000).signal}).then(function(r){return r.json();}).then(function(d){
       var st=d.stages||[]; var f=-1;
       for(var i=0;i<st.length;i++){ if(st[i].status==='fault'){f=i;break;} }
-      if(f>=0){ setBadge(el,'bad','● '+(f+1)+'단계 멈춤','배치 · '+st[f].name+' 실패'); results.push('bad'); }
-      else if(st.length && st.every(function(x){return x.status==='ok';})){ setBadge(el,'on','● 정상','배치 · 전 단계 통과'+(d.target?' ('+d.target+')':'')); results.push('ok'); }
-      else { setBadge(el,'','● 대기','배치 · 아직 빌드 전'); results.push('ok'); }
+      if(f>=0){ setBadge(el,'bad','● '+(f+1)+'단계 멈춤', st[f].name+' 실패 — 클릭해 로그 확인'); results.push('bad'); }
+      else if(st.length && st.every(function(x){return x.status==='ok';})){ setBadge(el,'on','● 정상', d.target?('최근 빌드 '+d.target+' · 전 단계 통과'):'전 단계 통과'); results.push('ok'); }
+      else { setBadge(el,'','● 대기','아직 빌드 전'); results.push('ok'); }
       done();
     }).catch(function(){
-      setBadge(el,'bad','● 확인불가','배치 · status.json 못읽음'); results.push('bad'); done();
+      setBadge(el,'bad','● 확인불가','status.json 못읽음'); results.push('bad'); done();
     });
   }
   APPS.forEach(function(a){ var el=card(a); (a.type==='batch'?checkBatch:checkApp)(a,el); });
