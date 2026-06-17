@@ -511,7 +511,7 @@ if(getTok())loadAll(); else showSetup('');
 <script>
 (function(){
   var APPS=[
-    {g:"gh", name:"광고보고서 빌드", url:"https://sangjunepark-beep.github.io/hanasignmall-ad-reports/monitor.html", type:"batch", status:"https://sangjunepark-beep.github.io/hanasignmall-ad-reports/status.json", desc:"매일 새벽 자동 빌드 · CEO 광고 보고서 (5단계 감시)"},
+    {g:"gh", name:"광고보고서 빌드", url:"https://sangjunepark-beep.github.io/hanasignmall-ad-reports/ceo-report/latest.html", monitor:"https://sangjunepark-beep.github.io/hanasignmall-ad-reports/monitor.html", type:"batch", status:"https://sangjunepark-beep.github.io/hanasignmall-ad-reports/status.json", desc:"매일 새벽 자동 빌드 · CEO 광고 보고서 (카드=보고서 / 상태 배지 클릭=단계 감시)"},
     {g:"gh", name:"가이드·용어비교", url:"https://sangjunepark-beep.github.io/hanasm-guide/", type:"app", desc:"제품 제작가이드 + ERP↔가이드 용어비교 (송기용팀장)"},
     {g:"gh", name:"와이어맵", url:"https://sangjunepark-beep.github.io/hanasm-wire-map/", type:"app", desc:"프로젝트 와이어맵·칸반 + 이 대시보드"},
     {g:"gh", name:"로켓출력공장 접수", url:"https://sangjunepark-beep.github.io/rocket-upload/", type:"app", desc:"DTF 디자인파일 고객 접수 페이지"},
@@ -568,7 +568,16 @@ if(getTok())loadAll(); else showSetup('');
       setBadge(el,'bad','● 확인불가','status.json 못읽음'); results.push('bad'); done();
     });
   }
-  APPS.forEach(function(a){ var el=card(a); if(a.g==='off'){ setBadge(el,'','● 비운용'); return; } (a.type==='batch'?checkBatch:checkApp)(a,el); });
+  APPS.forEach(function(a){
+    var el=card(a);
+    if(a.g==='off'){ setBadge(el,'','● 비운용'); return; }
+    if(a.type==='batch'){
+      var b=el.querySelector('[data-b]');
+      b.style.cursor='pointer'; b.title='클릭: 단계 감시(톱니) 화면';
+      b.addEventListener('click',function(e){ e.preventDefault(); e.stopPropagation(); window.open(a.monitor,'_blank','noopener'); });
+      checkBatch(a,el);
+    } else checkApp(a,el);
+  });
 })();
 </script>
 </body>
