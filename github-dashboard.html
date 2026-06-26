@@ -211,7 +211,7 @@
          · hanasm-chatbot-terms : Firestore(default) 실가동 → 용어통일 데이터 저장소, 화면은 hanasm-guide의 erp-compare.html이 띄움. 호스팅만 없는 정상 백엔드.
          · hanasm-event-board-2026 : Firestore API 미사용 + 호스팅 404 = 빈 예비 프로젝트. 운용본은 event-new-8ee81.
          · hanasm-cs-meeting : Firestore API 미사용 + 호스팅 404 = 빈 구버전. 운용본은 cs-meeting-6467a. -->
-    <div class="wd-sub"><span class="tag">Firebase · 자체 호스팅 없음</span> <span class="muted">· 3곳 · 1곳은 데이터(Firestore) 백엔드로 가동 · 2곳은 빈 프로젝트</span></div>
+    <div class="wd-sub"><span class="tag">Firebase · 자체 호스팅 없음</span> <span class="muted">· 4곳 · 1곳은 데이터(Firestore) 백엔드로 가동 · 3곳은 빈 프로젝트</span></div>
     <div class="wd-grid" id="wdGridOff"></div>
   </div>
 
@@ -535,7 +535,8 @@ if(getTok())loadAll(); else showSetup('');
     //  event-board-2026 / cs-meeting = Firestore API 미사용 + 호스팅 404 = 빈 예비/구버전
     {g:"off", name:"hanasm-chatbot-terms", url:"", type:"none", badge:"● 백엔드 가동", bcls:"on", desc:"Firestore(데이터) 실가동 — ERP↔가이드 용어통일 저장소. 화면은 가이드의 erp-compare.html이 띄움. 자체 호스팅 페이지는 없음(정상)"},
     {g:"off", name:"hanasm-event-board-2026", url:"", type:"none", badge:"● 미사용", bcls:"", desc:"빈 예비 프로젝트 — Firestore·호스팅 둘 다 미사용. 운용본은 event-new-8ee81(위)"},
-    {g:"off", name:"hanasm-cs-meeting (구)", url:"", type:"none", badge:"● 미사용", bcls:"", desc:"빈 구버전 — Firestore·호스팅 미사용. 운용본은 cs-meeting-6467a(위)"}
+    {g:"off", name:"hanasm-cs-meeting (구)", url:"", type:"none", badge:"● 미사용", bcls:"", desc:"빈 구버전 — Firestore·호스팅 미사용. 운용본은 cs-meeting-6467a(위)"},
+    {g:"off", name:"hanasm-webteam (구)", url:"", type:"none", badge:"● 미사용", bcls:"", desc:"빈 구/예비 — 호스팅 404. 운용본은 hanasm-webteam-board(위)"}
   ];
   var gridGh=document.getElementById('wdGridGh'), gridFb=document.getElementById('wdGridFb'), gridOff=document.getElementById('wdGridOff');
   if(!gridGh||!gridFb) return;
